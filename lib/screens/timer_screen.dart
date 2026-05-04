@@ -28,11 +28,14 @@ class TimerScreen extends StatefulWidget {
 
 class _TimerScreenState extends State<TimerScreen> {
   late final MealTimerController _controller;
+  bool _arrivalPromptShown = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = MealTimerController(config: widget.config)..start();
+    _controller = MealTimerController(config: widget.config);
+    _controller.addListener(_handleTimerChanged);
+    _controller.start();
   }
 
   @override
@@ -41,13 +44,32 @@ class _TimerScreenState extends State<TimerScreen> {
     super.dispose();
   }
 
-  Future<void> _confirmComplete() async {
+  void _handleTimerChanged() {
+    if (_arrivalPromptShown ||
+        _controller.state != MealTimerState.arrived ||
+        !mounted) {
+      return;
+    }
+
+    _arrivalPromptShown = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _confirmComplete(showFailureOnDecline: true);
+    });
+  }
+
+  Future<void> _confirmComplete({bool showFailureOnDecline = false}) async {
     final confirmed = await showDialog<bool>(
       context: context,
+      barrierDismissible: !showFailureOnDecline,
       builder: (context) {
         return AlertDialog(
           title: const Text('식사를 완료했어?'),
-          content: const Text('오늘의 냠냠코스를 마무리할까?'),
+          content: Text(
+            showFailureOnDecline ? '타이머가 끝났어. 식사를 마무리했어?' : '오늘의 냠냠코스를 마무리할까?',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -62,7 +84,15 @@ class _TimerScreenState extends State<TimerScreen> {
       },
     );
 
-    if (confirmed != true || !mounted) {
+    if (!mounted) {
+      return;
+    }
+
+    if (confirmed != true) {
+      if (showFailureOnDecline) {
+        final result = _controller.complete(mealCompleted: false);
+        _openResult(result);
+      }
       return;
     }
 

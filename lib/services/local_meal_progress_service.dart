@@ -69,7 +69,7 @@ class LocalMealProgressService {
   }
 
   List<RewardDefinition> _selectRewards(MealSessionResult result) {
-    if (!result.completedBeforeArrival) {
+    if (!result.mealCompleted) {
       return const [];
     }
 

@@ -134,7 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     Slider(
                       value: _customMinutes,
-                      min: 5,
+                      min: 1,
                       max: 60,
                       divisions: 11,
                       label: '${_customMinutes.round()}분',

@@ -58,7 +58,7 @@ class _ResultScreenState extends State<ResultScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final completedBeforeArrival = widget.result.completedBeforeArrival;
+    final mealCompleted = widget.result.mealCompleted;
 
     return Scaffold(
       body: SafeArea(
@@ -74,16 +74,16 @@ class _ResultScreenState extends State<ResultScreen> {
                   child: Column(
                     children: [
                       Text(
-                        completedBeforeArrival ? '식사 완주 성공!' : '오늘도 수고했어!',
+                        mealCompleted ? '식사 완주 성공!' : '아쉽지만 실패했어',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(fontWeight: FontWeight.w900),
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        completedBeforeArrival
-                            ? '오토바이가 도착하기 전에 식사를 마쳤어.'
-                            : '오토바이가 먼저 도착했지만, 식사하느라 정말 수고했어.',
+                        mealCompleted
+                            ? '오늘의 냠냠코스를 끝까지 잘 마쳤어.'
+                            : '타이머가 끝났지만 아직 식사가 완료되지 않았어.',
                         textAlign: TextAlign.center,
                         style: Theme.of(
                           context,
@@ -91,9 +91,7 @@ class _ResultScreenState extends State<ResultScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        completedBeforeArrival
-                            ? '오늘도 멋진 라이더였어!'
-                            : '다음 냠냠코스도 같이 달려보자.',
+                        mealCompleted ? '오늘도 멋진 라이더였어!' : '다음 냠냠코스에서 다시 도전해보자.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w800),

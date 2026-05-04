@@ -5,6 +5,7 @@ class MealSessionResult {
     required this.targetDuration,
     required this.actualDuration,
     required this.completedBeforeArrival,
+    this.mealCompleted = true,
   });
 
   final DateTime startedAt;
@@ -12,4 +13,5 @@ class MealSessionResult {
   final Duration targetDuration;
   final Duration actualDuration;
   final bool completedBeforeArrival;
+  final bool mealCompleted;
 }

@@ -63,7 +63,7 @@ void main() {
     );
   });
 
-  test('Overtime meal does not award stickers', () async {
+  test('Completed overtime meal awards a random sticker', () async {
     SharedPreferences.setMockInitialValues({});
 
     final service = LocalMealProgressService();
@@ -74,6 +74,24 @@ void main() {
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 25),
         completedBeforeArrival: false,
+      ),
+    );
+
+    expect(recordedSession.awardedRewards, hasLength(1));
+  });
+
+  test('Incomplete meal does not award stickers', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final service = LocalMealProgressService();
+    final recordedSession = await service.recordMealResult(
+      MealSessionResult(
+        startedAt: DateTime(2026, 5, 4, 12),
+        endedAt: DateTime(2026, 5, 4, 12, 25),
+        targetDuration: const Duration(minutes: 20),
+        actualDuration: const Duration(minutes: 25),
+        completedBeforeArrival: false,
+        mealCompleted: false,
       ),
     );
 

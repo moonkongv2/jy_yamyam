@@ -71,7 +71,7 @@ class MealTimerController extends ChangeNotifier {
     notifyListeners();
   }
 
-  MealSessionResult complete() {
+  MealSessionResult complete({bool mealCompleted = true}) {
     _updateElapsed();
     _state = MealTimerState.completed;
     _ticker?.cancel();
@@ -83,6 +83,7 @@ class MealTimerController extends ChangeNotifier {
       targetDuration: config.duration,
       actualDuration: _elapsed,
       completedBeforeArrival: progress < 1,
+      mealCompleted: mealCompleted,
     );
   }
 
