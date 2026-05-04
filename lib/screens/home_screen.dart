@@ -77,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '오늘도 밥길을 달려볼까?',
+                        '오늘도 냠냠 코스를 달려볼까?',
                         style: textTheme.titleMedium?.copyWith(
                           color: const Color(0xFF7A6250),
                           fontWeight: FontWeight.w700,

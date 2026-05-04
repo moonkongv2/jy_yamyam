@@ -82,7 +82,7 @@ class ResultScreen extends StatelessWidget {
                       Text(
                         completedBeforeArrival
                             ? '오늘도 멋진 라이더였어!'
-                            : '다음 밥길도 같이 달려보자.',
+                            : '다음 냠냠코스도 같이 달려보자.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w800),

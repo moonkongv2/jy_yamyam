@@ -44,7 +44,7 @@ class _TimerScreenState extends State<TimerScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text('식사를 완료했어?'),
-          content: const Text('오늘의 밥길을 마무리할까?'),
+          content: const Text('오늘의 냠냠코스를 마무리할까?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -86,7 +86,7 @@ class _TimerScreenState extends State<TimerScreen> {
 
     final progress = controller.progress;
     if (progress < 0.25) {
-      return '부릉부릉 출발! 밥길을 달려보자.';
+      return '부릉부릉 출발! 냠냠코스를 달려보자.';
     }
     if (progress < 0.5) {
       return '좋아, 천천히 꼭꼭 씹으면서 가고 있어.';
@@ -106,7 +106,7 @@ class _TimerScreenState extends State<TimerScreen> {
       animation: _controller,
       builder: (context, _) {
         return Scaffold(
-          appBar: AppBar(title: const Text('오늘의 밥길')),
+          appBar: AppBar(title: const Text('오늘의 냠냠코스')),
           body: SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
