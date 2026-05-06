@@ -29,8 +29,8 @@ class ResultScreen extends StatefulWidget {
 }
 
 class _ResultScreenState extends State<ResultScreen> {
-  static const _successVideoPath = 'assets/images/result_success.mp4';
-  static const _failureVideoPath = 'assets/images/result_failure.mp4';
+  static const _successVideoPath = 'assets/videos/result_success.mp4';
+  static const _failureVideoPath = 'assets/videos/result_failure.mp4';
   static const _successImagePath = 'assets/images/result_success.png';
   static const _failureImagePath = 'assets/images/result_failure.png';
 
@@ -173,7 +173,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                 Text(
                                   mealCompleted
                                       ? '오늘의 냠냠코스를 끝까지 잘 마쳤어.'
-                                      : '타이머가 끝났지만 아직 식사가 완료되지 않았어.',
+                                      : '오토바이가 먼저 지나갔어.',
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(height: 1.4),
@@ -181,7 +181,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                 const SizedBox(height: 8),
                                 Text(
                                   mealCompleted
-                                      ? '오늘도 멋진 라이더였어!'
+                                      ? '지나가기 전에 마쳐서 짐칸 선물을 받았어!'
                                       : '다음 냠냠코스에서 다시 도전해보자.',
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.titleMedium

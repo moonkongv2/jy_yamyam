@@ -5,10 +5,21 @@ import '../models/meal_session_result.dart';
 import '../models/meal_timer_config.dart';
 import '../services/local_meal_progress_service.dart';
 import '../utils/duration_format.dart';
-import '../widgets/meal_message_card.dart';
 import '../widgets/road_view.dart';
 import '../widgets/timer_control_bar.dart';
 import 'result_screen.dart';
+
+const _motivationVideoByMilestone = {
+  10: 'assets/videos/motivation_10.mp4',
+  20: 'assets/videos/motivation_20.mp4',
+  30: 'assets/videos/motivation_30.mp4',
+  40: 'assets/videos/motivation_40.mp4',
+  50: 'assets/videos/motivation_50.mp4',
+  60: 'assets/videos/motivation_60.mp4',
+  70: 'assets/videos/motivation_70.mp4',
+  80: 'assets/videos/motivation_80.mp4',
+  90: 'assets/videos/motivation_90.mp4',
+};
 
 class TimerScreen extends StatefulWidget {
   const TimerScreen({
@@ -28,7 +39,10 @@ class TimerScreen extends StatefulWidget {
 
 class _TimerScreenState extends State<TimerScreen> {
   late final MealTimerController _controller;
+  final Set<int> _shownMotivationMilestones = {};
   bool _arrivalPromptShown = false;
+  int? _activeMotivationMilestone;
+  String? _activeMotivationVideoPath;
 
   @override
   void initState() {
@@ -45,6 +59,8 @@ class _TimerScreenState extends State<TimerScreen> {
   }
 
   void _handleTimerChanged() {
+    _maybeShowMotivationVideo();
+
     if (_arrivalPromptShown ||
         _controller.state != MealTimerState.arrived ||
         !mounted) {
@@ -52,11 +68,52 @@ class _TimerScreenState extends State<TimerScreen> {
     }
 
     _arrivalPromptShown = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future<void>.delayed(const Duration(milliseconds: 900));
       if (!mounted) {
         return;
       }
       _confirmComplete(showFailureOnDecline: true);
+    });
+  }
+
+  void _maybeShowMotivationVideo() {
+    if (!mounted || _controller.progress >= 1) {
+      return;
+    }
+
+    final milestone = (_controller.progress * 10).floor() * 10;
+    if (milestone < 10 || milestone > 90) {
+      return;
+    }
+
+    if (!_shownMotivationMilestones.add(milestone)) {
+      return;
+    }
+
+    if (_activeMotivationMilestone != null) {
+      return;
+    }
+
+    final videoPath = _motivationVideoByMilestone[milestone];
+    if (videoPath == null) {
+      return;
+    }
+
+    setState(() {
+      _activeMotivationMilestone = milestone;
+      _activeMotivationVideoPath = videoPath;
+    });
+  }
+
+  void _handleMotivationVideoFinished() {
+    if (!mounted || _activeMotivationMilestone == null) {
+      return;
+    }
+
+    setState(() {
+      _activeMotivationMilestone = null;
+      _activeMotivationVideoPath = null;
     });
   }
 
@@ -68,7 +125,9 @@ class _TimerScreenState extends State<TimerScreen> {
         return AlertDialog(
           title: const Text('식사를 완료했어?'),
           content: Text(
-            showFailureOnDecline ? '타이머가 끝났어. 식사를 마무리했어?' : '오늘의 냠냠코스를 마무리할까?',
+            showFailureOnDecline
+                ? '오토바이가 지나갔어. 식사를 마무리했어?'
+                : '오늘의 냠냠코스를 마무리할까?',
           ),
           actions: [
             TextButton(
@@ -113,27 +172,6 @@ class _TimerScreenState extends State<TimerScreen> {
     );
   }
 
-  String _messageFor(MealTimerController controller) {
-    if (controller.isPaused) {
-      return '잠깐 쉬는 중이야';
-    }
-
-    final progress = controller.progress;
-    if (progress < 0.25) {
-      return '부릉부릉 출발! 냠냠코스를 달려보자.';
-    }
-    if (progress < 0.5) {
-      return '좋아, 천천히 꼭꼭 씹으면서 가고 있어.';
-    }
-    if (progress < 0.75) {
-      return '절반쯤 왔어. 오늘도 잘하고 있어!';
-    }
-    if (progress < 1.0) {
-      return '도착이 가까워졌어. 마지막까지 같이 가보자.';
-    }
-    return '오토바이가 도착했어. 오늘도 식사하느라 수고했어.';
-  }
-
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -146,9 +184,14 @@ class _TimerScreenState extends State<TimerScreen> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
               child: Column(
                 children: [
-                  MealMessageCard(message: _messageFor(_controller)),
-                  const SizedBox(height: 16),
-                  Expanded(child: RoadView(progress: _controller.progress)),
+                  Expanded(
+                    child: RoadView(
+                      progress: _controller.progress,
+                      motivationVideoAssetPath: _activeMotivationVideoPath,
+                      motivationVideoMilestone: _activeMotivationMilestone,
+                      onMotivationVideoFinished: _handleMotivationVideoFinished,
+                    ),
+                  ),
                   if (widget.config.showRemainingTime) ...[
                     const SizedBox(height: 16),
                     _RemainingTimeCard(remaining: _controller.remaining),
