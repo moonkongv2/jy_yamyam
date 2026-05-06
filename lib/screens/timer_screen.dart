@@ -11,14 +11,22 @@ import 'result_screen.dart';
 
 const _motivationVideoByMilestone = {
   10: 'assets/videos/motivation_10.mp4',
-  20: 'assets/videos/motivation_20.mp4',
-  30: 'assets/videos/motivation_30.mp4',
-  40: 'assets/videos/motivation_40.mp4',
-  50: 'assets/videos/motivation_50.mp4',
-  60: 'assets/videos/motivation_60.mp4',
-  70: 'assets/videos/motivation_70.mp4',
-  80: 'assets/videos/motivation_80.mp4',
-  90: 'assets/videos/motivation_90.mp4',
+  20: 'assets/videos/motivation_10.mp4',
+  30: 'assets/videos/motivation_10.mp4',
+  40: 'assets/videos/motivation_10.mp4',
+  50: 'assets/videos/motivation_10.mp4',
+  60: 'assets/videos/motivation_10.mp4',
+  70: 'assets/videos/motivation_10.mp4',
+  80: 'assets/videos/motivation_10.mp4',
+  90: 'assets/videos/motivation_10.mp4',
+  // 20: 'assets/videos/motivation_20.mp4',
+  // 30: 'assets/videos/motivation_30.mp4',
+  // 40: 'assets/videos/motivation_40.mp4',
+  // 50: 'assets/videos/motivation_50.mp4',
+  // 60: 'assets/videos/motivation_60.mp4',
+  // 70: 'assets/videos/motivation_70.mp4',
+  // 80: 'assets/videos/motivation_80.mp4',
+  // 90: 'assets/videos/motivation_90.mp4',
 };
 
 class TimerScreen extends StatefulWidget {
@@ -125,9 +133,7 @@ class _TimerScreenState extends State<TimerScreen> {
         return AlertDialog(
           title: const Text('식사를 완료했어?'),
           content: Text(
-            showFailureOnDecline
-                ? '오토바이가 지나갔어. 식사를 마무리했어?'
-                : '오늘의 냠냠코스를 마무리할까?',
+            showFailureOnDecline ? '오토바이가 지나갔어. 식사를 마무리했어?' : '오늘의 냠냠코스를 마무리할까?',
           ),
           actions: [
             TextButton(

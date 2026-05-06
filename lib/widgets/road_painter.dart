@@ -61,7 +61,6 @@ class RoadPainter extends CustomPainter {
       Offset(roadBounds.right - 16, roadBounds.center.dy),
       lanePaint,
     );
-    _drawMilestones(canvas, roadBounds);
   }
 
   void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {
@@ -73,38 +72,6 @@ class RoadPainter extends CustomPainter {
       final nextX = (x + dashWidth).clamp(start.dx, end.dx).toDouble();
       canvas.drawLine(Offset(x, start.dy), Offset(nextX, end.dy), paint);
       x += dashWidth + gap;
-    }
-  }
-
-  void _drawMilestones(Canvas canvas, Rect roadBounds) {
-    final passedPaint = Paint()..color = const Color(0xFFFFF4A3);
-    final upcomingPaint = Paint()..color = Colors.white.withValues(alpha: 0.62);
-    final postPaint = Paint()
-      ..color = const Color(0xFF5B4636).withValues(alpha: 0.38)
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-
-    for (var index = 1; index < 10; index += 1) {
-      final milestoneProgress = index / 10;
-      final x = roadBounds.left + (roadBounds.width * milestoneProgress);
-      final isPassed = progress >= milestoneProgress;
-      final center = Offset(x, roadBounds.top - 8);
-      final markerPaint = isPassed ? passedPaint : upcomingPaint;
-
-      canvas.drawLine(
-        Offset(x, roadBounds.top + 3),
-        Offset(x, roadBounds.top - 18),
-        postPaint,
-      );
-      canvas.drawCircle(center, 8, markerPaint);
-      canvas.drawCircle(
-        center,
-        8,
-        Paint()
-          ..color = const Color(0xFF5B4636).withValues(alpha: 0.18)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
-      );
     }
   }
 

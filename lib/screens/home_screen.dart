@@ -50,6 +50,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _adjustCustomMinutes(int delta) {
+    final minutes = (_customMinutes.round() + delta).clamp(1, 60);
+    setState(() => _customMinutes = minutes.toDouble());
+  }
+
   Future<void> _openSettings() async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -136,11 +141,41 @@ class _HomeScreenState extends State<HomeScreen> {
                       value: _customMinutes,
                       min: 1,
                       max: 60,
-                      divisions: 11,
                       label: '${_customMinutes.round()}분',
                       onChanged: (value) {
                         setState(() => _customMinutes = value);
                       },
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _MinuteAdjustButton(
+                            label: '-5',
+                            onPressed: () => _adjustCustomMinutes(-5),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _MinuteAdjustButton(
+                            label: '-1',
+                            onPressed: () => _adjustCustomMinutes(-1),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _MinuteAdjustButton(
+                            label: '+1',
+                            onPressed: () => _adjustCustomMinutes(1),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _MinuteAdjustButton(
+                            label: '+5',
+                            onPressed: () => _adjustCustomMinutes(5),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 8),
                     FilledButton.icon(
@@ -174,6 +209,18 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+}
+
+class _MinuteAdjustButton extends StatelessWidget {
+  const _MinuteAdjustButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(onPressed: onPressed, child: Text(label));
   }
 }
 

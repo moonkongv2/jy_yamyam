@@ -70,6 +70,11 @@ class RoadView extends StatelessWidget {
                 Positioned.fill(
                   child: CustomPaint(painter: RoadPainter(progress: progress)),
                 ),
+                _SceneryLayer(
+                  roadBounds: roadBounds,
+                  motorcycleSize: motorcycleSize,
+                  size: size,
+                ),
                 _Marker(
                   label: '출발',
                   icon: Icons.home_rounded,
@@ -115,6 +120,119 @@ class RoadView extends StatelessWidget {
       },
     );
   }
+}
+
+class _SceneryLayer extends StatefulWidget {
+  const _SceneryLayer({
+    required this.roadBounds,
+    required this.motorcycleSize,
+    required this.size,
+  });
+
+  final Rect roadBounds;
+  final double motorcycleSize;
+  final Size size;
+
+  static const List<_SceneryEmoji> _items = [
+    _SceneryEmoji('🏠', 0.00, -0.12),
+    _SceneryEmoji('🌳', 0.18, 0.18),
+    _SceneryEmoji('🚗', 0.36, 0.08),
+    _SceneryEmoji('🌲', 0.54, -0.18),
+    _SceneryEmoji('🏡', 0.72, 0.12),
+    _SceneryEmoji('🌼', 0.90, -0.04),
+  ];
+
+  @override
+  State<_SceneryLayer> createState() => _SceneryLayerState();
+}
+
+class _SceneryLayerState extends State<_SceneryLayer>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final emojiSize = (widget.motorcycleSize * 0.38)
+        .clamp(44.0, 72.0)
+        .toDouble();
+    final laneTop = (widget.roadBounds.top - emojiSize - 20).clamp(
+      12.0,
+      widget.size.height - emojiSize - 12,
+    );
+    final travelWidth = widget.size.width + (emojiSize * 3);
+
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, _) {
+            final scroll = _controller.value * travelWidth;
+
+            return Stack(
+              children: [
+                for (final item in _SceneryLayer._items)
+                  Positioned(
+                    left: _loopedX(
+                      (item.offset * travelWidth) - scroll,
+                      travelWidth,
+                      emojiSize,
+                    ),
+                    top: laneTop + (item.verticalOffset * emojiSize),
+                    child: Opacity(
+                      opacity: 0.9,
+                      child: Text(
+                        item.emoji,
+                        textScaler: TextScaler.noScaling,
+                        style: TextStyle(
+                          fontSize: emojiSize,
+                          height: 1,
+                          shadows: [
+                            Shadow(
+                              color: const Color(
+                                0xFF5B4636,
+                              ).withValues(alpha: 0.14),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  double _loopedX(double value, double width, double emojiSize) {
+    return ((value % width) + width) % width - emojiSize;
+  }
+}
+
+class _SceneryEmoji {
+  const _SceneryEmoji(this.emoji, this.offset, this.verticalOffset);
+
+  final String emoji;
+  final double offset;
+  final double verticalOffset;
 }
 
 class _MotivationVideoBubble extends StatefulWidget {
