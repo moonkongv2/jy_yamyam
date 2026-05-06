@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/meal_progress_snapshot.dart';
 import '../models/reward_item.dart';
 import '../services/local_meal_progress_service.dart';
+import '../widgets/reward_sticker_image.dart';
 
 class StickerCollectionScreen extends StatelessWidget {
   const StickerCollectionScreen({super.key, required this.mealProgressService});
@@ -73,12 +74,10 @@ class _StickerCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              _isCollected ? sticker.emoji : '?',
-              style: TextStyle(
-                fontSize: 42,
-                color: _isCollected ? null : const Color(0xFFB9A999),
-              ),
+            RewardStickerImage(
+              reward: sticker,
+              size: 72,
+              locked: !_isCollected,
             ),
             const SizedBox(height: 12),
             Text(

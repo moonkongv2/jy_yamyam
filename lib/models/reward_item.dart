@@ -14,6 +14,7 @@ class RewardDefinition {
   final String emoji;
 
   String get displayLabel => '$emoji $name';
+  String get imageAssetPath => 'assets/images/$id.png';
 }
 
 class RewardInventoryItem {
