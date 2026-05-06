@@ -150,7 +150,7 @@ class _ResultScreenState extends State<ResultScreen> {
                             child: Column(
                               children: [
                                 Text(
-                                  mealCompleted ? '식사 완주 성공!' : '아쉽지만 실패했어',
+                                  mealCompleted ? '식사 완주 성공!' : '아쉽지만 조금 늦었어',
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context)
                                       .textTheme
@@ -181,7 +181,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                 const SizedBox(height: 8),
                                 Text(
                                   mealCompleted
-                                      ? '지나가기 전에 마쳐서 짐칸 선물을 받았어!'
+                                      ? '지나가기 전에 식사를 잘 마쳐서 선물을 받았어!'
                                       : '다음 냠냠코스에서 다시 도전해보자.',
                                   textAlign: TextAlign.center,
                                   style: Theme.of(context).textTheme.titleMedium
