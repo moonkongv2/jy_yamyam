@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:jy_yamyam/catalogs/vehicle_catalog.dart';
 import 'package:jy_yamyam/main.dart' as app;
 import 'package:jy_yamyam/models/meal_session_result.dart';
 import 'package:jy_yamyam/models/meal_timer_config.dart';
@@ -9,6 +10,8 @@ import 'package:jy_yamyam/models/reward_item.dart';
 import 'package:jy_yamyam/models/vehicle.dart';
 import 'package:jy_yamyam/screens/home_screen.dart';
 import 'package:jy_yamyam/services/local_meal_progress_service.dart';
+import 'package:jy_yamyam/widgets/road_painter.dart';
+import 'package:jy_yamyam/widgets/road_view.dart';
 import 'package:jy_yamyam/widgets/vehicle_widget.dart';
 
 void main() {
@@ -204,6 +207,64 @@ void main() {
 
     expect(find.text('🚒'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Road view shows winding route markers and vehicle', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 420,
+            height: 640,
+            child: RoadView(progress: 0.5, vehicle: VehicleCatalog.fireTruck),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(VehicleWidget), findsOneWidget);
+    expect(tester.widget<VehicleWidget>(find.byType(VehicleWidget)).angle, 0);
+    expect(find.byIcon(Icons.home_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.star_rounded), findsNothing);
+    expect(find.byIcon(Icons.restaurant_rounded), findsNothing);
+    expect(find.byIcon(Icons.emoji_events_rounded), findsNothing);
+    expect(find.byIcon(Icons.flag_rounded), findsOneWidget);
+
+    const roadSize = Size(420, 640);
+    final roadBounds = createRoadBounds(roadSize);
+    final roadSides = [
+      for (var index = 0; index <= 20; index += 1)
+        roadPointForProgress(roadSize, index / 20).dx < roadBounds.center.dx,
+    ];
+    var sideChanges = 0;
+    for (var index = 1; index < roadSides.length; index += 1) {
+      if (roadSides[index] != roadSides[index - 1]) {
+        sideChanges += 1;
+      }
+    }
+    expect(sideChanges, greaterThanOrEqualTo(7));
+    expect(
+      roadPointForProgress(roadSize, 1).dx,
+      greaterThan(roadBounds.center.dx),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 420,
+            height: 640,
+            child: RoadView(progress: 0.2, vehicle: VehicleCatalog.fireTruck),
+          ),
+        ),
+      ),
+    );
+    expect(
+      tester.widget<VehicleWidget>(find.byType(VehicleWidget)).isFacingLeft,
+      isTrue,
+    );
   });
 
   testWidgets('English locale shows English home copy', (tester) async {

@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
@@ -24,7 +23,7 @@ class RoadView extends StatelessWidget {
   final String? motivationVideoAssetPath;
   final int? motivationVideoMilestone;
   final VoidCallback? onMotivationVideoFinished;
-  static const double _vehicleSize = 220;
+  static const double _vehicleSize = 116;
 
   @override
   Widget build(BuildContext context) {
@@ -33,33 +32,22 @@ class RoadView extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = Size(constraints.maxWidth, constraints.maxHeight);
-        final roadBounds = createRoadBounds(size);
         final vehicleSize = math
-            .min(_vehicleSize, math.min(size.width * 0.56, size.height * 0.62))
+            .min(_vehicleSize, math.min(size.width * 0.26, size.height * 0.17))
             .toDouble();
         final clampedProgress = progress.clamp(0.0, 1.0).toDouble();
-        final hasPassed = progress >= 1;
-        final travelInset = math.min(
-          vehicleSize * 0.48,
-          roadBounds.width * 0.18,
-        );
-        final roadX = ui.lerpDouble(
-          roadBounds.left + travelInset,
-          roadBounds.right - travelInset,
+        final vehiclePosition = roadPointForProgress(size, clampedProgress);
+        final isVehicleFacingLeft = roadIsFacingLeftForProgress(
+          size,
           clampedProgress,
-        )!;
-        final vehicleLeft = hasPassed
-            ? size.width + (vehicleSize * 0.12)
-            : roadX - (vehicleSize / 2);
-        final vehicleTop = roadBounds.center.dy - (vehicleSize * 0.8);
+        );
+        final vehicleLeft = vehiclePosition.dx - (vehicleSize / 2);
+        final vehicleTop = vehiclePosition.dy - (vehicleSize / 2);
         const videoMargin = 16.0;
         final videoFrameTop = videoMargin;
         final videoFrameLeft = videoMargin;
         final videoFrameWidth = math.max(0.0, size.width - (videoMargin * 2));
-        final videoFrameHeight = (roadBounds.top - (videoMargin * 2)).clamp(
-          104.0,
-          math.max(104.0, size.height - (videoMargin * 2)),
-        );
+        final videoFrameHeight = (size.height * 0.34).clamp(104.0, 220.0);
 
         return DecoratedBox(
           decoration: BoxDecoration(
@@ -73,16 +61,17 @@ class RoadView extends StatelessWidget {
                 Positioned.fill(
                   child: CustomPaint(painter: RoadPainter(progress: progress)),
                 ),
-                _SceneryLayer(
-                  roadBounds: roadBounds,
-                  vehicleSize: vehicleSize,
-                  size: size,
-                ),
-                _Marker(
-                  label: texts.common.start,
+                _RoadMarker(
+                  position: roadPointForProgress(size, 0),
                   icon: Icons.home_rounded,
-                  alignment: Alignment.bottomLeft,
-                  margin: const EdgeInsets.only(left: 18, bottom: 16),
+                  label: texts.common.start,
+                  isActive: true,
+                ),
+                _RoadMarker(
+                  position: roadPointForProgress(size, 1),
+                  icon: Icons.flag_rounded,
+                  label: texts.common.complete,
+                  isActive: clampedProgress >= 1,
                 ),
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 850),
@@ -91,14 +80,15 @@ class RoadView extends StatelessWidget {
                   top: vehicleTop,
                   child: AnimatedOpacity(
                     duration: const Duration(milliseconds: 850),
-                    opacity: hasPassed ? 0 : 1,
+                    opacity: 1,
                     child: AnimatedScale(
                       duration: const Duration(milliseconds: 850),
                       curve: Curves.easeInOutCubic,
-                      scale: hasPassed ? 0.78 : 1,
+                      scale: progress >= 1 ? 0.92 : 1,
                       child: VehicleWidget(
                         vehicle: vehicle,
                         size: vehicleSize,
+                        isFacingLeft: isVehicleFacingLeft,
                         isArrived: progress >= 1,
                       ),
                     ),
@@ -126,115 +116,60 @@ class RoadView extends StatelessWidget {
   }
 }
 
-class _SceneryLayer extends StatefulWidget {
-  const _SceneryLayer({
-    required this.roadBounds,
-    required this.vehicleSize,
-    required this.size,
+class _RoadMarker extends StatelessWidget {
+  const _RoadMarker({
+    required this.position,
+    required this.icon,
+    required this.isActive,
+    this.label,
   });
 
-  final Rect roadBounds;
-  final double vehicleSize;
-  final Size size;
-
-  static const List<_SceneryEmoji> _items = [
-    _SceneryEmoji('🏠', 0.00, -0.12),
-    _SceneryEmoji('🌳', 0.18, 0.18),
-    _SceneryEmoji('🚗', 0.36, 0.08),
-    _SceneryEmoji('🌲', 0.54, -0.18),
-    _SceneryEmoji('🏡', 0.72, 0.12),
-    _SceneryEmoji('🌼', 0.90, -0.04),
-  ];
-
-  @override
-  State<_SceneryLayer> createState() => _SceneryLayerState();
-}
-
-class _SceneryLayerState extends State<_SceneryLayer>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3200),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  final Offset position;
+  final IconData icon;
+  final bool isActive;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
-    final emojiSize = (widget.vehicleSize * 0.38).clamp(44.0, 72.0).toDouble();
-    final laneTop = (widget.roadBounds.top - emojiSize - 20).clamp(
-      12.0,
-      widget.size.height - emojiSize - 12,
-    );
-    final travelWidth = widget.size.width + (emojiSize * 3);
+    final colorScheme = Theme.of(context).colorScheme;
+    final markerColor = isActive ? colorScheme.primary : Colors.white;
+    final iconColor = isActive ? Colors.white : const Color(0xFF5B4636);
 
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) {
-            final scroll = _controller.value * travelWidth;
-
-            return Stack(
-              children: [
-                for (final item in _SceneryLayer._items)
-                  Positioned(
-                    left: _loopedX(
-                      (item.offset * travelWidth) - scroll,
-                      travelWidth,
-                      emojiSize,
-                    ),
-                    top: laneTop + (item.verticalOffset * emojiSize),
-                    child: Opacity(
-                      opacity: 0.9,
-                      child: Text(
-                        item.emoji,
-                        textScaler: TextScaler.noScaling,
-                        style: TextStyle(
-                          fontSize: emojiSize,
-                          height: 1,
-                          shadows: [
-                            Shadow(
-                              color: const Color(
-                                0xFF5B4636,
-                              ).withValues(alpha: 0.14),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
+    return Positioned(
+      left: position.dx - 20,
+      top: position.dy - 20,
+      width: 40,
+      height: 40,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutBack,
+        scale: isActive ? 1 : 0.86,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOut,
+          decoration: BoxDecoration(
+            color: markerColor,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: isActive ? colorScheme.primary : const Color(0xFFEAD8C7),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF5B4636).withValues(alpha: 0.15),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Semantics(
+            label: label ?? 'milestone',
+            child: Icon(icon, color: iconColor, size: 23),
+          ),
         ),
       ),
     );
   }
-
-  double _loopedX(double value, double width, double emojiSize) {
-    return ((value % width) + width) % width - emojiSize;
-  }
-}
-
-class _SceneryEmoji {
-  const _SceneryEmoji(this.emoji, this.offset, this.verticalOffset);
-
-  final String emoji;
-  final double offset;
-  final double verticalOffset;
 }
 
 class _MotivationVideoBubble extends StatefulWidget {
@@ -333,43 +268,6 @@ class _MotivationVideoBubbleState extends State<_MotivationVideoBubble> {
               width: _controller.value.size.width,
               height: _controller.value.size.height,
               child: VideoPlayer(_controller),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Marker extends StatelessWidget {
-  const _Marker({
-    required this.label,
-    required this.icon,
-    required this.alignment,
-    required this.margin,
-  });
-
-  final String label;
-  final IconData icon;
-  final Alignment alignment;
-  final EdgeInsets margin;
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: alignment,
-      child: Padding(
-        padding: margin,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.9),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(9),
-            child: Semantics(
-              label: label,
-              child: Icon(icon, color: const Color(0xFF5B4636), size: 28),
             ),
           ),
         ),

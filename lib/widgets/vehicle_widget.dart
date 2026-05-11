@@ -10,12 +10,14 @@ class VehicleWidget extends StatefulWidget {
     required this.vehicle,
     this.size = 180,
     this.angle = 0,
+    this.isFacingLeft = false,
     this.isArrived = false,
   });
 
   final VehicleDefinition vehicle;
   final double size;
   final double angle;
+  final bool isFacingLeft;
   final bool isArrived;
 
   @override
@@ -90,8 +92,8 @@ class _VehicleWidgetState extends State<VehicleWidget>
               ),
               Transform.translate(
                 offset: Offset(0, bounceOffset),
-                child: Transform.rotate(
-                  angle: widget.angle * 0.32,
+                child: Transform.flip(
+                  flipX: widget.isFacingLeft,
                   child: Image.asset(
                     widget.vehicle.assetPath,
                     width: widget.size,
