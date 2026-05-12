@@ -295,7 +295,7 @@ class _ProgressMessageCard extends StatelessWidget {
             DecoratedBox(
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [AppColors.yellow, AppColors.orange],
+                  colors: [AppColors.sky, AppColors.skyBlue],
                 ),
                 borderRadius: BorderRadius.circular(999),
               ),
@@ -331,7 +331,7 @@ class _ProgressMessageCard extends StatelessWidget {
                       minHeight: 9,
                       backgroundColor: AppColors.creamDark,
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppColors.orangeDeep,
+                        AppColors.blue,
                       ),
                     ),
                   ),

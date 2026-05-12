@@ -68,7 +68,7 @@ class RoadView extends StatelessWidget {
             boxShadow: [
               ...AppShadows.soft,
               BoxShadow(
-                color: AppColors.orangeDeep.withValues(alpha: 0.10),
+                color: AppColors.blue.withValues(alpha: 0.10),
                 blurRadius: 30,
                 offset: const Offset(0, 16),
               ),
@@ -152,8 +152,8 @@ class _RoadMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final markerColor = isActive ? AppColors.orangeDeep : AppColors.white;
-    final iconColor = isActive ? AppColors.white : AppColors.brown700;
+    final markerColor = isActive ? AppColors.blue : AppColors.white;
+    final iconColor = AppColors.brown700;
 
     return Positioned(
       left: position.dx - 20,
@@ -171,7 +171,7 @@ class _RoadMarker extends StatelessWidget {
             color: markerColor,
             shape: BoxShape.circle,
             border: Border.all(
-              color: isActive ? AppColors.orangeDeep : AppColors.creamDark,
+              color: isActive ? AppColors.blue : AppColors.creamDark,
               width: 2,
             ),
             boxShadow: [

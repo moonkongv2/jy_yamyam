@@ -102,7 +102,11 @@ void main() {
     );
     expect(
       tester.getTopLeft(_vehicleChoiceFinder('police_car')).dy,
-      greaterThan(tester.getTopLeft(_vehicleChoiceFinder('motorcycle')).dy),
+      tester.getTopLeft(_vehicleChoiceFinder('motorcycle')).dy,
+    );
+    expect(
+      tester.getTopLeft(_vehicleChoiceFinder('excavator')).dy,
+      tester.getTopLeft(_vehicleChoiceFinder('motorcycle')).dy,
     );
     expect(
       tester.getSize(_vehicleChoiceFinder('motorcycle')).width,

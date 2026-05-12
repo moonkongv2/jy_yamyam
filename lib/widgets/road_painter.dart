@@ -113,13 +113,13 @@ class RoadPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round
       ..strokeWidth = roadWidth;
     final progressPaint = Paint()
-      ..color = AppColors.yellow
+      ..color = AppColors.skyBlue
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..strokeWidth = roadWidth;
     final progressGlowPaint = Paint()
-      ..color = AppColors.orange.withValues(alpha: 0.22)
+      ..color = AppColors.blue.withValues(alpha: 0.20)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round

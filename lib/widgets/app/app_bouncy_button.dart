@@ -12,7 +12,7 @@ class AppBouncyButton extends StatefulWidget {
     required this.label,
     required this.onPressed,
     this.icon,
-    this.backgroundColor = AppColors.orangeDeep,
+    this.backgroundColor = AppColors.blue,
     this.foregroundColor = Colors.white,
     this.minHeight = 58,
   });

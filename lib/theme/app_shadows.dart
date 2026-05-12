@@ -13,7 +13,7 @@ abstract final class AppShadows {
 
   static final button = [
     BoxShadow(
-      color: AppColors.orangeDeep.withValues(alpha: 0.18),
+      color: AppColors.blue.withValues(alpha: 0.18),
       blurRadius: 14,
       offset: const Offset(0, 7),
     ),

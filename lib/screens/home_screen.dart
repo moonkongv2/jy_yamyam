@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../catalogs/vehicle_catalog.dart';
 import '../l10n/app_texts.dart';
 import '../models/meal_progress_snapshot.dart';
 import '../models/meal_timer_config.dart';
 import '../models/reward_item.dart';
+import '../models/vehicle.dart';
 import '../services/local_meal_progress_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
@@ -88,6 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final childName = _config.childName.trim().isEmpty
         ? texts.common.defaultChildName
         : _config.childName.trim();
+    final selectedVehicle = VehicleCatalog.findById(_config.motorcycleId);
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -114,12 +117,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: AppColors.brown900,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.xs),
                       Text(
                         texts.home.subtitle,
                         style: textTheme.titleMedium?.copyWith(
                           color: AppColors.brown500,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -144,7 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
             LayoutBuilder(
               builder: (context, constraints) {
                 final vehicleCard = VehicleSelectionCard(
-                  title: texts.settings.vehicleSelection,
+                  title: '오늘의 빠방',
+                  subtitle: texts.settings.vehicleSelection,
                   selectedVehicleId: _config.motorcycleId,
                   onVehicleSelected: (vehicleId) {
                     _updateConfig(_config.copyWith(motorcycleId: vehicleId));
@@ -152,6 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
                 final heroCard = _HeroMissionCard(
                   ctaLabel: '${texts.home.normalCourse} ${texts.common.start}',
+                  vehicle: selectedVehicle,
                   onStart: () => _startTimer(25),
                 );
 
@@ -190,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     label: texts.home.normalCourse,
                     emoji: '🍚',
                     subtitle: '든든한 기본 미션',
-                    backgroundColor: AppColors.yellow,
+                    backgroundColor: AppColors.skyBlue,
                     badge: '추천',
                     onPressed: () => _startTimer(25),
                   ),
@@ -299,9 +304,14 @@ class _MinuteAdjustButton extends StatelessWidget {
 }
 
 class _HeroMissionCard extends StatelessWidget {
-  const _HeroMissionCard({required this.ctaLabel, required this.onStart});
+  const _HeroMissionCard({
+    required this.ctaLabel,
+    required this.vehicle,
+    required this.onStart,
+  });
 
   final String ctaLabel;
+  final VehicleDefinition vehicle;
   final VoidCallback onStart;
 
   @override
@@ -314,23 +324,19 @@ class _HeroMissionCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.yellow,
-            AppColors.orange.withValues(alpha: 0.68),
-            AppColors.pink,
-          ],
+          colors: [AppColors.sky, AppColors.skyBlue, AppColors.cream],
         ),
         boxShadow: [
           ...AppShadows.soft,
           BoxShadow(
-            color: AppColors.orangeDeep.withValues(alpha: 0.16),
+            color: AppColors.blue.withValues(alpha: 0.16),
             blurRadius: 28,
             offset: const Offset(0, 14),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xxl),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -353,7 +359,7 @@ class _HeroMissionCard extends StatelessWidget {
                         '라이더가 맛있는 완주를 기다리고 있어요',
                         style: textTheme.bodyLarge?.copyWith(
                           color: AppColors.brown700,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -368,17 +374,17 @@ class _HeroMissionCard extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.sm),
                     child: SizedBox(
-                      width: 102,
-                      height: 102,
+                      width: 86,
+                      height: 86,
                       child: Image.asset(
-                        'assets/images/jy_the_rider.png',
+                        vehicle.assetPath,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) {
-                          return const Center(
+                          return Center(
                             child: Text(
-                              '🏍️',
+                              vehicle.emoji,
                               textScaler: TextScaler.noScaling,
-                              style: TextStyle(fontSize: 58, height: 1),
+                              style: const TextStyle(fontSize: 50, height: 1),
                             ),
                           );
                         },
@@ -393,7 +399,9 @@ class _HeroMissionCard extends StatelessWidget {
               label: ctaLabel,
               icon: Icons.flag_rounded,
               onPressed: onStart,
-              minHeight: 62,
+              backgroundColor: AppColors.blue,
+              foregroundColor: AppColors.brown900,
+              minHeight: 56,
             ),
           ],
         ),
@@ -446,8 +454,8 @@ class _PresetMissionCard extends StatelessWidget {
           onTap: onPressed,
           child: Padding(
             padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl,
-              vertical: AppSpacing.lg,
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.md,
             ),
             child: Row(
               children: [
@@ -457,13 +465,13 @@ class _PresetMissionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppRadius.lg),
                   ),
                   child: SizedBox(
-                    width: 54,
-                    height: 54,
+                    width: 48,
+                    height: 48,
                     child: Center(
                       child: Text(
                         emoji,
                         textScaler: TextScaler.noScaling,
-                        style: const TextStyle(fontSize: 30, height: 1),
+                        style: const TextStyle(fontSize: 27, height: 1),
                       ),
                     ),
                   ),
@@ -482,7 +490,7 @@ class _PresetMissionCard extends StatelessWidget {
                             label,
                             style: textTheme.titleMedium?.copyWith(
                               color: AppColors.brown900,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
                           if (badge != null) _RecommendedBadge(label: badge!),
@@ -493,7 +501,7 @@ class _PresetMissionCard extends StatelessWidget {
                         subtitle,
                         style: textTheme.bodyMedium?.copyWith(
                           color: AppColors.brown500,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -531,9 +539,8 @@ class _RecommendedBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.orangeDeep,
+        color: AppColors.skyBlue,
         borderRadius: BorderRadius.circular(999),
-        boxShadow: AppShadows.button,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -543,7 +550,7 @@ class _RecommendedBadge extends StatelessWidget {
         child: Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: AppColors.white,
+            color: AppColors.brown700,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -583,7 +590,7 @@ class _CustomMinutesCard extends StatelessWidget {
         boxShadow: AppShadows.soft,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xxl),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -591,16 +598,16 @@ class _CustomMinutesCard extends StatelessWidget {
               title,
               style: textTheme.titleLarge?.copyWith(
                 color: AppColors.brown900,
-                fontWeight: FontWeight.w900,
+                fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: AppSpacing.md),
             SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppColors.orangeDeep,
+                activeTrackColor: AppColors.blue,
                 inactiveTrackColor: AppColors.creamDark,
-                thumbColor: AppColors.orangeDeep,
-                overlayColor: AppColors.orange.withValues(alpha: 0.20),
+                thumbColor: AppColors.skyBlue,
+                overlayColor: AppColors.blue.withValues(alpha: 0.18),
                 valueIndicatorColor: AppColors.brown900,
                 valueIndicatorTextStyle: textTheme.labelMedium?.copyWith(
                   color: AppColors.white,
@@ -649,11 +656,16 @@ class _CustomMinutesCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-            AppBouncyButton(
-              label: startLabel,
-              icon: Icons.two_wheeler_rounded,
-              onPressed: onStart,
-              minHeight: 60,
+            SizedBox(
+              width: double.infinity,
+              child: AppBouncyButton(
+                label: startLabel,
+                icon: Icons.flag_rounded,
+                onPressed: onStart,
+                backgroundColor: AppColors.blue,
+                foregroundColor: AppColors.brown900,
+                minHeight: 56,
+              ),
             ),
           ],
         ),
@@ -777,9 +789,9 @@ class _StickerCollectionCta extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.orangeDeep, AppColors.orange],
+          colors: [AppColors.sky, AppColors.pink],
         ),
-        boxShadow: AppShadows.button,
+        boxShadow: AppShadows.soft,
       ),
       child: Material(
         color: AppColors.transparent,
@@ -803,7 +815,7 @@ class _StickerCollectionCta extends StatelessWidget {
                     padding: EdgeInsets.all(AppSpacing.sm),
                     child: Icon(
                       Icons.collections_bookmark_rounded,
-                      color: AppColors.white,
+                      color: AppColors.brown700,
                     ),
                   ),
                 ),
@@ -812,12 +824,15 @@ class _StickerCollectionCta extends StatelessWidget {
                   child: Text(
                     label,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.white,
-                      fontWeight: FontWeight.w900,
+                      color: AppColors.brown900,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
-                const Icon(Icons.arrow_forward_rounded, color: AppColors.white),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  color: AppColors.brown700,
+                ),
               ],
             ),
           ),

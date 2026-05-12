@@ -58,8 +58,8 @@ class TimerControlBar extends StatelessWidget {
               label: Text(texts.timer.completeMealButton),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(64),
-                backgroundColor: AppColors.orangeDeep,
-                foregroundColor: AppColors.white,
+                backgroundColor: AppColors.blue,
+                foregroundColor: AppColors.brown900,
                 shape: RoundedRectangleBorder(borderRadius: AppRadius.button),
                 textStyle: Theme.of(
                   context,

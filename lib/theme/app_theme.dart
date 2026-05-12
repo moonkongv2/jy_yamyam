@@ -7,12 +7,12 @@ abstract final class AppTheme {
   static ThemeData light() {
     const colorScheme = ColorScheme(
       brightness: Brightness.light,
-      primary: AppColors.orangeDeep,
-      onPrimary: Colors.white,
-      primaryContainer: AppColors.yellow,
+      primary: AppColors.blue,
+      onPrimary: AppColors.brown900,
+      primaryContainer: AppColors.skyBlue,
       onPrimaryContainer: AppColors.brown900,
-      secondary: AppColors.orange,
-      onSecondary: Colors.white,
+      secondary: AppColors.skyBlue,
+      onSecondary: AppColors.brown900,
       secondaryContainer: AppColors.mint,
       onSecondaryContainer: AppColors.brown900,
       tertiary: Color(0xFF66B7E8),
@@ -33,7 +33,7 @@ abstract final class AppTheme {
       scrim: Colors.black,
       inverseSurface: AppColors.brown900,
       onInverseSurface: AppColors.cream,
-      inversePrimary: AppColors.orange,
+      inversePrimary: AppColors.skyBlue,
     );
 
     final baseTheme = ThemeData(
@@ -68,8 +68,8 @@ abstract final class AppTheme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(58),
-          backgroundColor: AppColors.orangeDeep,
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.blue,
+          foregroundColor: AppColors.brown900,
           disabledBackgroundColor: AppColors.brown300.withValues(alpha: 0.32),
           disabledForegroundColor: AppColors.brown500.withValues(alpha: 0.56),
           elevation: 0,
@@ -89,7 +89,7 @@ abstract final class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.orangeDeep,
+          foregroundColor: AppColors.blue,
           textStyle: const TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
@@ -110,13 +110,13 @@ abstract final class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.button,
-          borderSide: const BorderSide(color: AppColors.orangeDeep, width: 2),
+          borderSide: const BorderSide(color: AppColors.blue, width: 2),
         ),
         labelStyle: const TextStyle(color: AppColors.brown500),
       ),
       chipTheme: baseTheme.chipTheme.copyWith(
         backgroundColor: Colors.white,
-        selectedColor: AppColors.yellow,
+        selectedColor: AppColors.skyBlue,
         disabledColor: AppColors.creamDark,
         labelStyle: textTheme.titleMedium?.copyWith(
           color: AppColors.brown900,
@@ -132,12 +132,12 @@ abstract final class AppTheme {
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           return states.contains(WidgetState.selected)
-              ? AppColors.orangeDeep
+              ? AppColors.blue
               : AppColors.brown300;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           return states.contains(WidgetState.selected)
-              ? AppColors.yellow
+              ? AppColors.skyBlue
               : AppColors.creamDark;
         }),
       ),
