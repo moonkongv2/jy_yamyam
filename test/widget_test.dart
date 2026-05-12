@@ -9,6 +9,7 @@ import 'package:jy_yamyam/models/meal_timer_config.dart';
 import 'package:jy_yamyam/models/reward_item.dart';
 import 'package:jy_yamyam/models/vehicle.dart';
 import 'package:jy_yamyam/screens/home_screen.dart';
+import 'package:jy_yamyam/screens/timer_screen.dart';
 import 'package:jy_yamyam/services/local_meal_progress_service.dart';
 import 'package:jy_yamyam/widgets/road_painter.dart';
 import 'package:jy_yamyam/widgets/road_view.dart';
@@ -277,12 +278,44 @@ void main() {
     await _startApp(tester, const Locale('en'));
 
     expect(find.text('Yamyam Rider'), findsOneWidget);
+    expect(find.text("Today's Yamyam Mission"), findsOneWidget);
+    expect(
+      find.text('Your rider is waiting for a tasty finish'),
+      findsOneWidget,
+    );
+    expect(find.text("Today's vehicle"), findsOneWidget);
     expect(find.text('15-min Morning Ride'), findsOneWidget);
+    expect(find.text('A light warm-up'), findsOneWidget);
     expect(find.text('25-min Regular Ride'), findsOneWidget);
+    expect(find.text('A steady mealtime mission'), findsOneWidget);
+    expect(find.text('Recommended'), findsOneWidget);
     expect(find.text('35-min Easy Ride'), findsOneWidget);
+    expect(find.text('Cruise to the finish'), findsOneWidget);
     await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pumpAndSettle();
     expect(find.text('Start Custom Ride'), findsOneWidget);
+  });
+
+  testWidgets('English locale shows English timer progress copy', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults(),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text("Today's Yamyam Ride"), findsOneWidget);
+    expect(find.text("We're off!"), findsOneWidget);
+    expect(find.text('출발했어요!'), findsNothing);
   });
 
   testWidgets('Unsupported locale falls back to English', (tester) async {

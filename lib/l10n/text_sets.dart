@@ -11,9 +11,16 @@ abstract interface class CommonTextSet {
 
 abstract interface class HomeTextSet {
   String get subtitle;
+  String get heroMissionTitle;
+  String get heroMissionSubtitle;
+  String get todayVehicleTitle;
   String get morningCourse;
+  String get morningCourseSubtitle;
   String get normalCourse;
+  String get normalCourseSubtitle;
   String get slowCourse;
+  String get slowCourseSubtitle;
+  String get recommendedBadge;
   String get customStartButton;
   String get mealSummaryLabel;
   String get stickerKindSummaryLabel;
@@ -49,6 +56,11 @@ abstract interface class SettingsTextSet {
 
 abstract interface class TimerTextSet {
   String get courseTitle;
+  String get progressJustStarted;
+  String get progressGoingWell;
+  String get progressPastHalfway;
+  String get progressAlmostThere;
+  String get progressArrived;
   String get completeDialogTitle;
   String get arrivalDialogMessage;
   String get completeDialogMessage;

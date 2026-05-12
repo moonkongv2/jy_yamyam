@@ -6,9 +6,16 @@ class EnHomeTexts implements HomeTextSet {
   const EnHomeTexts();
 
   String get subtitle => "Ready for today's mealtime ride?";
+  String get heroMissionTitle => "Today's Yamyam Mission";
+  String get heroMissionSubtitle => 'Your rider is waiting for a tasty finish';
+  String get todayVehicleTitle => "Today's vehicle";
   String get morningCourse => '15-min Morning Ride';
+  String get morningCourseSubtitle => 'A light warm-up';
   String get normalCourse => '25-min Regular Ride';
+  String get normalCourseSubtitle => 'A steady mealtime mission';
   String get slowCourse => '35-min Easy Ride';
+  String get slowCourseSubtitle => 'Cruise to the finish';
+  String get recommendedBadge => 'Recommended';
   String get customStartButton => 'Start Custom Ride';
   String get mealSummaryLabel => 'Meals';
   String get stickerKindSummaryLabel => 'Kinds';

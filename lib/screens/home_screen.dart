@@ -147,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
             LayoutBuilder(
               builder: (context, constraints) {
                 final vehicleCard = VehicleSelectionCard(
-                  title: '오늘의 빠방',
+                  title: texts.home.todayVehicleTitle,
                   subtitle: texts.settings.vehicleSelection,
                   selectedVehicleId: _config.motorcycleId,
                   onVehicleSelected: (vehicleId) {
@@ -187,22 +187,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   _PresetMissionCard(
                     label: texts.home.morningCourse,
                     emoji: '🌞',
-                    subtitle: '가볍게 워밍업',
+                    subtitle: texts.home.morningCourseSubtitle,
                     backgroundColor: AppColors.sky,
                     onPressed: () => _startTimer(15),
                   ),
                   _PresetMissionCard(
                     label: texts.home.normalCourse,
                     emoji: '🍚',
-                    subtitle: '든든한 기본 미션',
+                    subtitle: texts.home.normalCourseSubtitle,
                     backgroundColor: AppColors.skyBlue,
-                    badge: '추천',
+                    badge: texts.home.recommendedBadge,
                     onPressed: () => _startTimer(25),
                   ),
                   _PresetMissionCard(
                     label: texts.home.slowCourse,
                     emoji: '🌈',
-                    subtitle: '천천히 완주하기',
+                    subtitle: texts.home.slowCourseSubtitle,
                     backgroundColor: AppColors.pink,
                     onPressed: () => _startTimer(35),
                   ),
@@ -317,6 +317,7 @@ class _HeroMissionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final texts = AppTexts.of(context);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -348,7 +349,7 @@ class _HeroMissionCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '오늘의 냠냠 미션',
+                        texts.home.heroMissionTitle,
                         style: textTheme.headlineSmall?.copyWith(
                           color: AppColors.brown900,
                           fontWeight: FontWeight.w900,
@@ -356,7 +357,7 @@ class _HeroMissionCard extends StatelessWidget {
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        '라이더가 맛있는 완주를 기다리고 있어요',
+                        texts.home.heroMissionSubtitle,
                         style: textTheme.bodyLarge?.copyWith(
                           color: AppColors.brown700,
                           fontWeight: FontWeight.w600,

@@ -6,9 +6,16 @@ class HomeTexts implements HomeTextSet {
   const HomeTexts();
 
   String get subtitle => '오늘도 냠냠 코스를 달려볼까?';
+  String get heroMissionTitle => '오늘의 냠냠 미션';
+  String get heroMissionSubtitle => '라이더가 맛있는 완주를 기다리고 있어요';
+  String get todayVehicleTitle => '오늘의 빠방';
   String get morningCourse => '15분 아침 코스';
+  String get morningCourseSubtitle => '가볍게 워밍업';
   String get normalCourse => '25분 보통 코스';
+  String get normalCourseSubtitle => '든든한 기본 미션';
   String get slowCourse => '35분 천천히 코스';
+  String get slowCourseSubtitle => '천천히 완주하기';
+  String get recommendedBadge => '추천';
   String get customStartButton => '직접 설정으로 출발';
   String get mealSummaryLabel => '식사';
   String get stickerKindSummaryLabel => '종류';

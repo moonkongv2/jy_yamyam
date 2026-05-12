@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../catalogs/vehicle_catalog.dart';
 import '../controllers/meal_timer_controller.dart';
 import '../l10n/app_texts.dart';
+import '../l10n/text_sets.dart';
 import '../models/meal_session_result.dart';
 import '../models/meal_timer_config.dart';
 import '../services/local_meal_progress_service.dart';
@@ -187,20 +188,20 @@ class _TimerScreenState extends State<TimerScreen> {
     );
   }
 
-  String _progressMessage(double progress) {
+  String _progressMessage(TimerTextSet texts, double progress) {
     if (progress < 0.25) {
-      return '출발했어요!';
+      return texts.progressJustStarted;
     }
     if (progress < 0.5) {
-      return '잘 가고 있어요!';
+      return texts.progressGoingWell;
     }
     if (progress < 0.8) {
-      return '벌써 많이 왔어요!';
+      return texts.progressPastHalfway;
     }
     if (progress < 1.0) {
-      return '거의 도착했어요!';
+      return texts.progressAlmostThere;
     }
-    return '도착했어요!';
+    return texts.progressArrived;
   }
 
   @override
@@ -232,7 +233,7 @@ class _TimerScreenState extends State<TimerScreen> {
               child: Column(
                 children: [
                   _ProgressMessageCard(
-                    message: _progressMessage(progress),
+                    message: _progressMessage(texts.timer, progress),
                     progress: progress,
                   ),
                   const SizedBox(height: AppSpacing.lg),
