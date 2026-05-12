@@ -8,6 +8,7 @@ import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/local_meal_progress_service.dart';
 import 'services/local_settings_service.dart';
+import 'theme/app_theme.dart';
 
 class YamyamRiderApp extends StatefulWidget {
   const YamyamRiderApp({
@@ -49,11 +50,6 @@ class _YamyamRiderAppState extends State<YamyamRiderApp> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFFFF9F68),
-      brightness: Brightness.light,
-    );
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       onGenerateTitle: (context) => AppTexts.of(context).common.appTitle,
@@ -63,48 +59,7 @@ class _YamyamRiderAppState extends State<YamyamRiderApp> {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      theme: ThemeData(
-        colorScheme: colorScheme,
-        scaffoldBackgroundColor: const Color(0xFFFFF8EF),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          centerTitle: true,
-          backgroundColor: Color(0xFFFFF8EF),
-          foregroundColor: Color(0xFF3D332B),
-        ),
-        cardTheme: CardThemeData(
-          color: Colors.white,
-          elevation: 0,
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(56),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-            textStyle: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size.fromHeight(54),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
-            ),
-            textStyle: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ),
-      ),
+      theme: AppTheme.light(),
       home: _showSplash
           ? SplashScreen(onFinished: _finishSplash)
           : _hasChildName

@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../theme/app_colors.dart';
+
 Rect createRoadBounds(Size size) {
   final horizontalPadding = (size.width * 0.13).clamp(46.0, 62.0).toDouble();
   final verticalPadding = size.height * 0.06;
@@ -85,42 +87,58 @@ class RoadPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final roadPath = createRoadPath(size);
-    final roadWidth = (size.shortestSide * 0.07).clamp(24.0, 36.0).toDouble();
+    final roadWidth = (size.shortestSide * 0.075).clamp(28.0, 40.0).toDouble();
     final roadMetric = roadPath.computeMetrics().first;
     final progressDistance =
         roadMetric.length * progress.clamp(0.0, 1.0).toDouble();
     final progressPath = roadMetric.extractPath(0, progressDistance);
 
-    final shadowPaint = Paint()
-      ..color = const Color(0xFFE4C19D)
+    final softShadowPaint = Paint()
+      ..color = AppColors.brown700.withValues(alpha: 0.10)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = roadWidth;
+      ..strokeWidth = roadWidth + 14
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    final rimPaint = Paint()
+      ..color = AppColors.white.withValues(alpha: 0.72)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = roadWidth + 8;
     final roadPaint = Paint()
-      ..color = const Color(0xFFB6DCC5)
+      ..color = AppColors.mint
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..strokeWidth = roadWidth;
     final progressPaint = Paint()
-      ..color = const Color(0xFFFFC857)
+      ..color = AppColors.yellow
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..strokeWidth = roadWidth;
+    final progressGlowPaint = Paint()
+      ..color = AppColors.orange.withValues(alpha: 0.22)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..strokeWidth = roadWidth + 10
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
 
-    canvas.drawPath(roadPath.shift(const Offset(0, 9)), shadowPaint);
+    canvas.drawPath(roadPath.shift(const Offset(0, 10)), softShadowPaint);
+    canvas.drawPath(roadPath, rimPaint);
     canvas.drawPath(roadPath, roadPaint);
     if (progressDistance > 0) {
+      canvas.drawPath(progressPath, progressGlowPaint);
       canvas.drawPath(progressPath, progressPaint);
     }
 
     final lanePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.86)
+      ..color = AppColors.white.withValues(alpha: 0.88)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 2.8;
+      ..strokeWidth = 3.2;
 
     _drawDashedPath(canvas, roadPath, lanePaint);
   }

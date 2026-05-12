@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../models/vehicle.dart';
+import '../theme/app_colors.dart';
 
 class VehicleWidget extends StatefulWidget {
   const VehicleWidget({
@@ -77,15 +78,22 @@ class _VehicleWidgetState extends State<VehicleWidget>
             alignment: Alignment.center,
             children: [
               Positioned(
-                bottom: widget.size * 0.13,
+                bottom: widget.size * 0.11,
                 child: Transform.scale(
                   scaleX: shadowScale,
                   child: Container(
-                    width: widget.size * 0.48,
-                    height: widget.size * 0.12,
+                    width: widget.size * 0.56,
+                    height: widget.size * 0.13,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF5B4636).withValues(alpha: 0.2),
+                      color: AppColors.brown700.withValues(alpha: 0.16),
                       borderRadius: BorderRadius.circular(widget.size),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.brown700.withValues(alpha: 0.10),
+                          blurRadius: widget.size * 0.08,
+                          spreadRadius: widget.size * 0.01,
+                        ),
+                      ],
                     ),
                   ),
                 ),

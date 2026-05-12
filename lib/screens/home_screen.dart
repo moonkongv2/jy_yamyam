@@ -5,7 +5,13 @@ import '../models/meal_progress_snapshot.dart';
 import '../models/meal_timer_config.dart';
 import '../models/reward_item.dart';
 import '../services/local_meal_progress_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_shadows.dart';
+import '../theme/app_spacing.dart';
 import '../utils/duration_format.dart';
+import '../widgets/app/app_bouncy_button.dart';
+import '../widgets/app/app_metric_tile.dart';
 import '../widgets/vehicle_selection_card.dart';
 import 'settings_screen.dart';
 import 'sticker_collection_screen.dart';
@@ -84,9 +90,16 @@ class _HomeScreenState extends State<HomeScreen> {
         : _config.childName.trim();
 
     return Scaffold(
+      backgroundColor: AppColors.cream,
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
+          cacheExtent: 1200,
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.xl,
+            AppSpacing.xxxl,
+            AppSpacing.xl,
+            AppSpacing.xxxl,
+          ),
           children: [
             Row(
               children: [
@@ -98,14 +111,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         texts.common.appTitle,
                         style: textTheme.headlineLarge?.copyWith(
                           fontWeight: FontWeight.w900,
-                          color: const Color(0xFF3D332B),
+                          color: AppColors.brown900,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
                         texts.home.subtitle,
                         style: textTheme.titleMedium?.copyWith(
-                          color: const Color(0xFF7A6250),
+                          color: AppColors.brown500,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -116,99 +129,123 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: _openSettings,
                   icon: const Icon(Icons.settings_rounded),
                   tooltip: texts.common.settings,
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.white,
+                    foregroundColor: AppColors.brown700,
+                    fixedSize: const Size(52, 52),
+                    shape: const CircleBorder(),
+                    shadowColor: AppColors.brown700.withValues(alpha: 0.14),
+                    elevation: 5,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 28),
-            VehicleSelectionCard(
-              title: texts.settings.vehicleSelection,
-              selectedVehicleId: _config.motorcycleId,
-              onVehicleSelected: (vehicleId) {
-                _updateConfig(_config.copyWith(motorcycleId: vehicleId));
+            const SizedBox(height: AppSpacing.xxl),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final vehicleCard = VehicleSelectionCard(
+                  title: texts.settings.vehicleSelection,
+                  selectedVehicleId: _config.motorcycleId,
+                  onVehicleSelected: (vehicleId) {
+                    _updateConfig(_config.copyWith(motorcycleId: vehicleId));
+                  },
+                );
+                final heroCard = _HeroMissionCard(
+                  ctaLabel: '${texts.home.normalCourse} ${texts.common.start}',
+                  onStart: () => _startTimer(25),
+                );
+
+                if (constraints.maxWidth >= 700) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: heroCard),
+                      const SizedBox(width: AppSpacing.xl),
+                      Expanded(child: vehicleCard),
+                    ],
+                  );
+                }
+
+                return Column(
+                  children: [
+                    heroCard,
+                    const SizedBox(height: AppSpacing.xl),
+                    vehicleCard,
+                  ],
+                );
               },
             ),
-            const SizedBox(height: 20),
-            _PresetButton(
-              label: texts.home.morningCourse,
-              emoji: '🌞',
-              onPressed: () => _startTimer(15),
-            ),
-            const SizedBox(height: 12),
-            _PresetButton(
-              label: texts.home.normalCourse,
-              emoji: '🍚',
-              onPressed: () => _startTimer(25),
-            ),
-            const SizedBox(height: 12),
-            _PresetButton(
-              label: texts.home.slowCourse,
-              emoji: '🌈',
-              onPressed: () => _startTimer(35),
-            ),
-            const SizedBox(height: 24),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      texts.home.customSettingMinutes(_customMinutes.round()),
-                      style: textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    Slider(
-                      value: _customMinutes,
-                      min: 1,
-                      max: 60,
-                      label: texts.home.minuteLabel(_customMinutes.round()),
-                      onChanged: (value) {
-                        setState(() => _customMinutes = value);
-                      },
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _MinuteAdjustButton(
-                            label: '-5',
-                            onPressed: () => _adjustCustomMinutes(-5),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _MinuteAdjustButton(
-                            label: '-1',
-                            onPressed: () => _adjustCustomMinutes(-1),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _MinuteAdjustButton(
-                            label: '+1',
-                            onPressed: () => _adjustCustomMinutes(1),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _MinuteAdjustButton(
-                            label: '+5',
-                            onPressed: () => _adjustCustomMinutes(5),
-                          ),
-                        ),
+            const SizedBox(height: AppSpacing.xl),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final presetCards = [
+                  _PresetMissionCard(
+                    label: texts.home.morningCourse,
+                    emoji: '🌞',
+                    subtitle: '가볍게 워밍업',
+                    backgroundColor: AppColors.sky,
+                    onPressed: () => _startTimer(15),
+                  ),
+                  _PresetMissionCard(
+                    label: texts.home.normalCourse,
+                    emoji: '🍚',
+                    subtitle: '든든한 기본 미션',
+                    backgroundColor: AppColors.yellow,
+                    badge: '추천',
+                    onPressed: () => _startTimer(25),
+                  ),
+                  _PresetMissionCard(
+                    label: texts.home.slowCourse,
+                    emoji: '🌈',
+                    subtitle: '천천히 완주하기',
+                    backgroundColor: AppColors.pink,
+                    onPressed: () => _startTimer(35),
+                  ),
+                ];
+
+                if (constraints.maxWidth >= 700) {
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (
+                        var index = 0;
+                        index < presetCards.length;
+                        index++
+                      ) ...[
+                        if (index > 0) const SizedBox(width: AppSpacing.md),
+                        Expanded(child: presetCards[index]),
                       ],
-                    ),
-                    const SizedBox(height: 8),
-                    FilledButton.icon(
-                      onPressed: () => _startTimer(_customMinutes.round()),
-                      icon: const Icon(Icons.two_wheeler_rounded),
-                      label: Text(texts.home.customStartButton),
-                    ),
+                    ],
+                  );
+                }
+
+                return Column(
+                  children: [
+                    for (
+                      var index = 0;
+                      index < presetCards.length;
+                      index++
+                    ) ...[
+                      if (index > 0) const SizedBox(height: AppSpacing.md),
+                      presetCards[index],
+                    ],
                   ],
-                ),
-              ),
+                );
+              },
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
+            _CustomMinutesCard(
+              title: texts.home.customSettingMinutes(_customMinutes.round()),
+              sliderLabel: texts.home.minuteLabel(_customMinutes.round()),
+              minutes: _customMinutes,
+              startLabel: texts.home.customStartButton,
+              onChanged: (value) {
+                setState(() => _customMinutes = value);
+              },
+              onAdjust: _adjustCustomMinutes,
+              onStart: () => _startTimer(_customMinutes.round()),
+            ),
+            const SizedBox(height: AppSpacing.xxl),
             FutureBuilder<MealProgressSnapshot>(
               future: widget.mealProgressService.loadSnapshot(),
               builder: (context, snapshot) {
@@ -242,7 +279,386 @@ class _MinuteAdjustButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(onPressed: onPressed, child: Text(label));
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        backgroundColor: AppColors.white.withValues(alpha: 0.72),
+        foregroundColor: AppColors.brown700,
+        side: const BorderSide(color: AppColors.creamDark, width: 1.4),
+        shape: const StadiumBorder(),
+        minimumSize: const Size.fromHeight(44),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+      ),
+    );
+  }
+}
+
+class _HeroMissionCard extends StatelessWidget {
+  const _HeroMissionCard({required this.ctaLabel, required this.onStart});
+
+  final String ctaLabel;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: AppRadius.panel,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.yellow,
+            AppColors.orange.withValues(alpha: 0.68),
+            AppColors.pink,
+          ],
+        ),
+        boxShadow: [
+          ...AppShadows.soft,
+          BoxShadow(
+            color: AppColors.orangeDeep.withValues(alpha: 0.16),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '오늘의 냠냠 미션',
+                        style: textTheme.headlineSmall?.copyWith(
+                          color: AppColors.brown900,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        '라이더가 맛있는 완주를 기다리고 있어요',
+                        style: textTheme.bodyLarge?.copyWith(
+                          color: AppColors.brown700,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withValues(alpha: 0.52),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    child: SizedBox(
+                      width: 102,
+                      height: 102,
+                      child: Image.asset(
+                        'assets/images/jy_the_rider.png',
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Text(
+                              '🏍️',
+                              textScaler: TextScaler.noScaling,
+                              style: TextStyle(fontSize: 58, height: 1),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            AppBouncyButton(
+              label: ctaLabel,
+              icon: Icons.flag_rounded,
+              onPressed: onStart,
+              minHeight: 62,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PresetMissionCard extends StatelessWidget {
+  const _PresetMissionCard({
+    required this.label,
+    required this.emoji,
+    required this.subtitle,
+    required this.backgroundColor,
+    required this.onPressed,
+    this.badge,
+  });
+
+  final String label;
+  final String emoji;
+  final String subtitle;
+  final Color backgroundColor;
+  final VoidCallback onPressed;
+  final String? badge;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: AppRadius.card,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            backgroundColor,
+            backgroundColor.withValues(alpha: 0.72),
+            AppColors.white.withValues(alpha: 0.84),
+          ],
+        ),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.76)),
+        boxShadow: AppShadows.soft,
+      ),
+      child: Material(
+        color: AppColors.transparent,
+        borderRadius: AppRadius.card,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl,
+              vertical: AppSpacing.lg,
+            ),
+            child: Row(
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withValues(alpha: 0.64),
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                  ),
+                  child: SizedBox(
+                    width: 54,
+                    height: 54,
+                    child: Center(
+                      child: Text(
+                        emoji,
+                        textScaler: TextScaler.noScaling,
+                        style: const TextStyle(fontSize: 30, height: 1),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.xs,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            label,
+                            style: textTheme.titleMedium?.copyWith(
+                              color: AppColors.brown900,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          if (badge != null) _RecommendedBadge(label: badge!),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        subtitle,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.brown500,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withValues(alpha: 0.72),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(AppSpacing.sm),
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      color: AppColors.brown700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RecommendedBadge extends StatelessWidget {
+  const _RecommendedBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.orangeDeep,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: AppShadows.button,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: AppColors.white,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CustomMinutesCard extends StatelessWidget {
+  const _CustomMinutesCard({
+    required this.title,
+    required this.sliderLabel,
+    required this.minutes,
+    required this.startLabel,
+    required this.onChanged,
+    required this.onAdjust,
+    required this.onStart,
+  });
+
+  final String title;
+  final String sliderLabel;
+  final double minutes;
+  final String startLabel;
+  final ValueChanged<double> onChanged;
+  final ValueChanged<int> onAdjust;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: AppRadius.panel,
+        border: Border.all(color: AppColors.creamDark),
+        boxShadow: AppShadows.soft,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: textTheme.titleLarge?.copyWith(
+                color: AppColors.brown900,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: AppColors.orangeDeep,
+                inactiveTrackColor: AppColors.creamDark,
+                thumbColor: AppColors.orangeDeep,
+                overlayColor: AppColors.orange.withValues(alpha: 0.20),
+                valueIndicatorColor: AppColors.brown900,
+                valueIndicatorTextStyle: textTheme.labelMedium?.copyWith(
+                  color: AppColors.white,
+                  fontWeight: FontWeight.w900,
+                ),
+                trackHeight: 8,
+              ),
+              child: Slider(
+                value: minutes,
+                min: 1,
+                max: 60,
+                label: sliderLabel,
+                onChanged: onChanged,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              children: [
+                Expanded(
+                  child: _MinuteAdjustButton(
+                    label: '-5',
+                    onPressed: () => onAdjust(-5),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _MinuteAdjustButton(
+                    label: '-1',
+                    onPressed: () => onAdjust(-1),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _MinuteAdjustButton(
+                    label: '+1',
+                    onPressed: () => onAdjust(1),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _MinuteAdjustButton(
+                    label: '+5',
+                    onPressed: () => onAdjust(5),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            AppBouncyButton(
+              label: startLabel,
+              icon: Icons.two_wheeler_rounded,
+              onPressed: onStart,
+              minHeight: 60,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -274,48 +690,56 @@ class _ProgressSummary extends StatelessWidget {
     );
     final stickerKindCount = knownStickers.length;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          texts.home.progressTitle(childName),
+          style: textTheme.titleLarge?.copyWith(
+            color: AppColors.brown900,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Row(
           children: [
-            Text(
-              texts.home.progressTitle(childName),
-              style: textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
+            Expanded(
+              child: AppMetricTile(
+                icon: Icons.restaurant_rounded,
+                label: texts.home.mealSummaryLabel,
+                value: texts.home.mealCount(history.length),
+                backgroundColor: AppColors.mint,
               ),
             ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: _SummaryTile(
-                    icon: Icons.restaurant_rounded,
-                    label: texts.home.mealSummaryLabel,
-                    value: texts.home.mealCount(history.length),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _SummaryTile(
-                    icon: Icons.auto_awesome_rounded,
-                    label: texts.home.stickerKindSummaryLabel,
-                    value: texts.home.stickerKindCount(stickerKindCount),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: _SummaryTile(
-                    icon: Icons.stars_rounded,
-                    label: texts.home.stickerSummaryLabel,
-                    value: texts.home.stickerCount(stickerCount),
-                  ),
-                ),
-              ],
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: AppMetricTile(
+                icon: Icons.auto_awesome_rounded,
+                label: texts.home.stickerKindSummaryLabel,
+                value: texts.home.stickerKindCount(stickerKindCount),
+                backgroundColor: AppColors.sky,
+              ),
             ),
-            const SizedBox(height: 14),
-            Text(
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: AppMetricTile(
+                icon: Icons.stars_rounded,
+                label: texts.home.stickerSummaryLabel,
+                value: texts.home.stickerCount(stickerCount),
+                backgroundColor: AppColors.pink,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.creamDark.withValues(alpha: 0.62),
+            borderRadius: AppRadius.card,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Text(
               recent == null
                   ? texts.home.noMealHistory
                   : texts.home.recentMealSummary(
@@ -323,95 +747,81 @@ class _ProgressSummary extends StatelessWidget {
                       recent.completedBeforeArrival,
                     ),
               style: textTheme.bodyLarge?.copyWith(
-                color: const Color(0xFF7A6250),
-                fontWeight: FontWeight.w700,
+                color: AppColors.brown500,
+                fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 14),
-            OutlinedButton.icon(
-              onPressed: onOpenStickers,
-              icon: const Icon(Icons.collections_bookmark_rounded),
-              label: Text(texts.home.openStickerCollection),
-            ),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(height: AppSpacing.md),
+        _StickerCollectionCta(
+          label: texts.home.openStickerCollection,
+          onPressed: onOpenStickers,
+        ),
+      ],
     );
   }
 }
 
-class _SummaryTile extends StatelessWidget {
-  const _SummaryTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
+class _StickerCollectionCta extends StatelessWidget {
+  const _StickerCollectionCta({required this.label, required this.onPressed});
 
-  final IconData icon;
   final String label;
-  final String value;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8EF),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-        child: Column(
-          children: [
-            Icon(icon, color: const Color(0xFF7A6250)),
-            const SizedBox(height: 6),
-            Text(
-              value,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-            ),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: const Color(0xFF7A6250),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+        borderRadius: AppRadius.card,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.orangeDeep, AppColors.orange],
         ),
+        boxShadow: AppShadows.button,
       ),
-    );
-  }
-}
-
-class _PresetButton extends StatelessWidget {
-  const _PresetButton({
-    required this.label,
-    required this.emoji,
-    required this.onPressed,
-  });
-
-  final String label;
-  final String emoji;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return FilledButton.tonal(
-      onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        minimumSize: const Size.fromHeight(64),
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-      ),
-      child: Row(
-        children: [
-          Text(emoji, style: const TextStyle(fontSize: 26)),
-          const SizedBox(width: 12),
-          Text(label),
-          const Spacer(),
-          const Icon(Icons.arrow_forward_rounded),
-        ],
+      child: Material(
+        color: AppColors.transparent,
+        borderRadius: AppRadius.card,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xl,
+              vertical: AppSpacing.lg,
+            ),
+            child: Row(
+              children: [
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.white.withValues(alpha: 0.24),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(AppSpacing.sm),
+                    child: Icon(
+                      Icons.collections_bookmark_rounded,
+                      color: AppColors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_rounded, color: AppColors.white),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -5,6 +5,10 @@ import 'package:video_player/video_player.dart';
 
 import '../l10n/app_texts.dart';
 import '../models/vehicle.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_shadows.dart';
+import '../theme/app_spacing.dart';
 import 'road_painter.dart';
 import 'vehicle_widget.dart';
 
@@ -51,13 +55,30 @@ class RoadView extends StatelessWidget {
 
         return DecoratedBox(
           decoration: BoxDecoration(
-            color: const Color(0xFFFFE8CC),
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(34),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.sky, AppColors.cream, AppColors.pink],
+            ),
+            border: Border.all(
+              color: AppColors.white.withValues(alpha: 0.78),
+              width: 1.5,
+            ),
+            boxShadow: [
+              ...AppShadows.soft,
+              BoxShadow(
+                color: AppColors.orangeDeep.withValues(alpha: 0.10),
+                blurRadius: 30,
+                offset: const Offset(0, 16),
+              ),
+            ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(34),
             child: Stack(
               children: [
+                const Positioned.fill(child: _RoadScenery()),
                 Positioned.fill(
                   child: CustomPaint(painter: RoadPainter(progress: progress)),
                 ),
@@ -131,9 +152,8 @@ class _RoadMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final markerColor = isActive ? colorScheme.primary : Colors.white;
-    final iconColor = isActive ? Colors.white : const Color(0xFF5B4636);
+    final markerColor = isActive ? AppColors.orangeDeep : AppColors.white;
+    final iconColor = isActive ? AppColors.white : AppColors.brown700;
 
     return Positioned(
       left: position.dx - 20,
@@ -151,20 +171,67 @@ class _RoadMarker extends StatelessWidget {
             color: markerColor,
             shape: BoxShape.circle,
             border: Border.all(
-              color: isActive ? colorScheme.primary : const Color(0xFFEAD8C7),
+              color: isActive ? AppColors.orangeDeep : AppColors.creamDark,
               width: 2,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF5B4636).withValues(alpha: 0.15),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
+                color: AppColors.brown700.withValues(alpha: 0.14),
+                blurRadius: 14,
+                offset: const Offset(0, 7),
               ),
             ],
           ),
           child: Semantics(
             label: label ?? 'milestone',
             child: Icon(icon, color: iconColor, size: 23),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RoadScenery extends StatelessWidget {
+  const _RoadScenery();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: const [
+        _SceneryEmoji(emoji: '☁️', alignment: Alignment(-0.76, -0.86)),
+        _SceneryEmoji(emoji: '🌤️', alignment: Alignment(0.78, -0.78)),
+        _SceneryEmoji(emoji: '🌷', alignment: Alignment(-0.82, 0.34)),
+        _SceneryEmoji(emoji: '🌿', alignment: Alignment(0.84, 0.42)),
+      ],
+    );
+  }
+}
+
+class _SceneryEmoji extends StatelessWidget {
+  const _SceneryEmoji({required this.emoji, required this.alignment});
+
+  final String emoji;
+  final Alignment alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: alignment,
+      child: Opacity(
+        opacity: 0.72,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.46),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Text(
+              emoji,
+              textScaler: TextScaler.noScaling,
+              style: const TextStyle(fontSize: 22, height: 1),
+            ),
           ),
         ),
       ),
@@ -248,20 +315,20 @@ class _MotivationVideoBubbleState extends State<_MotivationVideoBubble> {
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: AppColors.white,
+        borderRadius: AppRadius.card,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF5B4636).withValues(alpha: 0.18),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
+            color: AppColors.brown700.withValues(alpha: 0.18),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(6),
+        padding: const EdgeInsets.all(AppSpacing.sm),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(13),
+          borderRadius: BorderRadius.circular(AppRadius.lg),
           child: FittedBox(
             fit: BoxFit.cover,
             child: SizedBox(

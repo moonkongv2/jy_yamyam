@@ -6,6 +6,10 @@ import '../l10n/app_texts.dart';
 import '../models/meal_session_result.dart';
 import '../models/meal_timer_config.dart';
 import '../services/local_meal_progress_service.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_radius.dart';
+import '../theme/app_shadows.dart';
+import '../theme/app_spacing.dart';
 import '../utils/duration_format.dart';
 import '../widgets/road_view.dart';
 import '../widgets/timer_control_bar.dart';
@@ -183,6 +187,22 @@ class _TimerScreenState extends State<TimerScreen> {
     );
   }
 
+  String _progressMessage(double progress) {
+    if (progress < 0.25) {
+      return '출발했어요!';
+    }
+    if (progress < 0.5) {
+      return '잘 가고 있어요!';
+    }
+    if (progress < 0.8) {
+      return '벌써 많이 왔어요!';
+    }
+    if (progress < 1.0) {
+      return '거의 도착했어요!';
+    }
+    return '도착했어요!';
+  }
+
   @override
   Widget build(BuildContext context) {
     final texts = AppTexts.of(context);
@@ -191,17 +211,34 @@ class _TimerScreenState extends State<TimerScreen> {
       animation: _controller,
       builder: (context, _) {
         final vehicle = VehicleCatalog.findById(widget.config.motorcycleId);
+        final progress = _controller.progress.clamp(0.0, 1.0).toDouble();
 
         return Scaffold(
-          appBar: AppBar(title: Text(texts.timer.courseTitle)),
+          backgroundColor: AppColors.cream,
+          appBar: AppBar(
+            title: Text(texts.timer.courseTitle),
+            backgroundColor: AppColors.cream,
+            foregroundColor: AppColors.brown900,
+            elevation: 0,
+          ),
           body: SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.xl,
+                AppSpacing.sm,
+                AppSpacing.xl,
+                AppSpacing.xl,
+              ),
               child: Column(
                 children: [
+                  _ProgressMessageCard(
+                    message: _progressMessage(progress),
+                    progress: progress,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
                   Expanded(
                     child: RoadView(
-                      progress: _controller.progress,
+                      progress: progress,
                       vehicle: vehicle,
                       motivationVideoAssetPath: _activeMotivationVideoPath,
                       motivationVideoMilestone: _activeMotivationMilestone,
@@ -209,10 +246,10 @@ class _TimerScreenState extends State<TimerScreen> {
                     ),
                   ),
                   if (widget.config.showRemainingTime) ...[
-                    const SizedBox(height: 16),
+                    const SizedBox(height: AppSpacing.lg),
                     _RemainingTimeCard(remaining: _controller.remaining),
                   ],
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpacing.lg),
                   TimerControlBar(
                     isPaused: _controller.isPaused,
                     onPauseResume: () {
@@ -234,6 +271,80 @@ class _TimerScreenState extends State<TimerScreen> {
   }
 }
 
+class _ProgressMessageCard extends StatelessWidget {
+  const _ProgressMessageCard({required this.message, required this.progress});
+
+  final String message;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: AppRadius.panel,
+        border: Border.all(color: AppColors.creamDark),
+        boxShadow: AppShadows.soft,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.yellow, AppColors.orange],
+                ),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: const SizedBox(
+                width: 46,
+                height: 46,
+                child: Center(
+                  child: Text(
+                    '🏁',
+                    textScaler: TextScaler.noScaling,
+                    style: TextStyle(fontSize: 24, height: 1),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message,
+                    style: textTheme.titleLarge?.copyWith(
+                      color: AppColors.brown900,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(999),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 9,
+                      backgroundColor: AppColors.creamDark,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.orangeDeep,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _RemainingTimeCard extends StatelessWidget {
   const _RemainingTimeCard({required this.remaining});
 
@@ -242,20 +353,43 @@ class _RemainingTimeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final texts = AppTexts.of(context);
+    final textTheme = Theme.of(context).textTheme;
 
-    return Card(
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: AppRadius.panel,
+        border: Border.all(color: AppColors.creamDark),
+        boxShadow: AppShadows.soft,
+      ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.lg,
+        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.timer_rounded),
-            const SizedBox(width: 8),
-            Text(
-              texts.timer.remainingTime(formatDuration(remaining)),
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: AppColors.mint,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(AppSpacing.sm),
+                child: Icon(Icons.timer_rounded, color: AppColors.brown700),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Flexible(
+              child: Text(
+                texts.timer.remainingTime(formatDuration(remaining)),
+                textAlign: TextAlign.center,
+                style: textTheme.headlineSmall?.copyWith(
+                  color: AppColors.brown900,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
             ),
           ],
         ),
