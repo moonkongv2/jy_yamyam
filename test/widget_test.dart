@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:jy_yamyam/catalogs/avatar_prompt_catalog.dart';
@@ -13,6 +16,8 @@ import 'package:jy_yamyam/models/vehicle.dart';
 import 'package:jy_yamyam/screens/avatar_setup_screen.dart';
 import 'package:jy_yamyam/screens/home_screen.dart';
 import 'package:jy_yamyam/screens/timer_screen.dart';
+import 'package:jy_yamyam/services/avatar_image_picker.dart';
+import 'package:jy_yamyam/services/local_avatar_image_service.dart';
 import 'package:jy_yamyam/services/local_meal_progress_service.dart';
 import 'package:jy_yamyam/services/local_settings_service.dart';
 import 'package:jy_yamyam/widgets/road_painter.dart';
@@ -253,6 +258,214 @@ void main() {
 
     expect(changedConfig?.motorcycleId, 'fire_truck');
     expect(_avatarPromptText(tester), contains('소방관'));
+  });
+
+  testWidgets('Avatar setup shows upload button in custom mode', (
+    tester,
+  ) async {
+    await _pumpAvatarSetupScreen(tester, MealTimerConfig.defaults());
+
+    await tester.tap(find.text('직접 만든 아바타 사용'));
+    await tester.pump();
+
+    expect(find.widgetWithText(FilledButton, '아바타 이미지 업로드'), findsOneWidget);
+    expect(
+      find.textContaining('생성형 AI에서 만든 정사각형 아바타 이미지를 업로드해 주세요.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('Avatar setup picker cancellation does not update config', (
+    tester,
+  ) async {
+    MealTimerConfig? changedConfig;
+    await _pumpAvatarSetupScreen(
+      tester,
+      MealTimerConfig.defaults(),
+      imagePicker: _FakeAvatarImagePicker(),
+      avatarImageService: _FakeLocalAvatarImageService('/tmp/avatar.png'),
+      onConfigChanged: (config) => changedConfig = config,
+    );
+
+    await tester.tap(find.text('직접 만든 아바타 사용'));
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, '아바타 이미지 업로드'));
+    await tester.pumpAndSettle();
+
+    expect(changedConfig, isNull);
+    expect(
+      find.byKey(const ValueKey('pendingAvatarImagePreview')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('Avatar setup successful upload shows pending preview', (
+    tester,
+  ) async {
+    MealTimerConfig? changedConfig;
+    await _pumpAvatarSetupScreen(
+      tester,
+      MealTimerConfig.defaults(),
+      imagePicker: _FakeAvatarImagePicker(
+        XFile.fromData(
+          Uint8List.fromList([1, 2, 3]),
+          path: 'picked/avatar.png',
+        ),
+      ),
+      avatarImageService: _FakeLocalAvatarImageService('/tmp/avatar_saved.png'),
+      onConfigChanged: (config) => changedConfig = config,
+    );
+
+    await tester.tap(find.text('직접 만든 아바타 사용'));
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilledButton, '아바타 이미지 업로드'));
+    await tester.pumpAndSettle();
+
+    expect(changedConfig, isNull);
+    expect(
+      find.byKey(const ValueKey('pendingAvatarImagePreview')),
+      findsOneWidget,
+    );
+    expect(find.widgetWithText(FilledButton, '다시 업로드'), findsOneWidget);
+    await _scrollAvatarCompositeIntoView(tester);
+    expect(find.text('합성 미리보기'), findsOneWidget);
+    expect(find.text('이 모습으로 냠냠라이더를 탈까요?'), findsOneWidget);
+  });
+
+  testWidgets('Avatar setup size slider updates local adjustment state', (
+    tester,
+  ) async {
+    await _pumpAvatarSetupScreen(
+      tester,
+      MealTimerConfig.defaults().copyWith(
+        avatarMode: AvatarImageMode.custom,
+        customAvatarImagePath: '/tmp/avatar_saved.png',
+      ),
+    );
+
+    await _scrollAvatarAdjustmentIntoView(tester);
+    expect(_avatarSliderValue(tester, 'avatarScaleSlider'), 1.0);
+
+    _avatarSlider(tester, 'avatarScaleSlider').onChanged!(1.2);
+    await tester.pump();
+
+    expect(_avatarSliderValue(tester, 'avatarScaleSlider'), 1.2);
+  });
+
+  testWidgets('Avatar setup reset button resets adjustment controls', (
+    tester,
+  ) async {
+    await _pumpAvatarSetupScreen(
+      tester,
+      MealTimerConfig.defaults().copyWith(
+        avatarMode: AvatarImageMode.custom,
+        customAvatarImagePath: '/tmp/avatar_saved.png',
+      ),
+    );
+
+    await _scrollAvatarAdjustmentIntoView(tester);
+    _avatarSlider(tester, 'avatarScaleSlider').onChanged!(1.25);
+    _avatarSlider(tester, 'avatarOffsetXSlider').onChanged!(0.12);
+    _avatarSlider(tester, 'avatarOffsetYSlider').onChanged!(-0.08);
+    _avatarSlider(tester, 'avatarRotationSlider').onChanged!(9.0);
+    await tester.pump();
+
+    await _tapVisible(tester, find.byKey(const ValueKey('avatarResetButton')));
+    await tester.pump();
+
+    expect(_avatarSliderValue(tester, 'avatarScaleSlider'), 1.0);
+    expect(_avatarSliderValue(tester, 'avatarOffsetXSlider'), 0.0);
+    expect(_avatarSliderValue(tester, 'avatarOffsetYSlider'), 0.0);
+    expect(_avatarSliderValue(tester, 'avatarRotationSlider'), 0.0);
+  });
+
+  testWidgets('Avatar setup confirm saves custom avatar adjustment', (
+    tester,
+  ) async {
+    MealTimerConfig? changedConfig;
+    await _pumpAvatarSetupScreen(
+      tester,
+      MealTimerConfig.defaults().copyWith(
+        avatarMode: AvatarImageMode.custom,
+        customAvatarImagePath: '/tmp/avatar_saved.png',
+      ),
+      onConfigChanged: (config) => changedConfig = config,
+    );
+
+    await _scrollAvatarAdjustmentIntoView(tester);
+    _avatarSlider(tester, 'avatarScaleSlider').onChanged!(1.3);
+    _avatarSlider(tester, 'avatarOffsetXSlider').onChanged!(0.1);
+    _avatarSlider(tester, 'avatarOffsetYSlider').onChanged!(-0.05);
+    _avatarSlider(tester, 'avatarRotationSlider').onChanged!(7.0);
+    await tester.pump();
+
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('avatarConfirmButton')),
+    );
+    await tester.pump();
+
+    expect(changedConfig?.avatarMode, AvatarImageMode.custom);
+    expect(changedConfig?.customAvatarImagePath, '/tmp/avatar_saved.png');
+    expect(changedConfig?.avatarScale, 1.3);
+    expect(changedConfig?.avatarOffsetX, 0.1);
+    expect(changedConfig?.avatarOffsetY, -0.05);
+    expect(changedConfig?.avatarRotationDegrees, 7.0);
+    expect(find.text('아바타를 저장했어요.'), findsOneWidget);
+  });
+
+  testWidgets('Avatar setup default image button saves default avatar mode', (
+    tester,
+  ) async {
+    MealTimerConfig? changedConfig;
+    await _pumpAvatarSetupScreen(
+      tester,
+      MealTimerConfig.defaults().copyWith(
+        avatarMode: AvatarImageMode.custom,
+        customAvatarImagePath: '/tmp/avatar_saved.png',
+        avatarScale: 1.2,
+        avatarOffsetX: 0.1,
+        avatarOffsetY: -0.1,
+        avatarRotationDegrees: 6.0,
+      ),
+      onConfigChanged: (config) => changedConfig = config,
+    );
+
+    await _scrollAvatarAdjustmentIntoView(tester);
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('avatarUseDefaultButton')),
+    );
+    await tester.pump();
+
+    expect(changedConfig?.avatarMode, AvatarImageMode.defaultImage);
+    expect(changedConfig?.customAvatarImagePath, '/tmp/avatar_saved.png');
+    expect(changedConfig?.avatarScale, 1.2);
+    expect(changedConfig?.avatarOffsetX, 0.1);
+    expect(changedConfig?.avatarOffsetY, -0.1);
+    expect(changedConfig?.avatarRotationDegrees, 6.0);
+    expect(find.text('기본 이미지로 변경했어요.'), findsOneWidget);
+  });
+
+  testWidgets('Avatar setup confirm without image is disabled and safe', (
+    tester,
+  ) async {
+    MealTimerConfig? changedConfig;
+    await _pumpAvatarSetupScreen(
+      tester,
+      MealTimerConfig.defaults(),
+      onConfigChanged: (config) => changedConfig = config,
+    );
+
+    await tester.tap(find.text('직접 만든 아바타 사용'));
+    await tester.pump();
+
+    final confirmButton = tester.widget<FilledButton>(
+      find.byKey(const ValueKey('avatarConfirmButton')),
+    );
+    expect(confirmButton.onPressed, isNull);
+    expect(changedConfig, isNull);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('Remaining time setting can be turned off', (tester) async {
@@ -659,6 +872,8 @@ Future<void> _pumpAvatarSetupScreen(
   WidgetTester tester,
   MealTimerConfig config, {
   ValueChanged<MealTimerConfig>? onConfigChanged,
+  AvatarImagePicker? imagePicker,
+  LocalAvatarImageService? avatarImageService,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -672,6 +887,8 @@ Future<void> _pumpAvatarSetupScreen(
       home: AvatarSetupScreen(
         config: config,
         onConfigChanged: onConfigChanged ?? (_) {},
+        imagePicker: imagePicker,
+        avatarImageService: avatarImageService,
       ),
     ),
   );
@@ -681,6 +898,40 @@ Future<void> _pumpAvatarSetupScreen(
 Future<void> _scrollAvatarPromptIntoView(WidgetTester tester) async {
   await tester.drag(find.byType(ListView), const Offset(0, -700));
   await tester.pumpAndSettle();
+}
+
+Future<void> _scrollAvatarCompositeIntoView(WidgetTester tester) async {
+  for (var index = 0; index < 4; index += 1) {
+    if (find.text('합성 미리보기').evaluate().isNotEmpty) {
+      return;
+    }
+    await tester.drag(find.byType(ListView), const Offset(0, -700));
+    await tester.pumpAndSettle();
+  }
+}
+
+Future<void> _scrollAvatarAdjustmentIntoView(WidgetTester tester) async {
+  for (var index = 0; index < 6; index += 1) {
+    if (find.byKey(const ValueKey('avatarScaleSlider')).evaluate().isNotEmpty) {
+      return;
+    }
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+  }
+}
+
+Future<void> _tapVisible(WidgetTester tester, Finder finder) async {
+  await tester.ensureVisible(finder);
+  await tester.pumpAndSettle();
+  await tester.tap(finder);
+}
+
+Slider _avatarSlider(WidgetTester tester, String keyValue) {
+  return tester.widget<Slider>(find.byKey(ValueKey(keyValue)));
+}
+
+double _avatarSliderValue(WidgetTester tester, String keyValue) {
+  return _avatarSlider(tester, keyValue).value;
 }
 
 Material _vehicleChoiceMaterial(WidgetTester tester, String vehicleId) {
@@ -703,4 +954,26 @@ String _avatarPromptText(WidgetTester tester) {
   return tester
       .widget<SelectableText>(find.byKey(const ValueKey('avatarPromptText')))
       .data!;
+}
+
+class _FakeAvatarImagePicker implements AvatarImagePicker {
+  const _FakeAvatarImagePicker([this.pickedFile]);
+
+  final XFile? pickedFile;
+
+  @override
+  Future<XFile?> pickAvatarImage() async {
+    return pickedFile;
+  }
+}
+
+class _FakeLocalAvatarImageService extends LocalAvatarImageService {
+  const _FakeLocalAvatarImageService(this.savedPath);
+
+  final String savedPath;
+
+  @override
+  Future<String> savePickedAvatarImage(XFile pickedFile) async {
+    return savedPath;
+  }
 }
