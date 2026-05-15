@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:jy_yamyam/catalogs/avatar_prompt_catalog.dart';
 import 'package:jy_yamyam/catalogs/vehicle_catalog.dart';
 import 'package:jy_yamyam/main.dart' as app;
 import 'package:jy_yamyam/models/meal_session_result.dart';
@@ -11,11 +12,136 @@ import 'package:jy_yamyam/models/vehicle.dart';
 import 'package:jy_yamyam/screens/home_screen.dart';
 import 'package:jy_yamyam/screens/timer_screen.dart';
 import 'package:jy_yamyam/services/local_meal_progress_service.dart';
+import 'package:jy_yamyam/services/local_settings_service.dart';
 import 'package:jy_yamyam/widgets/road_painter.dart';
 import 'package:jy_yamyam/widgets/road_view.dart';
 import 'package:jy_yamyam/widgets/vehicle_widget.dart';
 
 void main() {
+  test('Default config uses default avatar image settings', () {
+    final config = MealTimerConfig.defaults();
+
+    expect(config.avatarMode, AvatarImageMode.defaultImage);
+    expect(config.customAvatarImagePath, isNull);
+    expect(config.avatarScale, 1.0);
+    expect(config.avatarOffsetX, 0.0);
+    expect(config.avatarOffsetY, 0.0);
+    expect(config.avatarRotationDegrees, 0.0);
+  });
+
+  test('Local settings saves and loads avatar settings', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final service = LocalSettingsService();
+    await service.saveConfig(
+      MealTimerConfig.defaults().copyWith(
+        childName: '지율',
+        motorcycleId: 'police_car',
+        avatarMode: AvatarImageMode.custom,
+        customAvatarImagePath: '/local/avatar.png',
+        avatarScale: 1.25,
+        avatarOffsetX: 8.0,
+        avatarOffsetY: -6.0,
+        avatarRotationDegrees: 12.0,
+      ),
+    );
+
+    final loadedConfig = await service.loadConfig();
+    expect(loadedConfig.childName, '지율');
+    expect(loadedConfig.motorcycleId, 'police_car');
+    expect(loadedConfig.avatarMode, AvatarImageMode.custom);
+    expect(loadedConfig.customAvatarImagePath, '/local/avatar.png');
+    expect(loadedConfig.avatarScale, 1.25);
+    expect(loadedConfig.avatarOffsetX, 8.0);
+    expect(loadedConfig.avatarOffsetY, -6.0);
+    expect(loadedConfig.avatarRotationDegrees, 12.0);
+  });
+
+  test('Custom avatar image path can be cleared to null', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final service = LocalSettingsService();
+    await service.saveConfig(
+      MealTimerConfig.defaults().copyWith(
+        avatarMode: AvatarImageMode.custom,
+        customAvatarImagePath: '/local/avatar.png',
+      ),
+    );
+    await service.saveConfig(
+      MealTimerConfig.defaults().copyWith(customAvatarImagePath: null),
+    );
+
+    final loadedConfig = await service.loadConfig();
+    final preferences = await SharedPreferences.getInstance();
+    expect(loadedConfig.customAvatarImagePath, isNull);
+    expect(preferences.getString('customAvatarImagePath'), isNull);
+  });
+
+  test(
+    'Existing child name and vehicle settings load without avatar keys',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'childName': '민준',
+        'motorcycleId': 'fire_truck',
+      });
+
+      final config = await LocalSettingsService().loadConfig();
+
+      expect(config.childName, '민준');
+      expect(config.motorcycleId, 'fire_truck');
+      expect(config.avatarMode, AvatarImageMode.defaultImage);
+      expect(config.customAvatarImagePath, isNull);
+    },
+  );
+
+  test('Every catalog vehicle defines an avatar slot', () {
+    for (final vehicle in VehicleCatalog.all) {
+      expect(vehicle.avatarSlot, isNotNull, reason: vehicle.id);
+    }
+  });
+
+  test('Avatar prompt catalog returns prompts for every vehicle', () {
+    for (final vehicle in VehicleCatalog.all) {
+      final prompt = AvatarPromptCatalog.promptForVehicle(vehicle, 'ko');
+
+      expect(prompt.trim(), isNotEmpty, reason: vehicle.id);
+      expect(prompt, contains('첨부한 아이 사진을 참고'));
+      expect(prompt, contains('아이의 주요 얼굴 특징은 유지'));
+      expect(prompt, contains('정사각형 1:1 헤드샷'));
+      expect(prompt, contains('텍스트, 로고, 워터마크 금지'));
+    }
+  });
+
+  test('Avatar prompt catalog includes vehicle-specific Korean guidance', () {
+    final motorcyclePrompt = AvatarPromptCatalog.promptForVehicle(
+      VehicleCatalog.motorcycle,
+      'ko',
+    );
+    final fireTruckPrompt = AvatarPromptCatalog.promptForVehicle(
+      VehicleCatalog.fireTruck,
+      'ko',
+    );
+    final policeCarPrompt = AvatarPromptCatalog.promptForVehicle(
+      VehicleCatalog.policeCar,
+      'ko',
+    );
+    final excavatorPrompt = AvatarPromptCatalog.promptForVehicle(
+      VehicleCatalog.excavator,
+      'ko',
+    );
+
+    expect(
+      motorcyclePrompt.contains('오토바이') || motorcyclePrompt.contains('라이더'),
+      isTrue,
+    );
+    expect(fireTruckPrompt, contains('소방관'));
+    expect(policeCarPrompt, contains('경찰'));
+    expect(
+      excavatorPrompt.contains('안전모') || excavatorPrompt.contains('포크레인'),
+      isTrue,
+    );
+  });
+
   testWidgets('First launch asks for child name before home', (tester) async {
     SharedPreferences.setMockInitialValues({});
 

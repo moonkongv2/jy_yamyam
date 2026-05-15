@@ -1,6 +1,7 @@
 import '../models/vehicle.dart';
 
 abstract final class VehicleCatalog {
+  // Avatar slots are placeholders and need visual tuning against the real assets.
   static const motorcycle = VehicleDefinition(
     id: 'motorcycle',
     labelKo: '오토바이',
@@ -8,6 +9,11 @@ abstract final class VehicleCatalog {
     emoji: '🏍️',
     assetPath: 'assets/images/vehicle_motorcycle.png',
     selectionAssetPath: 'assets/images/vehicle_motorcycle_chip.png',
+    avatarSlot: VehicleAvatarSlot(
+      centerX: 0.57,
+      centerY: 0.31,
+      sizeRatio: 0.28,
+    ),
   );
 
   static const fireTruck = VehicleDefinition(
@@ -17,6 +23,11 @@ abstract final class VehicleCatalog {
     emoji: '🚒',
     assetPath: 'assets/images/vehicle_fire_truck.png',
     selectionAssetPath: 'assets/images/vehicle_fire_truck_chip.png',
+    avatarSlot: VehicleAvatarSlot(
+      centerX: 0.57,
+      centerY: 0.30,
+      sizeRatio: 0.26,
+    ),
   );
 
   static const policeCar = VehicleDefinition(
@@ -26,6 +37,11 @@ abstract final class VehicleCatalog {
     emoji: '🚓',
     assetPath: 'assets/images/vehicle_police_car.png',
     selectionAssetPath: 'assets/images/vehicle_police_car_chip.png',
+    avatarSlot: VehicleAvatarSlot(
+      centerX: 0.57,
+      centerY: 0.30,
+      sizeRatio: 0.26,
+    ),
   );
 
   static const excavator = VehicleDefinition(
@@ -35,6 +51,11 @@ abstract final class VehicleCatalog {
     emoji: '🚜',
     assetPath: 'assets/images/vehicle_excavator.png',
     selectionAssetPath: 'assets/images/vehicle_excavator_chip.png',
+    avatarSlot: VehicleAvatarSlot(
+      centerX: 0.48,
+      centerY: 0.28,
+      sizeRatio: 0.28,
+    ),
   );
 
   static const all = [motorcycle, fireTruck, policeCar, excavator];

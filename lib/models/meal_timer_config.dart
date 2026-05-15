@@ -1,3 +1,7 @@
+enum AvatarImageMode { defaultImage, custom }
+
+const Object _customAvatarImagePathUnset = Object();
+
 class MealTimerConfig {
   const MealTimerConfig({
     required this.duration,
@@ -7,6 +11,12 @@ class MealTimerConfig {
     required this.courseId,
     required this.motorcycleId,
     required this.childName,
+    required this.avatarMode,
+    required this.customAvatarImagePath,
+    required this.avatarScale,
+    required this.avatarOffsetX,
+    required this.avatarOffsetY,
+    required this.avatarRotationDegrees,
   });
 
   factory MealTimerConfig.defaults() {
@@ -18,6 +28,12 @@ class MealTimerConfig {
       courseId: 'park',
       motorcycleId: 'motorcycle',
       childName: '',
+      avatarMode: AvatarImageMode.defaultImage,
+      customAvatarImagePath: null,
+      avatarScale: 1.0,
+      avatarOffsetX: 0.0,
+      avatarOffsetY: 0.0,
+      avatarRotationDegrees: 0.0,
     );
   }
 
@@ -28,6 +44,12 @@ class MealTimerConfig {
   final String courseId;
   final String motorcycleId;
   final String childName;
+  final AvatarImageMode avatarMode;
+  final String? customAvatarImagePath;
+  final double avatarScale;
+  final double avatarOffsetX;
+  final double avatarOffsetY;
+  final double avatarRotationDegrees;
 
   MealTimerConfig copyWith({
     Duration? duration,
@@ -37,6 +59,12 @@ class MealTimerConfig {
     String? courseId,
     String? motorcycleId,
     String? childName,
+    AvatarImageMode? avatarMode,
+    Object? customAvatarImagePath = _customAvatarImagePathUnset,
+    double? avatarScale,
+    double? avatarOffsetX,
+    double? avatarOffsetY,
+    double? avatarRotationDegrees,
   }) {
     return MealTimerConfig(
       duration: duration ?? this.duration,
@@ -46,6 +74,16 @@ class MealTimerConfig {
       courseId: courseId ?? this.courseId,
       motorcycleId: motorcycleId ?? this.motorcycleId,
       childName: childName ?? this.childName,
+      avatarMode: avatarMode ?? this.avatarMode,
+      customAvatarImagePath:
+          customAvatarImagePath == _customAvatarImagePathUnset
+          ? this.customAvatarImagePath
+          : customAvatarImagePath as String?,
+      avatarScale: avatarScale ?? this.avatarScale,
+      avatarOffsetX: avatarOffsetX ?? this.avatarOffsetX,
+      avatarOffsetY: avatarOffsetY ?? this.avatarOffsetY,
+      avatarRotationDegrees:
+          avatarRotationDegrees ?? this.avatarRotationDegrees,
     );
   }
 }
