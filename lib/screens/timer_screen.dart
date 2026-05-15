@@ -259,6 +259,11 @@ class _TimerScreenState extends State<TimerScreen> {
       animation: _controller,
       builder: (context, _) {
         final vehicle = VehicleCatalog.findById(widget.config.motorcycleId);
+        final vehicleAvatarMode = widget.config.avatarModeForVehicle(
+          vehicle.id,
+        );
+        final vehicleAvatarImagePath = widget.config
+            .customAvatarImagePathForVehicle(vehicle.id);
         final progress = _controller.progress.clamp(0.0, 1.0).toDouble();
         final statusCopy = _timerStatusCopy(
           texts.timer,
@@ -293,6 +298,13 @@ class _TimerScreenState extends State<TimerScreen> {
                     child: RoadView(
                       progress: progress,
                       vehicle: vehicle,
+                      avatarMode: vehicleAvatarMode,
+                      customAvatarImagePath: vehicleAvatarImagePath,
+                      avatarScale: widget.config.avatarScale,
+                      avatarOffsetX: widget.config.avatarOffsetX,
+                      avatarOffsetY: widget.config.avatarOffsetY,
+                      avatarRotationDegrees:
+                          widget.config.avatarRotationDegrees,
                       motivationVideoAssetPath: _activeMotivationVideoPath,
                       motivationVideoMilestone: _activeMotivationMilestone,
                       onMotivationVideoFinished: _handleMotivationVideoFinished,

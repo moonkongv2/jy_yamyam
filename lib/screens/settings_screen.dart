@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/app_texts.dart';
@@ -65,6 +67,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final texts = AppTexts.of(context);
+    final isUsingCustomAvatar =
+        _config.hasCustomAvatarForVehicle(_config.motorcycleId) &&
+        _config.customAvatarImagePath != null &&
+        File(_config.customAvatarImagePath!).existsSync();
+    final avatarStateText = isUsingCustomAvatar
+        ? texts.settings.avatarCustomState
+        : texts.settings.avatarDefaultState;
 
     return Scaffold(
       appBar: AppBar(title: Text(texts.settings.title)),
@@ -204,11 +213,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    _config.avatarMode == AvatarImageMode.custom
-                        ? texts.settings.avatarCustomState
-                        : texts.settings.avatarDefaultState,
-                  ),
+                  Text(avatarStateText),
                   const SizedBox(height: 12),
                   FilledButton(
                     onPressed: _openAvatarSetup,

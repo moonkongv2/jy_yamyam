@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../l10n/app_texts.dart';
+import '../models/meal_timer_config.dart';
 import '../models/vehicle.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
@@ -17,6 +18,13 @@ class RoadView extends StatelessWidget {
     super.key,
     required this.progress,
     required this.vehicle,
+    this.avatarMode = AvatarImageMode.defaultImage,
+    this.customAvatarImagePath,
+    this.avatarScale = 1.0,
+    this.avatarOffsetX = 0.0,
+    this.avatarOffsetY = 0.0,
+    this.avatarRotationDegrees = 0.0,
+    this.avatarImageBuilder,
     this.motivationVideoAssetPath,
     this.motivationVideoMilestone,
     this.onMotivationVideoFinished,
@@ -24,6 +32,14 @@ class RoadView extends StatelessWidget {
 
   final double progress;
   final VehicleDefinition vehicle;
+  final AvatarImageMode avatarMode;
+  final String? customAvatarImagePath;
+  final double avatarScale;
+  final double avatarOffsetX;
+  final double avatarOffsetY;
+  final double avatarRotationDegrees;
+  final Widget Function(BuildContext context, String imagePath)?
+  avatarImageBuilder;
   final String? motivationVideoAssetPath;
   final int? motivationVideoMilestone;
   final VoidCallback? onMotivationVideoFinished;
@@ -110,6 +126,13 @@ class RoadView extends StatelessWidget {
                         size: vehicleSize,
                         isFacingLeft: isVehicleFacingLeft,
                         isArrived: progress >= 1,
+                        avatarMode: avatarMode,
+                        customAvatarImagePath: customAvatarImagePath,
+                        avatarScale: avatarScale,
+                        avatarOffsetX: avatarOffsetX,
+                        avatarOffsetY: avatarOffsetY,
+                        avatarRotationDegrees: avatarRotationDegrees,
+                        avatarImageBuilder: avatarImageBuilder,
                       ),
                     ),
                   ),

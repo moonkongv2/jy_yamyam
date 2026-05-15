@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../catalogs/vehicle_catalog.dart';
@@ -14,6 +16,7 @@ import '../theme/app_spacing.dart';
 import '../utils/duration_format.dart';
 import '../widgets/app/app_bouncy_button.dart';
 import '../widgets/app/app_metric_tile.dart';
+import '../widgets/avatar/avatar_composite_preview.dart';
 import '../widgets/vehicle_selection_card.dart';
 import 'avatar_setup_screen.dart';
 import 'settings_screen.dart';
@@ -26,11 +29,14 @@ class HomeScreen extends StatefulWidget {
     required this.config,
     required this.mealProgressService,
     required this.onConfigChanged,
+    this.avatarImageBuilder,
   });
 
   final MealTimerConfig config;
   final LocalMealProgressService mealProgressService;
   final ValueChanged<MealTimerConfig> onConfigChanged;
+  final Widget Function(BuildContext context, String imagePath)?
+  avatarImageBuilder;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -101,6 +107,18 @@ class _HomeScreenState extends State<HomeScreen> {
         ? texts.common.defaultChildName
         : _config.childName.trim();
     final selectedVehicle = VehicleCatalog.findById(_config.motorcycleId);
+    final selectedVehicleAvatarMode = _config.avatarModeForVehicle(
+      selectedVehicle.id,
+    );
+    final selectedVehicleAvatarImagePath = _config
+        .customAvatarImagePathForVehicle(selectedVehicle.id);
+    final isUsingCustomAvatar =
+        selectedVehicleAvatarMode == AvatarImageMode.custom &&
+        selectedVehicleAvatarImagePath != null &&
+        File(selectedVehicleAvatarImagePath).existsSync();
+    final avatarStateText = isUsingCustomAvatar
+        ? texts.settings.avatarCustomState
+        : texts.settings.avatarDefaultState;
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -163,16 +181,31 @@ class _HomeScreenState extends State<HomeScreen> {
                   onVehicleSelected: (vehicleId) {
                     _updateConfig(_config.copyWith(motorcycleId: vehicleId));
                   },
+                  avatarMode: selectedVehicleAvatarMode,
+                  customAvatarImagePath: selectedVehicleAvatarImagePath,
+                  avatarScale: _config.avatarScale,
+                  avatarOffsetX: _config.avatarOffsetX,
+                  avatarOffsetY: _config.avatarOffsetY,
+                  avatarRotationDegrees: _config.avatarRotationDegrees,
+                  avatarImageBuilder: widget.avatarImageBuilder,
                 );
                 final avatarCard = _AvatarCtaCard(
                   title: texts.home.avatarCtaTitle,
                   subtitle: texts.home.avatarCtaSubtitle,
+                  stateText: avatarStateText,
                   buttonLabel: texts.home.avatarCtaButton,
                   onPressed: _openAvatarSetup,
                 );
                 final heroCard = _HeroMissionCard(
                   ctaLabel: '${texts.home.normalCourse} ${texts.common.start}',
                   vehicle: selectedVehicle,
+                  avatarMode: selectedVehicleAvatarMode,
+                  customAvatarImagePath: selectedVehicleAvatarImagePath,
+                  avatarScale: _config.avatarScale,
+                  avatarOffsetX: _config.avatarOffsetX,
+                  avatarOffsetY: _config.avatarOffsetY,
+                  avatarRotationDegrees: _config.avatarRotationDegrees,
+                  avatarImageBuilder: widget.avatarImageBuilder,
                   onStart: () => _startTimer(25),
                 );
 
@@ -306,12 +339,14 @@ class _AvatarCtaCard extends StatelessWidget {
   const _AvatarCtaCard({
     required this.title,
     required this.subtitle,
+    required this.stateText,
     required this.buttonLabel,
     required this.onPressed,
   });
 
   final String title;
   final String subtitle;
+  final String stateText;
   final String buttonLabel;
   final VoidCallback onPressed;
 
@@ -367,6 +402,14 @@ class _AvatarCtaCard extends StatelessWidget {
                 height: 1.36,
               ),
             ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              stateText,
+              style: textTheme.bodyMedium?.copyWith(
+                color: AppColors.textStrong,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
             const SizedBox(height: AppSpacing.md),
             Align(
               alignment: Alignment.centerLeft,
@@ -415,11 +458,26 @@ class _HeroMissionCard extends StatelessWidget {
   const _HeroMissionCard({
     required this.ctaLabel,
     required this.vehicle,
+    required this.avatarMode,
+    required this.customAvatarImagePath,
+    required this.avatarScale,
+    required this.avatarOffsetX,
+    required this.avatarOffsetY,
+    required this.avatarRotationDegrees,
+    this.avatarImageBuilder,
     required this.onStart,
   });
 
   final String ctaLabel;
   final VehicleDefinition vehicle;
+  final AvatarImageMode avatarMode;
+  final String? customAvatarImagePath;
+  final double avatarScale;
+  final double avatarOffsetX;
+  final double avatarOffsetY;
+  final double avatarRotationDegrees;
+  final Widget Function(BuildContext context, String imagePath)?
+  avatarImageBuilder;
   final VoidCallback onStart;
 
   @override
@@ -494,18 +552,16 @@ class _HeroMissionCard extends StatelessWidget {
                     child: SizedBox(
                       width: 78,
                       height: 78,
-                      child: Image.asset(
-                        vehicle.assetPath,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Center(
-                            child: Text(
-                              vehicle.emoji,
-                              textScaler: TextScaler.noScaling,
-                              style: const TextStyle(fontSize: 50, height: 1),
-                            ),
-                          );
-                        },
+                      child: AvatarCompositePreview(
+                        vehicle: vehicle,
+                        avatarMode: avatarMode,
+                        customAvatarImagePath: customAvatarImagePath,
+                        avatarScale: avatarScale,
+                        avatarOffsetX: avatarOffsetX,
+                        avatarOffsetY: avatarOffsetY,
+                        avatarRotationDegrees: avatarRotationDegrees,
+                        size: 78,
+                        avatarImageBuilder: avatarImageBuilder,
                       ),
                     ),
                   ),

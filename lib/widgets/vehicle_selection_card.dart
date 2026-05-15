@@ -3,11 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../catalogs/vehicle_catalog.dart';
+import '../models/meal_timer_config.dart';
 import '../models/vehicle.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
+import 'avatar/avatar_composite_preview.dart';
 
 class VehicleSelectionCard extends StatelessWidget {
   const VehicleSelectionCard({
@@ -16,12 +18,27 @@ class VehicleSelectionCard extends StatelessWidget {
     this.subtitle,
     required this.selectedVehicleId,
     required this.onVehicleSelected,
+    this.avatarMode = AvatarImageMode.defaultImage,
+    this.customAvatarImagePath,
+    this.avatarScale = 1.0,
+    this.avatarOffsetX = 0.0,
+    this.avatarOffsetY = 0.0,
+    this.avatarRotationDegrees = 0.0,
+    this.avatarImageBuilder,
   });
 
   final String title;
   final String? subtitle;
   final String selectedVehicleId;
   final ValueChanged<String> onVehicleSelected;
+  final AvatarImageMode avatarMode;
+  final String? customAvatarImagePath;
+  final double avatarScale;
+  final double avatarOffsetX;
+  final double avatarOffsetY;
+  final double avatarRotationDegrees;
+  final Widget Function(BuildContext context, String imagePath)?
+  avatarImageBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -107,6 +124,13 @@ class VehicleSelectionCard extends StatelessWidget {
                                 VehicleCatalog.all[index].id,
                             onTap: () =>
                                 onVehicleSelected(VehicleCatalog.all[index].id),
+                            avatarMode: avatarMode,
+                            customAvatarImagePath: customAvatarImagePath,
+                            avatarScale: avatarScale,
+                            avatarOffsetX: avatarOffsetX,
+                            avatarOffsetY: avatarOffsetY,
+                            avatarRotationDegrees: avatarRotationDegrees,
+                            avatarImageBuilder: avatarImageBuilder,
                           ),
                         ],
                       ],
@@ -128,12 +152,27 @@ class _VehicleChoiceButton extends StatelessWidget {
     required this.vehicle,
     required this.isSelected,
     required this.onTap,
+    required this.avatarMode,
+    required this.customAvatarImagePath,
+    required this.avatarScale,
+    required this.avatarOffsetX,
+    required this.avatarOffsetY,
+    required this.avatarRotationDegrees,
+    this.avatarImageBuilder,
   });
 
   final double size;
   final VehicleDefinition vehicle;
   final bool isSelected;
   final VoidCallback onTap;
+  final AvatarImageMode avatarMode;
+  final String? customAvatarImagePath;
+  final double avatarScale;
+  final double avatarOffsetX;
+  final double avatarOffsetY;
+  final double avatarRotationDegrees;
+  final Widget Function(BuildContext context, String imagePath)?
+  avatarImageBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -170,18 +209,20 @@ class _VehicleChoiceButton extends StatelessWidget {
                   child: SizedBox(
                     width: size - 20,
                     height: size - 24,
-                    child: Image.asset(
-                      vehicle.selectionImagePath,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Center(
-                          child: Text(
-                            vehicle.emoji,
-                            textScaler: TextScaler.noScaling,
-                            style: const TextStyle(fontSize: 40, height: 1),
-                          ),
-                        );
-                      },
+                    child: _VehicleChoiceImage(
+                      vehicle: vehicle,
+                      size: size - 20,
+                      avatarMode: isSelected
+                          ? avatarMode
+                          : AvatarImageMode.defaultImage,
+                      customAvatarImagePath: isSelected
+                          ? customAvatarImagePath
+                          : null,
+                      avatarScale: avatarScale,
+                      avatarOffsetX: avatarOffsetX,
+                      avatarOffsetY: avatarOffsetY,
+                      avatarRotationDegrees: avatarRotationDegrees,
+                      avatarImageBuilder: avatarImageBuilder,
                     ),
                   ),
                 ),
@@ -210,6 +251,62 @@ class _VehicleChoiceButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _VehicleChoiceImage extends StatelessWidget {
+  const _VehicleChoiceImage({
+    required this.vehicle,
+    required this.size,
+    required this.avatarMode,
+    required this.customAvatarImagePath,
+    required this.avatarScale,
+    required this.avatarOffsetX,
+    required this.avatarOffsetY,
+    required this.avatarRotationDegrees,
+    this.avatarImageBuilder,
+  });
+
+  final VehicleDefinition vehicle;
+  final double size;
+  final AvatarImageMode avatarMode;
+  final String? customAvatarImagePath;
+  final double avatarScale;
+  final double avatarOffsetX;
+  final double avatarOffsetY;
+  final double avatarRotationDegrees;
+  final Widget Function(BuildContext context, String imagePath)?
+  avatarImageBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    if (avatarMode == AvatarImageMode.custom) {
+      return AvatarCompositePreview(
+        vehicle: vehicle,
+        avatarMode: avatarMode,
+        customAvatarImagePath: customAvatarImagePath,
+        avatarScale: avatarScale,
+        avatarOffsetX: avatarOffsetX,
+        avatarOffsetY: avatarOffsetY,
+        avatarRotationDegrees: avatarRotationDegrees,
+        size: size,
+        avatarImageBuilder: avatarImageBuilder,
+      );
+    }
+
+    return Image.asset(
+      vehicle.selectionImagePath,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return Center(
+          child: Text(
+            vehicle.emoji,
+            textScaler: TextScaler.noScaling,
+            style: const TextStyle(fontSize: 40, height: 1),
+          ),
+        );
+      },
     );
   }
 }

@@ -2,11 +2,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../models/meal_timer_config.dart';
 import '../models/vehicle.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
+import 'avatar/avatar_composite_preview.dart';
 
 class VehicleWidget extends StatefulWidget {
   const VehicleWidget({
@@ -16,6 +18,13 @@ class VehicleWidget extends StatefulWidget {
     this.angle = 0,
     this.isFacingLeft = false,
     this.isArrived = false,
+    this.avatarMode = AvatarImageMode.defaultImage,
+    this.customAvatarImagePath,
+    this.avatarScale = 1.0,
+    this.avatarOffsetX = 0.0,
+    this.avatarOffsetY = 0.0,
+    this.avatarRotationDegrees = 0.0,
+    this.avatarImageBuilder,
   });
 
   final VehicleDefinition vehicle;
@@ -23,6 +32,14 @@ class VehicleWidget extends StatefulWidget {
   final double angle;
   final bool isFacingLeft;
   final bool isArrived;
+  final AvatarImageMode avatarMode;
+  final String? customAvatarImagePath;
+  final double avatarScale;
+  final double avatarOffsetX;
+  final double avatarOffsetY;
+  final double avatarRotationDegrees;
+  final Widget Function(BuildContext context, String imagePath)?
+  avatarImageBuilder;
 
   @override
   State<VehicleWidget> createState() => _VehicleWidgetState();
@@ -103,26 +120,84 @@ class _VehicleWidgetState extends State<VehicleWidget>
               ),
               Transform.translate(
                 offset: Offset(0, bounceOffset),
-                child: Transform.flip(
-                  flipX: widget.isFacingLeft,
-                  child: Image.asset(
-                    widget.vehicle.assetPath,
-                    width: widget.size,
-                    height: widget.size,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return _VehicleFallback(
-                        vehicle: widget.vehicle,
-                        size: widget.size,
-                      );
-                    },
-                  ),
+                child: _VehicleImage(
+                  vehicle: widget.vehicle,
+                  size: widget.size,
+                  isFacingLeft: widget.isFacingLeft,
+                  avatarMode: widget.avatarMode,
+                  customAvatarImagePath: widget.customAvatarImagePath,
+                  avatarScale: widget.avatarScale,
+                  avatarOffsetX: widget.avatarOffsetX,
+                  avatarOffsetY: widget.avatarOffsetY,
+                  avatarRotationDegrees: widget.avatarRotationDegrees,
+                  avatarImageBuilder: widget.avatarImageBuilder,
                 ),
               ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+class _VehicleImage extends StatelessWidget {
+  const _VehicleImage({
+    required this.vehicle,
+    required this.size,
+    required this.isFacingLeft,
+    required this.avatarMode,
+    required this.customAvatarImagePath,
+    required this.avatarScale,
+    required this.avatarOffsetX,
+    required this.avatarOffsetY,
+    required this.avatarRotationDegrees,
+    this.avatarImageBuilder,
+  });
+
+  final VehicleDefinition vehicle;
+  final double size;
+  final bool isFacingLeft;
+  final AvatarImageMode avatarMode;
+  final String? customAvatarImagePath;
+  final double avatarScale;
+  final double avatarOffsetX;
+  final double avatarOffsetY;
+  final double avatarRotationDegrees;
+  final Widget Function(BuildContext context, String imagePath)?
+  avatarImageBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    if (avatarMode == AvatarImageMode.custom) {
+      return AvatarCompositePreview(
+        vehicle: vehicle,
+        avatarMode: avatarMode,
+        customAvatarImagePath: customAvatarImagePath,
+        avatarScale: avatarScale,
+        avatarOffsetX: avatarOffsetX,
+        avatarOffsetY: avatarOffsetY,
+        avatarRotationDegrees: avatarRotationDegrees,
+        size: size,
+        isFacingLeft: isFacingLeft,
+        avatarImageBuilder: avatarImageBuilder,
+        vehicleFallbackBuilder: (context, vehicle, size) {
+          return _VehicleFallback(vehicle: vehicle, size: size);
+        },
+      );
+    }
+
+    return Transform.flip(
+      flipX: isFacingLeft,
+      child: Image.asset(
+        vehicle.assetPath,
+        width: size,
+        height: size,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return _VehicleFallback(vehicle: vehicle, size: size);
+        },
+      ),
     );
   }
 }

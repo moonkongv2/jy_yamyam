@@ -1,6 +1,7 @@
 enum AvatarImageMode { defaultImage, custom }
 
 const Object _customAvatarImagePathUnset = Object();
+const Object _customAvatarVehicleIdUnset = Object();
 
 class MealTimerConfig {
   const MealTimerConfig({
@@ -13,6 +14,7 @@ class MealTimerConfig {
     required this.childName,
     required this.avatarMode,
     required this.customAvatarImagePath,
+    required this.customAvatarVehicleId,
     required this.avatarScale,
     required this.avatarOffsetX,
     required this.avatarOffsetY,
@@ -30,6 +32,7 @@ class MealTimerConfig {
       childName: '',
       avatarMode: AvatarImageMode.defaultImage,
       customAvatarImagePath: null,
+      customAvatarVehicleId: null,
       avatarScale: 1.0,
       avatarOffsetX: 0.0,
       avatarOffsetY: 0.0,
@@ -46,6 +49,7 @@ class MealTimerConfig {
   final String childName;
   final AvatarImageMode avatarMode;
   final String? customAvatarImagePath;
+  final String? customAvatarVehicleId;
   final double avatarScale;
   final double avatarOffsetX;
   final double avatarOffsetY;
@@ -61,6 +65,7 @@ class MealTimerConfig {
     String? childName,
     AvatarImageMode? avatarMode,
     Object? customAvatarImagePath = _customAvatarImagePathUnset,
+    Object? customAvatarVehicleId = _customAvatarVehicleIdUnset,
     double? avatarScale,
     double? avatarOffsetX,
     double? avatarOffsetY,
@@ -79,11 +84,36 @@ class MealTimerConfig {
           customAvatarImagePath == _customAvatarImagePathUnset
           ? this.customAvatarImagePath
           : customAvatarImagePath as String?,
+      customAvatarVehicleId:
+          customAvatarVehicleId == _customAvatarVehicleIdUnset
+          ? this.customAvatarVehicleId
+          : customAvatarVehicleId as String?,
       avatarScale: avatarScale ?? this.avatarScale,
       avatarOffsetX: avatarOffsetX ?? this.avatarOffsetX,
       avatarOffsetY: avatarOffsetY ?? this.avatarOffsetY,
       avatarRotationDegrees:
           avatarRotationDegrees ?? this.avatarRotationDegrees,
     );
+  }
+
+  bool hasCustomAvatarForVehicle(String vehicleId) {
+    final avatarPath = customAvatarImagePath?.trim();
+    final avatarVehicleId = customAvatarVehicleId?.trim();
+    return avatarMode == AvatarImageMode.custom &&
+        avatarPath != null &&
+        avatarPath.isNotEmpty &&
+        avatarVehicleId != null &&
+        avatarVehicleId.isNotEmpty &&
+        avatarVehicleId == vehicleId;
+  }
+
+  AvatarImageMode avatarModeForVehicle(String vehicleId) {
+    return hasCustomAvatarForVehicle(vehicleId)
+        ? AvatarImageMode.custom
+        : AvatarImageMode.defaultImage;
+  }
+
+  String? customAvatarImagePathForVehicle(String vehicleId) {
+    return hasCustomAvatarForVehicle(vehicleId) ? customAvatarImagePath : null;
   }
 }

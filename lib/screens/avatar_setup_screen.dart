@@ -36,8 +36,8 @@ class AvatarSetupScreen extends StatefulWidget {
 
 class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
   late MealTimerConfig _config = widget.config;
-  late AvatarImageMode _avatarMode = widget.config.avatarMode;
-  late String? _pendingAvatarImagePath = widget.config.customAvatarImagePath;
+  late AvatarImageMode _avatarMode = _avatarModeForConfig(widget.config);
+  String? _pendingAvatarImagePath;
   late double _avatarScale = widget.config.avatarScale;
   late double _avatarOffsetX = widget.config.avatarOffsetX;
   late double _avatarOffsetY = widget.config.avatarOffsetY;
@@ -59,17 +59,20 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
       _config = widget.config;
     }
     final avatarConfigChanged =
+        oldWidget.config.motorcycleId != widget.config.motorcycleId ||
         oldWidget.config.avatarMode != widget.config.avatarMode ||
         oldWidget.config.customAvatarImagePath !=
             widget.config.customAvatarImagePath ||
+        oldWidget.config.customAvatarVehicleId !=
+            widget.config.customAvatarVehicleId ||
         oldWidget.config.avatarScale != widget.config.avatarScale ||
         oldWidget.config.avatarOffsetX != widget.config.avatarOffsetX ||
         oldWidget.config.avatarOffsetY != widget.config.avatarOffsetY ||
         oldWidget.config.avatarRotationDegrees !=
             widget.config.avatarRotationDegrees;
     if (avatarConfigChanged) {
-      _avatarMode = widget.config.avatarMode;
-      _pendingAvatarImagePath = widget.config.customAvatarImagePath;
+      _avatarMode = _avatarModeForConfig(widget.config);
+      _pendingAvatarImagePath = null;
       _avatarScale = widget.config.avatarScale;
       _avatarOffsetX = widget.config.avatarOffsetX;
       _avatarOffsetY = widget.config.avatarOffsetY;
@@ -80,6 +83,10 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
   void _updateConfig(MealTimerConfig config) {
     setState(() => _config = config);
     widget.onConfigChanged(config);
+  }
+
+  AvatarImageMode _avatarModeForConfig(MealTimerConfig config) {
+    return config.avatarModeForVehicle(config.motorcycleId);
   }
 
   String get _avatarModeLabel {
@@ -95,7 +102,9 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
       return pendingPath;
     }
 
-    final savedPath = _config.customAvatarImagePath;
+    final savedPath = _config.customAvatarImagePathForVehicle(
+      _config.motorcycleId,
+    );
     if (savedPath != null && savedPath.trim().isNotEmpty) {
       return savedPath;
     }
@@ -167,6 +176,7 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
       _config.copyWith(
         avatarMode: AvatarImageMode.custom,
         customAvatarImagePath: selectedPath,
+        customAvatarVehicleId: _config.motorcycleId,
         avatarScale: _avatarScale,
         avatarOffsetX: _avatarOffsetX,
         avatarOffsetY: _avatarOffsetY,
@@ -186,6 +196,23 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
     ).showSnackBar(const SnackBar(content: Text('기본 이미지로 변경했어요.')));
   }
 
+  void _handleVehicleSelected(String vehicleId) {
+    final nextConfig = _config.copyWith(motorcycleId: vehicleId);
+    final nextAvatarMode = _avatarMode == AvatarImageMode.custom
+        ? AvatarImageMode.custom
+        : _avatarModeForConfig(nextConfig);
+    setState(() {
+      _config = nextConfig;
+      _avatarMode = nextAvatarMode;
+      _pendingAvatarImagePath = null;
+      _avatarScale = nextConfig.avatarScale;
+      _avatarOffsetX = nextConfig.avatarOffsetX;
+      _avatarOffsetY = nextConfig.avatarOffsetY;
+      _avatarRotationDegrees = nextConfig.avatarRotationDegrees;
+    });
+    widget.onConfigChanged(nextConfig);
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -198,8 +225,15 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
       Localizations.localeOf(context).languageCode,
     );
     final previewAvatarImagePath = _selectedAvatarImagePath;
+    final hasPreviewAvatarImage =
+        previewAvatarImagePath != null &&
+        File(previewAvatarImagePath).existsSync();
+    final shouldShowMissingAvatarWarning =
+        _avatarMode == AvatarImageMode.custom &&
+        previewAvatarImagePath != null &&
+        !hasPreviewAvatarImage;
     final shouldShowCompositePreview =
-        _avatarMode == AvatarImageMode.custom && previewAvatarImagePath != null;
+        _avatarMode == AvatarImageMode.custom && hasPreviewAvatarImage;
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -258,11 +292,19 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
             if (_avatarMode == AvatarImageMode.custom) ...[
               const SizedBox(height: AppSpacing.xl),
               _AvatarUploadCard(
-                imagePath: previewAvatarImagePath,
+                imagePath: hasPreviewAvatarImage
+                    ? previewAvatarImagePath
+                    : null,
                 isUploading: _isUploadingAvatar,
                 onUploadPressed: _pickAvatarImage,
               ),
               const SizedBox(height: AppSpacing.md),
+              if (shouldShowMissingAvatarWarning) ...[
+                const _AvatarWarningCard(
+                  message: '아바타 이미지를 찾을 수 없어 기본 이미지로 보여드려요.',
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
               if (shouldShowCompositePreview) ...[
                 _AvatarCompositePreviewCard(
                   vehicle: vehicle,
@@ -298,31 +340,37 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
                     : null,
                 onUseDefaultPressed: _useDefaultAvatarImage,
               ),
+            ] else ...[
+              const SizedBox(height: AppSpacing.xl),
+              _DefaultAvatarPreviewCard(
+                vehicle: vehicle,
+                onUseDefaultPressed: _useDefaultAvatarImage,
+              ),
             ],
             const SizedBox(height: AppSpacing.xl),
             VehicleSelectionCard(
               title: '아바타를 태울 차량',
               subtitle: '프롬프트 기준',
               selectedVehicleId: _config.motorcycleId,
-              onVehicleSelected: (vehicleId) {
-                _updateConfig(_config.copyWith(motorcycleId: vehicleId));
-              },
+              onVehicleSelected: _handleVehicleSelected,
             ),
-            const SizedBox(height: AppSpacing.xl),
-            const _AvatarGuideCard(items: _guideItems),
-            const SizedBox(height: AppSpacing.md),
-            _AvatarPromptCard(
-              prompt: prompt,
-              onCopyPressed: () => _copyPrompt(prompt),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            const _AvatarPrivacyNoteCard(),
-            const SizedBox(height: AppSpacing.md),
-            if (!shouldShowCompositePreview)
-              const _AvatarSetupStepCard(
-                title: '합성 미리보기',
-                icon: Icons.preview_rounded,
+            if (_avatarMode == AvatarImageMode.custom) ...[
+              const SizedBox(height: AppSpacing.xl),
+              const _AvatarGuideCard(items: _guideItems),
+              const SizedBox(height: AppSpacing.md),
+              _AvatarPromptCard(
+                prompt: prompt,
+                onCopyPressed: () => _copyPrompt(prompt),
               ),
+              const SizedBox(height: AppSpacing.md),
+              const _AvatarPrivacyNoteCard(),
+              const SizedBox(height: AppSpacing.md),
+              if (!shouldShowCompositePreview)
+                const _AvatarSetupStepCard(
+                  title: '합성 미리보기',
+                  icon: Icons.preview_rounded,
+                ),
+            ],
           ],
         ),
       ),
@@ -406,6 +454,110 @@ class _AvatarCompositePreviewCard extends StatelessWidget {
   }
 }
 
+class _DefaultAvatarPreviewCard extends StatelessWidget {
+  const _DefaultAvatarPreviewCard({
+    required this.vehicle,
+    required this.onUseDefaultPressed,
+  });
+
+  final VehicleDefinition vehicle;
+  final VoidCallback onUseDefaultPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWarm,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.borderWarm),
+        boxShadow: AppShadows.surface,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.image_rounded, color: AppColors.brown700),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    '기본 이미지 미리보기',
+                    style: textTheme.titleMedium?.copyWith(
+                      color: AppColors.textStrong,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Center(
+              child: AvatarCompositePreview(
+                vehicle: vehicle,
+                avatarMode: AvatarImageMode.defaultImage,
+                customAvatarImagePath: null,
+                avatarScale: 1.0,
+                avatarOffsetX: 0.0,
+                avatarOffsetY: 0.0,
+                avatarRotationDegrees: 0.0,
+                size: 180,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            FilledButton.icon(
+              key: const ValueKey('avatarUseDefaultButton'),
+              onPressed: onUseDefaultPressed,
+              icon: const Icon(Icons.image_rounded),
+              label: const Text('기본 이미지로 사용하기'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AvatarWarningCard extends StatelessWidget {
+  const _AvatarWarningCard({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceYellow.withValues(alpha: 0.52),
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.borderWarm),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.warning_amber_rounded, color: AppColors.brown700),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  height: 1.36,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AvatarAdjustmentCard extends StatelessWidget {
   const _AvatarAdjustmentCard({
     required this.hasImagePath,
@@ -472,8 +624,8 @@ class _AvatarAdjustmentCard extends StatelessWidget {
                 label: '얼굴 크기',
                 value: avatarScale,
                 min: 0.7,
-                max: 1.4,
-                divisions: 14,
+                max: 2.0,
+                divisions: 26,
                 keyValue: 'avatarScaleSlider',
                 onChanged: onScaleChanged,
               ),

@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 
 import '../../models/meal_timer_config.dart';
 import '../../models/vehicle.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/app_shadows.dart';
 
 class AvatarCompositePreview extends StatelessWidget {
   const AvatarCompositePreview({
@@ -21,6 +19,7 @@ class AvatarCompositePreview extends StatelessWidget {
     required this.size,
     this.isFacingLeft = false,
     this.avatarImageBuilder,
+    this.vehicleFallbackBuilder,
   });
 
   final VehicleDefinition vehicle;
@@ -34,6 +33,12 @@ class AvatarCompositePreview extends StatelessWidget {
   final bool isFacingLeft;
   final Widget Function(BuildContext context, String imagePath)?
   avatarImageBuilder;
+  final Widget Function(
+    BuildContext context,
+    VehicleDefinition vehicle,
+    double size,
+  )?
+  vehicleFallbackBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -59,14 +64,15 @@ class AvatarCompositePreview extends StatelessWidget {
                 vehicle.assetPath,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
-                  return Center(
-                    child: Text(
-                      vehicle.emoji,
-                      textScaler: TextScaler.noScaling,
-                      semanticsLabel: vehicle.labelKo,
-                      style: TextStyle(fontSize: size * 0.48, height: 1),
-                    ),
-                  );
+                  return vehicleFallbackBuilder?.call(context, vehicle, size) ??
+                      Center(
+                        child: Text(
+                          vehicle.emoji,
+                          textScaler: TextScaler.noScaling,
+                          semanticsLabel: vehicle.labelKo,
+                          style: TextStyle(fontSize: size * 0.48, height: 1),
+                        ),
+                      );
                 },
               ),
             ),
@@ -128,24 +134,25 @@ class _AvatarOverlay extends StatelessWidget {
         child: DecoratedBox(
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppColors.surfaceWarm,
-            border: Border.all(color: AppColors.white, width: 3),
-            boxShadow: AppShadows.buttonSoft,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: size * 0.018,
+                offset: Offset(0, size * 0.006),
+              ),
+            ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(3),
-            child: ClipOval(
-              child:
-                  avatarImageBuilder?.call(context, imagePath) ??
-                  Image.file(
-                    File(imagePath),
-                    key: const ValueKey('avatarCompositeOverlayImage'),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const SizedBox.shrink();
-                    },
-                  ),
-            ),
+          child: ClipOval(
+            child:
+                avatarImageBuilder?.call(context, imagePath) ??
+                Image.file(
+                  File(imagePath),
+                  key: const ValueKey('avatarCompositeOverlayImage'),
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const SizedBox.shrink();
+                  },
+                ),
           ),
         ),
       ),

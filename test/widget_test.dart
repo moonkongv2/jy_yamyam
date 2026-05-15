@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ import 'package:jy_yamyam/models/reward_item.dart';
 import 'package:jy_yamyam/models/vehicle.dart';
 import 'package:jy_yamyam/screens/avatar_setup_screen.dart';
 import 'package:jy_yamyam/screens/home_screen.dart';
+import 'package:jy_yamyam/screens/settings_screen.dart';
 import 'package:jy_yamyam/screens/timer_screen.dart';
 import 'package:jy_yamyam/services/avatar_image_picker.dart';
 import 'package:jy_yamyam/services/local_avatar_image_service.dart';
@@ -30,6 +32,7 @@ void main() {
 
     expect(config.avatarMode, AvatarImageMode.defaultImage);
     expect(config.customAvatarImagePath, isNull);
+    expect(config.customAvatarVehicleId, isNull);
     expect(config.avatarScale, 1.0);
     expect(config.avatarOffsetX, 0.0);
     expect(config.avatarOffsetY, 0.0);
@@ -46,6 +49,7 @@ void main() {
         motorcycleId: 'police_car',
         avatarMode: AvatarImageMode.custom,
         customAvatarImagePath: '/local/avatar.png',
+        customAvatarVehicleId: 'police_car',
         avatarScale: 1.25,
         avatarOffsetX: 8.0,
         avatarOffsetY: -6.0,
@@ -58,6 +62,7 @@ void main() {
     expect(loadedConfig.motorcycleId, 'police_car');
     expect(loadedConfig.avatarMode, AvatarImageMode.custom);
     expect(loadedConfig.customAvatarImagePath, '/local/avatar.png');
+    expect(loadedConfig.customAvatarVehicleId, 'police_car');
     expect(loadedConfig.avatarScale, 1.25);
     expect(loadedConfig.avatarOffsetX, 8.0);
     expect(loadedConfig.avatarOffsetY, -6.0);
@@ -98,6 +103,24 @@ void main() {
       expect(config.motorcycleId, 'fire_truck');
       expect(config.avatarMode, AvatarImageMode.defaultImage);
       expect(config.customAvatarImagePath, isNull);
+      expect(config.customAvatarVehicleId, isNull);
+    },
+  );
+
+  test(
+    'Existing custom avatar settings infer vehicle id when missing',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'motorcycleId': 'police_car',
+        'avatarMode': 'custom',
+        'customAvatarImagePath': '/local/avatar.png',
+      });
+
+      final config = await LocalSettingsService().loadConfig();
+
+      expect(config.avatarMode, AvatarImageMode.custom);
+      expect(config.customAvatarImagePath, '/local/avatar.png');
+      expect(config.customAvatarVehicleId, 'police_car');
     },
   );
 
@@ -174,6 +197,7 @@ void main() {
 
     expect(find.text('냠냠 라이더'), findsOneWidget);
     expect(find.text('우리 아이 아바타'), findsOneWidget);
+    expect(find.text('기본 이미지 사용 중'), findsOneWidget);
     expect(find.text('아바타 만들기'), findsOneWidget);
     expect(find.text('15분 아침 코스'), findsOneWidget);
     expect(find.text('25분 보통 코스'), findsOneWidget);
@@ -181,6 +205,98 @@ void main() {
     await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pumpAndSettle();
     expect(find.text('직접 설정으로 출발'), findsOneWidget);
+  });
+
+  testWidgets('Home screen vehicle sections render confirmed custom avatar', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final avatarFile = _createTemporaryAvatarImage();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            childName: '지율',
+            avatarMode: AvatarImageMode.custom,
+            customAvatarImagePath: avatarFile.path,
+            customAvatarVehicleId: 'motorcycle',
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          avatarImageBuilder: (context, imagePath) {
+            return const ColoredBox(
+              key: ValueKey('avatarCompositeOverlayImage'),
+              color: Colors.pink,
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('오늘의 냠냠 미션'), findsOneWidget);
+    expect(find.text('오늘의 빠방'), findsOneWidget);
+    expect(find.text('직접 만든 아바타 사용 중'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('avatarCompositeOverlayImage')),
+      findsNWidgets(2),
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Home screen does not apply saved avatar to another vehicle', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final avatarFile = _createTemporaryAvatarImage();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            childName: '지율',
+            motorcycleId: 'excavator',
+            avatarMode: AvatarImageMode.custom,
+            customAvatarImagePath: avatarFile.path,
+            customAvatarVehicleId: 'police_car',
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          avatarImageBuilder: (context, imagePath) {
+            return const ColoredBox(
+              key: ValueKey('avatarCompositeOverlayImage'),
+              color: Colors.pink,
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const ValueKey('avatarCompositeOverlayImage')),
+      findsNothing,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
 
   testWidgets('Home avatar CTA opens avatar setup screen', (tester) async {
@@ -196,8 +312,13 @@ void main() {
       find.text('외부 AI 서비스에서 아이 사진을 귀여운 라이더 캐릭터로 만든 뒤 업로드해 주세요.'),
       findsOneWidget,
     );
-    expect(find.text('이미지 생성 가이드'), findsOneWidget);
+    expect(find.text('기본 이미지 미리보기'), findsOneWidget);
+
+    await tester.tap(find.text('직접 만든 아바타 사용'));
+    await tester.pump();
+
     await _scrollAvatarPromptIntoView(tester);
+    expect(find.text('이미지 생성 가이드'), findsOneWidget);
     expect(find.text('프롬프트 복사'), findsOneWidget);
     expect(find.text('프롬프트 복사하기'), findsOneWidget);
   });
@@ -207,10 +328,13 @@ void main() {
   ) async {
     await _pumpAvatarSetupScreen(tester, MealTimerConfig.defaults());
 
+    await tester.tap(find.text('직접 만든 아바타 사용'));
+    await tester.pump();
+
+    await _scrollAvatarPromptIntoView(tester);
     expect(find.text('아이 얼굴이 잘 보이는 정면 사진을 사용해 주세요.'), findsOneWidget);
     expect(find.text('얼굴이 크고 선명할수록 좋아요.'), findsOneWidget);
     expect(find.text('텍스트, 로고, 워터마크는 없어야 해요.'), findsOneWidget);
-    await _scrollAvatarPromptIntoView(tester);
     expect(_avatarPromptText(tester), contains('첨부한 아이 사진을 참고'));
     expect(_avatarPromptText(tester), contains('정사각형 1:1 헤드샷'));
     expect(find.text('프롬프트 복사하기'), findsOneWidget);
@@ -224,6 +348,8 @@ void main() {
       MealTimerConfig.defaults().copyWith(motorcycleId: 'fire_truck'),
     );
 
+    await tester.tap(find.text('직접 만든 아바타 사용'));
+    await tester.pump();
     await _scrollAvatarPromptIntoView(tester);
     expect(_avatarPromptText(tester), contains('소방관'));
   });
@@ -236,6 +362,8 @@ void main() {
       MealTimerConfig.defaults().copyWith(motorcycleId: 'police_car'),
     );
 
+    await tester.tap(find.text('직접 만든 아바타 사용'));
+    await tester.pump();
     await _scrollAvatarPromptIntoView(tester);
     expect(_avatarPromptText(tester), contains('경찰'));
   });
@@ -250,6 +378,9 @@ void main() {
       onConfigChanged: (config) => changedConfig = config,
     );
 
+    await tester.tap(find.text('직접 만든 아바타 사용'));
+    await tester.pump();
+    await _scrollAvatarVehicleSelectionIntoView(tester);
     expect(find.text('아바타를 태울 차량'), findsOneWidget);
 
     await tester.tap(_vehicleChoiceFinder('fire_truck'));
@@ -303,6 +434,7 @@ void main() {
     tester,
   ) async {
     MealTimerConfig? changedConfig;
+    final avatarFile = _createTemporaryAvatarImage();
     await _pumpAvatarSetupScreen(
       tester,
       MealTimerConfig.defaults(),
@@ -312,7 +444,7 @@ void main() {
           path: 'picked/avatar.png',
         ),
       ),
-      avatarImageService: _FakeLocalAvatarImageService('/tmp/avatar_saved.png'),
+      avatarImageService: _FakeLocalAvatarImageService(avatarFile.path),
       onConfigChanged: (config) => changedConfig = config,
     );
 
@@ -332,14 +464,56 @@ void main() {
     expect(find.text('이 모습으로 냠냠라이더를 탈까요?'), findsOneWidget);
   });
 
-  testWidgets('Avatar setup size slider updates local adjustment state', (
+  testWidgets('Avatar setup initializes from custom config', (tester) async {
+    final avatarFile = _createTemporaryAvatarImage();
+    await _pumpAvatarSetupScreen(
+      tester,
+      MealTimerConfig.defaults().copyWith(
+        avatarMode: AvatarImageMode.custom,
+        customAvatarImagePath: avatarFile.path,
+        customAvatarVehicleId: 'motorcycle',
+      ),
+    );
+
+    expect(find.text('직접 만든 아바타 사용'), findsWidgets);
+    expect(find.widgetWithText(FilledButton, '다시 업로드'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('pendingAvatarImagePreview')),
+      findsOneWidget,
+    );
+    await _scrollAvatarCompositeIntoView(tester);
+    expect(find.text('합성 미리보기'), findsOneWidget);
+  });
+
+  testWidgets('Avatar setup warns when saved custom file is missing', (
     tester,
   ) async {
     await _pumpAvatarSetupScreen(
       tester,
       MealTimerConfig.defaults().copyWith(
         avatarMode: AvatarImageMode.custom,
-        customAvatarImagePath: '/tmp/avatar_saved.png',
+        customAvatarImagePath: '/missing/avatar.png',
+        customAvatarVehicleId: 'motorcycle',
+      ),
+    );
+
+    expect(find.text('아바타 이미지를 찾을 수 없어 기본 이미지로 보여드려요.'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('pendingAvatarImagePreview')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('Avatar setup size slider updates local adjustment state', (
+    tester,
+  ) async {
+    final avatarFile = _createTemporaryAvatarImage();
+    await _pumpAvatarSetupScreen(
+      tester,
+      MealTimerConfig.defaults().copyWith(
+        avatarMode: AvatarImageMode.custom,
+        customAvatarImagePath: avatarFile.path,
+        customAvatarVehicleId: 'motorcycle',
       ),
     );
 
@@ -355,11 +529,13 @@ void main() {
   testWidgets('Avatar setup reset button resets adjustment controls', (
     tester,
   ) async {
+    final avatarFile = _createTemporaryAvatarImage();
     await _pumpAvatarSetupScreen(
       tester,
       MealTimerConfig.defaults().copyWith(
         avatarMode: AvatarImageMode.custom,
-        customAvatarImagePath: '/tmp/avatar_saved.png',
+        customAvatarImagePath: avatarFile.path,
+        customAvatarVehicleId: 'motorcycle',
       ),
     );
 
@@ -383,11 +559,13 @@ void main() {
     tester,
   ) async {
     MealTimerConfig? changedConfig;
+    final avatarFile = _createTemporaryAvatarImage();
     await _pumpAvatarSetupScreen(
       tester,
       MealTimerConfig.defaults().copyWith(
         avatarMode: AvatarImageMode.custom,
-        customAvatarImagePath: '/tmp/avatar_saved.png',
+        customAvatarImagePath: avatarFile.path,
+        customAvatarVehicleId: 'motorcycle',
       ),
       onConfigChanged: (config) => changedConfig = config,
     );
@@ -406,7 +584,8 @@ void main() {
     await tester.pump();
 
     expect(changedConfig?.avatarMode, AvatarImageMode.custom);
-    expect(changedConfig?.customAvatarImagePath, '/tmp/avatar_saved.png');
+    expect(changedConfig?.customAvatarImagePath, avatarFile.path);
+    expect(changedConfig?.customAvatarVehicleId, 'motorcycle');
     expect(changedConfig?.avatarScale, 1.3);
     expect(changedConfig?.avatarOffsetX, 0.1);
     expect(changedConfig?.avatarOffsetY, -0.05);
@@ -418,11 +597,13 @@ void main() {
     tester,
   ) async {
     MealTimerConfig? changedConfig;
+    final avatarFile = _createTemporaryAvatarImage();
     await _pumpAvatarSetupScreen(
       tester,
       MealTimerConfig.defaults().copyWith(
         avatarMode: AvatarImageMode.custom,
-        customAvatarImagePath: '/tmp/avatar_saved.png',
+        customAvatarImagePath: avatarFile.path,
+        customAvatarVehicleId: 'motorcycle',
         avatarScale: 1.2,
         avatarOffsetX: 0.1,
         avatarOffsetY: -0.1,
@@ -439,11 +620,33 @@ void main() {
     await tester.pump();
 
     expect(changedConfig?.avatarMode, AvatarImageMode.defaultImage);
-    expect(changedConfig?.customAvatarImagePath, '/tmp/avatar_saved.png');
+    expect(changedConfig?.customAvatarImagePath, avatarFile.path);
+    expect(changedConfig?.customAvatarVehicleId, 'motorcycle');
     expect(changedConfig?.avatarScale, 1.2);
     expect(changedConfig?.avatarOffsetX, 0.1);
     expect(changedConfig?.avatarOffsetY, -0.1);
     expect(changedConfig?.avatarRotationDegrees, 6.0);
+    expect(find.text('기본 이미지로 변경했어요.'), findsOneWidget);
+  });
+
+  testWidgets('Avatar setup default mode save keeps default avatar mode', (
+    tester,
+  ) async {
+    MealTimerConfig? changedConfig;
+    await _pumpAvatarSetupScreen(
+      tester,
+      MealTimerConfig.defaults(),
+      onConfigChanged: (config) => changedConfig = config,
+    );
+
+    expect(find.text('기본 이미지 미리보기'), findsOneWidget);
+    await _tapVisible(
+      tester,
+      find.byKey(const ValueKey('avatarUseDefaultButton')),
+    );
+    await tester.pump();
+
+    expect(changedConfig?.avatarMode, AvatarImageMode.defaultImage);
     expect(find.text('기본 이미지로 변경했어요.'), findsOneWidget);
   });
 
@@ -503,6 +706,38 @@ void main() {
     expect(find.text('아바타 설정'), findsOneWidget);
     expect(find.text('기본 이미지 사용 중'), findsOneWidget);
     expect(find.text('아바타 설정하기'), findsOneWidget);
+  });
+
+  testWidgets('Settings screen shows custom avatar state when active', (
+    tester,
+  ) async {
+    final avatarFile = _createTemporaryAvatarImage();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: SettingsScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            avatarMode: AvatarImageMode.custom,
+            customAvatarImagePath: avatarFile.path,
+            customAvatarVehicleId: 'motorcycle',
+          ),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+
+    await tester.drag(find.byType(ListView), const Offset(0, -700));
+    await tester.pumpAndSettle();
+
+    expect(find.text('아바타 설정'), findsOneWidget);
+    expect(find.text('직접 만든 아바타 사용 중'), findsOneWidget);
   });
 
   testWidgets('Home screen shows vehicle choices above courses', (
@@ -708,6 +943,118 @@ void main() {
     );
   });
 
+  testWidgets('Road view renders custom avatar overlay from local file', (
+    tester,
+  ) async {
+    final avatarFile = _createTemporaryAvatarImage();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 420,
+            height: 640,
+            child: RoadView(
+              progress: 0.5,
+              vehicle: VehicleCatalog.fireTruck,
+              avatarMode: AvatarImageMode.custom,
+              customAvatarImagePath: avatarFile.path,
+              avatarScale: 1.2,
+              avatarOffsetX: 0.05,
+              avatarOffsetY: -0.04,
+              avatarRotationDegrees: 6,
+              avatarImageBuilder: (context, imagePath) {
+                return const ColoredBox(
+                  key: ValueKey('avatarCompositeOverlayImage'),
+                  color: Colors.pink,
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(VehicleWidget), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('avatarCompositeOverlayImage')),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Road view ignores missing custom avatar file safely', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 420,
+            height: 640,
+            child: RoadView(
+              progress: 0.5,
+              vehicle: VehicleCatalog.fireTruck,
+              avatarMode: AvatarImageMode.custom,
+              customAvatarImagePath: '/missing/avatar.png',
+              avatarScale: 1.2,
+              avatarOffsetX: 0.05,
+              avatarOffsetY: -0.04,
+              avatarRotationDegrees: 6,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(VehicleWidget), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('avatarCompositeOverlayImage')),
+      findsNothing,
+    );
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Timer screen does not apply avatar saved for another vehicle', (
+    tester,
+  ) async {
+    final avatarFile = _createTemporaryAvatarImage();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            motorcycleId: 'excavator',
+            avatarMode: AvatarImageMode.custom,
+            customAvatarImagePath: avatarFile.path,
+            customAvatarVehicleId: 'police_car',
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byType(RoadView), findsOneWidget);
+    expect(
+      tester.widget<RoadView>(find.byType(RoadView)).avatarMode,
+      AvatarImageMode.defaultImage,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
   testWidgets('English locale shows English home copy', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
@@ -900,6 +1247,16 @@ Future<void> _scrollAvatarPromptIntoView(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _scrollAvatarVehicleSelectionIntoView(WidgetTester tester) async {
+  for (var index = 0; index < 4; index += 1) {
+    if (find.text('아바타를 태울 차량').evaluate().isNotEmpty) {
+      return;
+    }
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+  }
+}
+
 Future<void> _scrollAvatarCompositeIntoView(WidgetTester tester) async {
   for (var index = 0; index < 4; index += 1) {
     if (find.text('합성 미리보기').evaluate().isNotEmpty) {
@@ -933,6 +1290,90 @@ Slider _avatarSlider(WidgetTester tester, String keyValue) {
 double _avatarSliderValue(WidgetTester tester, String keyValue) {
   return _avatarSlider(tester, keyValue).value;
 }
+
+File _createTemporaryAvatarImage() {
+  final temporaryDirectory = Directory.systemTemp.createTempSync(
+    'road_avatar_test_',
+  );
+  final avatarFile = File('${temporaryDirectory.path}/avatar.png');
+  avatarFile.writeAsBytesSync(_transparentPngBytes);
+  addTearDown(() {
+    if (temporaryDirectory.existsSync()) {
+      temporaryDirectory.deleteSync(recursive: true);
+    }
+  });
+  return avatarFile;
+}
+
+final _transparentPngBytes = Uint8List.fromList([
+  0x89,
+  0x50,
+  0x4E,
+  0x47,
+  0x0D,
+  0x0A,
+  0x1A,
+  0x0A,
+  0x00,
+  0x00,
+  0x00,
+  0x0D,
+  0x49,
+  0x48,
+  0x44,
+  0x52,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x08,
+  0x06,
+  0x00,
+  0x00,
+  0x00,
+  0x1F,
+  0x15,
+  0xC4,
+  0x89,
+  0x00,
+  0x00,
+  0x00,
+  0x0A,
+  0x49,
+  0x44,
+  0x41,
+  0x54,
+  0x78,
+  0x9C,
+  0x63,
+  0x00,
+  0x01,
+  0x00,
+  0x00,
+  0x05,
+  0x00,
+  0x01,
+  0x0D,
+  0x0A,
+  0x2D,
+  0xB4,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x49,
+  0x45,
+  0x4E,
+  0x44,
+  0xAE,
+  0x42,
+  0x60,
+  0x82,
+]);
 
 Material _vehicleChoiceMaterial(WidgetTester tester, String vehicleId) {
   return tester.widget<Material>(_vehicleChoiceFinder(vehicleId));

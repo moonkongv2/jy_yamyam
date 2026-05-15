@@ -11,6 +11,7 @@ class LocalSettingsService {
   static const _childNameKey = 'childName';
   static const _avatarModeKey = 'avatarMode';
   static const _customAvatarImagePathKey = 'customAvatarImagePath';
+  static const _customAvatarVehicleIdKey = 'customAvatarVehicleId';
   static const _avatarScaleKey = 'avatarScale';
   static const _avatarOffsetXKey = 'avatarOffsetX';
   static const _avatarOffsetYKey = 'avatarOffsetY';
@@ -19,6 +20,21 @@ class LocalSettingsService {
   Future<MealTimerConfig> loadConfig() async {
     final preferences = await SharedPreferences.getInstance();
     final defaults = MealTimerConfig.defaults();
+    final motorcycleId =
+        preferences.getString(_motorcycleIdKey) ?? defaults.motorcycleId;
+    final avatarMode = _avatarModeFromString(
+      preferences.getString(_avatarModeKey),
+    );
+    final customAvatarImagePath = preferences.getString(
+      _customAvatarImagePathKey,
+    );
+    final customAvatarVehicleId =
+        preferences.getString(_customAvatarVehicleIdKey) ??
+        (avatarMode == AvatarImageMode.custom &&
+                customAvatarImagePath != null &&
+                customAvatarImagePath.trim().isNotEmpty
+            ? motorcycleId
+            : null);
 
     return defaults.copyWith(
       duration: Duration(
@@ -33,11 +49,11 @@ class LocalSettingsService {
           preferences.getBool(_soundEnabledKey) ?? defaults.soundEnabled,
       keepScreenAwake:
           preferences.getBool(_keepScreenAwakeKey) ?? defaults.keepScreenAwake,
-      motorcycleId:
-          preferences.getString(_motorcycleIdKey) ?? defaults.motorcycleId,
+      motorcycleId: motorcycleId,
       childName: preferences.getString(_childNameKey) ?? defaults.childName,
-      avatarMode: _avatarModeFromString(preferences.getString(_avatarModeKey)),
-      customAvatarImagePath: preferences.getString(_customAvatarImagePathKey),
+      avatarMode: avatarMode,
+      customAvatarImagePath: customAvatarImagePath,
+      customAvatarVehicleId: customAvatarVehicleId,
       avatarScale:
           preferences.getDouble(_avatarScaleKey) ?? defaults.avatarScale,
       avatarOffsetX:
@@ -70,6 +86,16 @@ class LocalSettingsService {
       await preferences.setString(
         _customAvatarImagePathKey,
         customAvatarImagePath,
+      );
+    }
+
+    final customAvatarVehicleId = config.customAvatarVehicleId?.trim();
+    if (customAvatarVehicleId == null || customAvatarVehicleId.isEmpty) {
+      await preferences.remove(_customAvatarVehicleIdKey);
+    } else {
+      await preferences.setString(
+        _customAvatarVehicleIdKey,
+        customAvatarVehicleId,
       );
     }
 
