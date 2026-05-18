@@ -22,6 +22,7 @@ import 'package:jy_yamyam/services/avatar_image_picker.dart';
 import 'package:jy_yamyam/services/local_avatar_image_service.dart';
 import 'package:jy_yamyam/services/local_meal_progress_service.dart';
 import 'package:jy_yamyam/services/local_settings_service.dart';
+import 'package:jy_yamyam/services/screen_awake_service.dart';
 import 'package:jy_yamyam/widgets/road_painter.dart';
 import 'package:jy_yamyam/widgets/road_view.dart';
 import 'package:jy_yamyam/widgets/vehicle_widget.dart';
@@ -1055,6 +1056,57 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets('Timer screen keeps screen awake only when setting is enabled', (
+    tester,
+  ) async {
+    final screenAwakeService = _FakeScreenAwakeService();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(keepScreenAwake: true),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          screenAwakeService: screenAwakeService,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(screenAwakeService.enabledValues, [true]);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+
+    expect(screenAwakeService.enabledValues, [true, false]);
+  });
+
+  testWidgets(
+    'Timer screen leaves wakelock untouched when setting is disabled',
+    (tester) async {
+      final screenAwakeService = _FakeScreenAwakeService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: TimerScreen(
+            config: MealTimerConfig.defaults().copyWith(keepScreenAwake: false),
+            mealProgressService: LocalMealProgressService(),
+            onConfigChanged: (_) {},
+            screenAwakeService: screenAwakeService,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(screenAwakeService.enabledValues, isEmpty);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+
+      expect(screenAwakeService.enabledValues, isEmpty);
+    },
+  );
+
   testWidgets('English locale shows English home copy', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
@@ -1405,6 +1457,15 @@ class _FakeAvatarImagePicker implements AvatarImagePicker {
   @override
   Future<XFile?> pickAvatarImage() async {
     return pickedFile;
+  }
+}
+
+class _FakeScreenAwakeService implements ScreenAwakeService {
+  final List<bool> enabledValues = [];
+
+  @override
+  Future<void> setEnabled(bool enabled) async {
+    enabledValues.add(enabled);
   }
 }
 

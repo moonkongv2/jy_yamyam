@@ -142,7 +142,7 @@ dart run flutter_launcher_icons
 - Timer UI copy is state-aware: running uses progress-based messages, paused shows break copy, and arrived/completed shows arrival copy.
 - The selected vehicle is shared across home, vehicle selector, timer road view, and vehicle rendering through `VehicleDefinition`.
 - Settings and meal progress are stored locally with `SharedPreferences`.
-- Sound and keep-screen-awake settings are persisted, but runtime behavior is still reserved for a later iteration.
+- Sound settings are persisted, and the keep-screen-awake setting is applied while the meal timer is running.
 - UI polish should use the shared design tokens in `lib/theme/` and reusable app widgets in `lib/widgets/app/`.
 - Vehicle and sticker assets should keep consistent canvas size, padding, and visual scale when adding new artwork.
 

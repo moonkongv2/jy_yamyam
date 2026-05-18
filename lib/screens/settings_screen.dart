@@ -133,7 +133,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 SwitchListTile(
                   title: Text(texts.settings.keepScreenAwake),
-                  subtitle: Text(texts.settings.savedOnlySubtitle),
+                  subtitle: Text(texts.settings.keepScreenAwakeSubtitle),
                   value: _config.keepScreenAwake,
                   onChanged: (value) {
                     _update(_config.copyWith(keepScreenAwake: value));
