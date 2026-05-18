@@ -12,22 +12,22 @@ class EnHomeTexts implements HomeTextSet {
   String get morningCourse => '15-min Morning Ride';
   String get morningCourseSubtitle => 'A light warm-up';
   String get normalCourse => '25-min Regular Ride';
-  String get normalCourseSubtitle => 'A steady mealtime mission';
   String get slowCourse => '35-min Easy Ride';
   String get slowCourseSubtitle => 'Cruise to the finish';
-  String get recommendedBadge => 'Recommended';
+  String get quickCourseTitle => 'Other rides';
   String get customStartButton => 'Start Custom Ride';
+  String get customSheetTitle => 'Custom time';
   String get mealSummaryLabel => 'Meals';
   String get stickerKindSummaryLabel => 'Kinds';
   String get stickerSummaryLabel => 'Stickers';
   String get noMealHistory => 'No meal records yet.';
   String get openStickerCollection => 'View Sticker Collection';
-  String get avatarCtaTitle => "Child's avatar";
   String get avatarCtaSubtitle =>
       'Put a cute rider face made from a child photo on the vehicle.';
   String get avatarCtaButton => 'Create avatar';
+  String get avatarCtaEditButton => 'Edit';
+  String get avatarInlineCustomState => 'Child face on board';
 
-  String customSettingMinutes(int minutes) => 'Custom: $minutes min';
   String minuteLabel(int minutes) => '$minutes min';
   String progressTitle(String childName) => "$childName's meal records";
   String mealCount(int count) => '$count';

@@ -197,15 +197,13 @@ void main() {
     await _startApp(tester, const Locale('ko'));
 
     expect(find.byKey(const ValueKey('homeLogo')), findsOneWidget);
-    expect(find.text('우리 아이 아바타'), findsOneWidget);
     expect(find.text('기본 이미지 사용 중'), findsOneWidget);
     expect(find.text('아바타 만들기'), findsOneWidget);
+    expect(find.text('다른 코스'), findsOneWidget);
     expect(find.text('15분 아침 코스'), findsOneWidget);
-    expect(find.text('25분 보통 코스'), findsOneWidget);
+    expect(find.textContaining('25분 보통 코스'), findsOneWidget);
     expect(find.text('35분 천천히 코스'), findsOneWidget);
-    await tester.drag(find.byType(ListView), const Offset(0, -500));
-    await tester.pumpAndSettle();
-    expect(find.text('직접 설정으로 출발'), findsOneWidget);
+    expect(find.text('직접 설정'), findsOneWidget);
   });
 
   testWidgets('Home screen vehicle sections render confirmed custom avatar', (
@@ -245,7 +243,7 @@ void main() {
 
     expect(find.text('오늘의 냠냠 미션'), findsOneWidget);
     expect(find.text('오늘의 빠방'), findsOneWidget);
-    expect(find.text('직접 만든 아바타 사용 중'), findsOneWidget);
+    expect(find.text('아이 얼굴 탑승 중'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('avatarCompositeOverlayImage')),
       findsNWidgets(2),
@@ -687,7 +685,7 @@ void main() {
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('25분 보통 코스'));
+    await tester.tap(find.textContaining('25분 보통 코스'));
     await tester.pump();
 
     expect(find.textContaining('남은 시간'), findsNothing);
@@ -741,7 +739,7 @@ void main() {
     expect(find.text('직접 만든 아바타 사용 중'), findsOneWidget);
   });
 
-  testWidgets('Home screen shows vehicle choices above courses', (
+  testWidgets('Home screen shows quick courses above vehicle choices', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -788,7 +786,7 @@ void main() {
 
     final vehicleTitleTop = tester.getTopLeft(find.text('빠방 고르기')).dy;
     final firstCourseTop = tester.getTopLeft(find.text('15분 아침 코스')).dy;
-    expect(vehicleTitleTop, lessThan(firstCourseTop));
+    expect(firstCourseTop, lessThan(vehicleTitleTop));
   });
 
   testWidgets('Selected vehicle on home is saved to preferences', (
@@ -1121,14 +1119,11 @@ void main() {
     expect(find.text("Today's vehicle"), findsOneWidget);
     expect(find.text('15-min Morning Ride'), findsOneWidget);
     expect(find.text('A light warm-up'), findsOneWidget);
-    expect(find.text('25-min Regular Ride'), findsOneWidget);
-    expect(find.text('A steady mealtime mission'), findsOneWidget);
-    expect(find.text('Recommended'), findsOneWidget);
+    expect(find.textContaining('25-min Regular Ride'), findsOneWidget);
+    expect(find.text('Other rides'), findsOneWidget);
     expect(find.text('35-min Easy Ride'), findsOneWidget);
     expect(find.text('Cruise to the finish'), findsOneWidget);
-    await tester.drag(find.byType(ListView), const Offset(0, -500));
-    await tester.pumpAndSettle();
-    expect(find.text('Start Custom Ride'), findsOneWidget);
+    expect(find.text('Custom time'), findsOneWidget);
   });
 
   testWidgets('English locale shows English timer progress copy', (
@@ -1184,7 +1179,7 @@ void main() {
     expect(find.byKey(const ValueKey('homeLogo')), findsOneWidget);
     await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pumpAndSettle();
-    expect(find.text('Start Custom Ride'), findsOneWidget);
+    expect(find.text('Custom time'), findsOneWidget);
   });
 
   test('Fast meal awards a special sticker with a random sticker', () async {

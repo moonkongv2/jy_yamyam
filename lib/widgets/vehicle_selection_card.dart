@@ -25,6 +25,7 @@ class VehicleSelectionCard extends StatelessWidget {
     this.avatarOffsetY = 0.0,
     this.avatarRotationDegrees = 0.0,
     this.avatarImageBuilder,
+    this.footer,
   });
 
   final String title;
@@ -39,6 +40,7 @@ class VehicleSelectionCard extends StatelessWidget {
   final double avatarRotationDegrees;
   final Widget Function(BuildContext context, String imagePath)?
   avatarImageBuilder;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -68,22 +70,27 @@ class VehicleSelectionCard extends StatelessWidget {
                   ),
                 ),
                 if (subtitle != null)
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.68),
-                      borderRadius: AppRadius.pill,
-                      border: Border.all(color: AppColors.borderSoft),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: AppSpacing.xs,
+                  Flexible(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withValues(alpha: 0.68),
+                        borderRadius: AppRadius.pill,
+                        border: Border.all(color: AppColors.borderSoft),
                       ),
-                      child: Text(
-                        subtitle!,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w700,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.sm,
+                          vertical: AppSpacing.xs,
+                        ),
+                        child: Text(
+                          subtitle!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w700,
+                              ),
                         ),
                       ),
                     ),
@@ -139,6 +146,16 @@ class VehicleSelectionCard extends StatelessWidget {
                 );
               },
             ),
+            if (footer != null) ...[
+              const SizedBox(height: AppSpacing.md),
+              const Divider(
+                color: AppColors.borderSoft,
+                height: 1,
+                thickness: 1,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              footer!,
+            ],
           ],
         ),
       ),

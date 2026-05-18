@@ -17,21 +17,21 @@ abstract interface class HomeTextSet {
   String get morningCourse;
   String get morningCourseSubtitle;
   String get normalCourse;
-  String get normalCourseSubtitle;
   String get slowCourse;
   String get slowCourseSubtitle;
-  String get recommendedBadge;
+  String get quickCourseTitle;
   String get customStartButton;
+  String get customSheetTitle;
   String get mealSummaryLabel;
   String get stickerKindSummaryLabel;
   String get stickerSummaryLabel;
   String get noMealHistory;
   String get openStickerCollection;
-  String get avatarCtaTitle;
   String get avatarCtaSubtitle;
   String get avatarCtaButton;
+  String get avatarCtaEditButton;
+  String get avatarInlineCustomState;
 
-  String customSettingMinutes(int minutes);
   String minuteLabel(int minutes);
   String progressTitle(String childName);
   String mealCount(int count);

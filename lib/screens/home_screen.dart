@@ -79,9 +79,146 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _adjustCustomMinutes(int delta) {
-    final minutes = (_customMinutes.round() + delta).clamp(1, 60);
-    setState(() => _customMinutes = minutes.toDouble());
+  Future<void> _openCustomMinutesSheet() async {
+    final texts = AppTexts.of(context);
+    var sheetMinutes = _customMinutes;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            void updateSheetMinutes(double value) {
+              final minutes = value.clamp(1.0, 60.0);
+              setState(() => _customMinutes = minutes);
+              setSheetState(() => sheetMinutes = minutes);
+            }
+
+            void adjustSheetMinutes(int delta) {
+              updateSheetMinutes((sheetMinutes.round() + delta).toDouble());
+            }
+
+            return SafeArea(
+              top: false,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.sizeOf(context).height * 0.56,
+                  ),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceWarm,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(AppRadius.xxl),
+                      ),
+                      border: Border.all(color: AppColors.borderWarm),
+                      boxShadow: AppShadows.hero,
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        AppSpacing.xl,
+                        AppSpacing.sm,
+                        AppSpacing.xl,
+                        AppSpacing.xl + MediaQuery.viewInsetsOf(context).bottom,
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: AppColors.borderSoft,
+                                borderRadius: AppRadius.pill,
+                              ),
+                              child: const SizedBox(width: 44, height: 5),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        texts.home.customSheetTitle,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                              color: AppColors.textStrong,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                      ),
+                                      const SizedBox(height: AppSpacing.xs),
+                                      Text(
+                                        texts.home.minuteLabel(
+                                          sheetMinutes.round(),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headlineSmall
+                                            ?.copyWith(
+                                              color: AppColors.textStrong,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton.filledTonal(
+                                  onPressed: () =>
+                                      Navigator.of(sheetContext).pop(),
+                                  icon: const Icon(Icons.close_rounded),
+                                  tooltip: MaterialLocalizations.of(
+                                    context,
+                                  ).closeButtonTooltip,
+                                  style: IconButton.styleFrom(
+                                    backgroundColor: AppColors.white.withValues(
+                                      alpha: 0.72,
+                                    ),
+                                    foregroundColor: AppColors.brown700,
+                                    fixedSize: const Size(44, 44),
+                                    shape: const CircleBorder(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            _CustomMinutesSheetContent(
+                              sliderLabel: texts.home.minuteLabel(
+                                sheetMinutes.round(),
+                              ),
+                              minutes: sheetMinutes,
+                              startLabel: texts.home.customStartButton,
+                              onChanged: updateSheetMinutes,
+                              onAdjust: adjustSheetMinutes,
+                              onStart: () {
+                                final selectedMinutes = sheetMinutes.round();
+                                Navigator.of(sheetContext).pop();
+                                _startTimer(selectedMinutes);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _openSettings() async {
@@ -119,7 +256,7 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedVehicleAvatarImagePath != null &&
         File(selectedVehicleAvatarImagePath).existsSync();
     final avatarStateText = isUsingCustomAvatar
-        ? texts.settings.avatarCustomState
+        ? texts.home.avatarInlineCustomState
         : texts.settings.avatarDefaultState;
 
     return Scaffold(
@@ -185,13 +322,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   avatarOffsetY: _config.avatarOffsetY,
                   avatarRotationDegrees: _config.avatarRotationDegrees,
                   avatarImageBuilder: widget.avatarImageBuilder,
-                );
-                final avatarCard = _AvatarCtaCard(
-                  title: texts.home.avatarCtaTitle,
-                  subtitle: texts.home.avatarCtaSubtitle,
-                  stateText: avatarStateText,
-                  buttonLabel: texts.home.avatarCtaButton,
-                  onPressed: _openAvatarSetup,
+                  footer: _AvatarInlineCta(
+                    stateText: avatarStateText,
+                    description: texts.home.avatarCtaSubtitle,
+                    buttonLabel: isUsingCustomAvatar
+                        ? texts.home.avatarCtaEditButton
+                        : texts.home.avatarCtaButton,
+                    onPressed: _openAvatarSetup,
+                  ),
                 );
                 final heroCard = _HeroMissionCard(
                   ctaLabel: '${texts.home.normalCourse} ${texts.common.start}',
@@ -205,6 +343,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   avatarImageBuilder: widget.avatarImageBuilder,
                   onStart: () => _startTimer(25),
                 );
+                final quickCourses = _QuickCourseSection(
+                  title: texts.home.quickCourseTitle,
+                  children: [
+                    _QuickCourseButton(
+                      label: texts.home.morningCourse,
+                      subtitle: texts.home.morningCourseSubtitle,
+                      emoji: '🌞',
+                      onPressed: () => _startTimer(15),
+                    ),
+                    _QuickCourseButton(
+                      label: texts.home.slowCourse,
+                      subtitle: texts.home.slowCourseSubtitle,
+                      emoji: '🌈',
+                      onPressed: () => _startTimer(35),
+                    ),
+                    _QuickCourseButton(
+                      label: texts.home.customSheetTitle,
+                      subtitle: texts.home.minuteLabel(_customMinutes.round()),
+                      icon: Icons.tune_rounded,
+                      onPressed: _openCustomMinutesSheet,
+                    ),
+                  ],
+                );
 
                 if (constraints.maxWidth >= 700) {
                   return Row(
@@ -215,9 +376,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: Column(
                           children: [
-                            vehicleCard,
+                            quickCourses,
                             const SizedBox(height: AppSpacing.md),
-                            avatarCard,
+                            vehicleCard,
                           ],
                         ),
                       ),
@@ -229,82 +390,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     heroCard,
                     const SizedBox(height: AppSpacing.xl),
+                    quickCourses,
+                    const SizedBox(height: AppSpacing.xl),
                     vehicleCard,
-                    const SizedBox(height: AppSpacing.md),
-                    avatarCard,
                   ],
                 );
               },
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final presetCards = [
-                  _PresetMissionCard(
-                    label: texts.home.morningCourse,
-                    emoji: '🌞',
-                    subtitle: texts.home.morningCourseSubtitle,
-                    backgroundColor: AppColors.surfaceYellow,
-                    onPressed: () => _startTimer(15),
-                  ),
-                  _PresetMissionCard(
-                    label: texts.home.normalCourse,
-                    emoji: '🍚',
-                    subtitle: texts.home.normalCourseSubtitle,
-                    backgroundColor: AppColors.primarySoft,
-                    badge: texts.home.recommendedBadge,
-                    onPressed: () => _startTimer(25),
-                  ),
-                  _PresetMissionCard(
-                    label: texts.home.slowCourse,
-                    emoji: '🌈',
-                    subtitle: texts.home.slowCourseSubtitle,
-                    backgroundColor: AppColors.surfacePink,
-                    onPressed: () => _startTimer(35),
-                  ),
-                ];
-
-                if (constraints.maxWidth >= 700) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      for (
-                        var index = 0;
-                        index < presetCards.length;
-                        index++
-                      ) ...[
-                        if (index > 0) const SizedBox(width: AppSpacing.md),
-                        Expanded(child: presetCards[index]),
-                      ],
-                    ],
-                  );
-                }
-
-                return Column(
-                  children: [
-                    for (
-                      var index = 0;
-                      index < presetCards.length;
-                      index++
-                    ) ...[
-                      if (index > 0) const SizedBox(height: AppSpacing.md),
-                      presetCards[index],
-                    ],
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            _CustomMinutesCard(
-              title: texts.home.customSettingMinutes(_customMinutes.round()),
-              sliderLabel: texts.home.minuteLabel(_customMinutes.round()),
-              minutes: _customMinutes,
-              startLabel: texts.home.customStartButton,
-              onChanged: (value) {
-                setState(() => _customMinutes = value);
-              },
-              onAdjust: _adjustCustomMinutes,
-              onStart: () => _startTimer(_customMinutes.round()),
             ),
             const SizedBox(height: AppSpacing.xxl),
             FutureBuilder<MealProgressSnapshot>(
@@ -379,18 +470,16 @@ class _HomeLogo extends StatelessWidget {
   }
 }
 
-class _AvatarCtaCard extends StatelessWidget {
-  const _AvatarCtaCard({
-    required this.title,
-    required this.subtitle,
+class _AvatarInlineCta extends StatelessWidget {
+  const _AvatarInlineCta({
     required this.stateText,
+    required this.description,
     required this.buttonLabel,
     required this.onPressed,
   });
 
-  final String title;
-  final String subtitle;
   final String stateText;
+  final String description;
   final String buttonLabel;
   final VoidCallback onPressed;
 
@@ -398,72 +487,93 @@ class _AvatarCtaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceWarm,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: AppColors.borderWarm),
-        boxShadow: AppShadows.surface,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return Material(
+      color: AppColors.transparent,
+      borderRadius: AppRadius.compactCard,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: AppRadius.compactCard,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 56),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+              vertical: AppSpacing.xs,
+            ),
+            child: Row(
               children: [
                 DecoratedBox(
                   decoration: BoxDecoration(
                     color: AppColors.surfacePink.withValues(alpha: 0.72),
                     borderRadius: AppRadius.pill,
                   ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(AppSpacing.sm),
+                  child: const SizedBox(
+                    width: 40,
+                    height: 40,
                     child: Icon(
                       Icons.face_retouching_natural_rounded,
                       color: AppColors.brown700,
+                      size: 24,
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
-                  child: Text(
-                    title,
-                    style: textTheme.titleMedium?.copyWith(
-                      color: AppColors.textStrong,
-                      fontWeight: FontWeight.w800,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        stateText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textStrong,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                          height: 1.25,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 112),
+                  child: OutlinedButton(
+                    onPressed: onPressed,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.textPrimary,
+                      side: const BorderSide(color: AppColors.borderSoft),
+                      shape: const StadiumBorder(),
+                      minimumSize: const Size(72, 44),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                      ),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      buttonLabel,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              subtitle,
-              style: textTheme.bodyMedium?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-                height: 1.36,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              stateText,
-              style: textTheme.bodyMedium?.copyWith(
-                color: AppColors.textStrong,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: FilledButton.icon(
-                onPressed: onPressed,
-                icon: const Icon(Icons.arrow_forward_rounded),
-                label: Text(buttonLabel),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -636,22 +746,11 @@ class _HeroMissionCard extends StatelessWidget {
   }
 }
 
-class _PresetMissionCard extends StatelessWidget {
-  const _PresetMissionCard({
-    required this.label,
-    required this.emoji,
-    required this.subtitle,
-    required this.backgroundColor,
-    required this.onPressed,
-    this.badge,
-  });
+class _QuickCourseSection extends StatelessWidget {
+  const _QuickCourseSection({required this.title, required this.children});
 
-  final String label;
-  final String emoji;
-  final String subtitle;
-  final Color backgroundColor;
-  final VoidCallback onPressed;
-  final String? badge;
+  final String title;
+  final List<_QuickCourseButton> children;
 
   @override
   Widget build(BuildContext context) {
@@ -659,130 +758,147 @@ class _PresetMissionCard extends StatelessWidget {
 
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: AppColors.surfaceWarm,
         borderRadius: AppRadius.card,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            backgroundColor.withValues(alpha: 0.48),
-            AppColors.surfaceWarm.withValues(alpha: 0.72),
-            AppColors.white.withValues(alpha: 0.92),
-          ],
-        ),
         border: Border.all(color: AppColors.borderWarm),
         boxShadow: AppShadows.surface,
       ),
-      child: Material(
-        color: AppColors.transparent,
-        borderRadius: AppRadius.card,
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onPressed,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: textTheme.titleMedium?.copyWith(
+                color: AppColors.textStrong,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-            child: Row(
-              children: [
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.white.withValues(alpha: 0.64),
-                    borderRadius: AppRadius.compactCard,
-                  ),
-                  child: SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Center(
-                      child: Text(
-                        emoji,
-                        textScaler: TextScaler.noScaling,
-                        style: const TextStyle(fontSize: 27, height: 1),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.xs,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Text(
-                            label,
-                            style: textTheme.titleMedium?.copyWith(
-                              color: AppColors.textStrong,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          if (badge != null) _RecommendedBadge(label: badge!),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        subtitle,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
-                          height: 1.34,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: AppColors.white.withValues(alpha: 0.72),
-                    borderRadius: AppRadius.pill,
-                    border: Border.all(
-                      color: AppColors.borderSoft.withValues(alpha: 0.68),
-                    ),
-                  ),
-                  child: const Padding(
-                    padding: EdgeInsets.all(AppSpacing.xs),
-                    child: Icon(
-                      Icons.arrow_forward_rounded,
-                      color: AppColors.brown700,
-                    ),
-                  ),
-                ),
-              ],
+            const SizedBox(height: AppSpacing.md),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const spacing = AppSpacing.sm;
+                final columns = constraints.maxWidth >= 520 ? 3 : 2;
+                final itemWidth =
+                    (constraints.maxWidth - (spacing * (columns - 1))) /
+                    columns;
+
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
+                  children: [
+                    for (final child in children)
+                      SizedBox(width: itemWidth, child: child),
+                  ],
+                );
+              },
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _RecommendedBadge extends StatelessWidget {
-  const _RecommendedBadge({required this.label});
+class _QuickCourseButton extends StatelessWidget {
+  const _QuickCourseButton({
+    required this.label,
+    required this.subtitle,
+    required this.onPressed,
+    this.emoji,
+    this.icon,
+  });
 
   final String label;
+  final String subtitle;
+  final VoidCallback onPressed;
+  final String? emoji;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: AppColors.primarySoft.withValues(alpha: 0.62),
-        borderRadius: AppRadius.pill,
-        border: Border.all(color: AppColors.white.withValues(alpha: 0.54)),
+        color: AppColors.white.withValues(alpha: 0.72),
+        borderRadius: AppRadius.compactCard,
+        border: Border.all(color: AppColors.borderSoft),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: AppColors.brown700,
-            fontWeight: FontWeight.w800,
+      child: Material(
+        color: AppColors.transparent,
+        borderRadius: AppRadius.compactCard,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: AppRadius.compactCard,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 56),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceSoft,
+                      borderRadius: AppRadius.pill,
+                    ),
+                    child: SizedBox(
+                      width: 34,
+                      height: 34,
+                      child: Center(
+                        child: emoji != null
+                            ? Text(
+                                emoji!,
+                                textScaler: TextScaler.noScaling,
+                                style: const TextStyle(fontSize: 21, height: 1),
+                              )
+                            : Icon(
+                                icon ?? Icons.arrow_forward_rounded,
+                                color: AppColors.brown700,
+                                size: 21,
+                              ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.labelLarge?.copyWith(
+                            color: AppColors.textStrong,
+                            fontWeight: FontWeight.w800,
+                            height: 1.15,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w600,
+                            height: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -790,9 +906,8 @@ class _RecommendedBadge extends StatelessWidget {
   }
 }
 
-class _CustomMinutesCard extends StatelessWidget {
-  const _CustomMinutesCard({
-    required this.title,
+class _CustomMinutesSheetContent extends StatelessWidget {
+  const _CustomMinutesSheetContent({
     required this.sliderLabel,
     required this.minutes,
     required this.startLabel,
@@ -801,7 +916,6 @@ class _CustomMinutesCard extends StatelessWidget {
     required this.onStart,
   });
 
-  final String title;
   final String sliderLabel;
   final double minutes;
   final String startLabel;
@@ -813,93 +927,76 @@ class _CustomMinutesCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceWarm,
-        borderRadius: AppRadius.panel,
-        border: Border.all(color: AppColors.borderWarm),
-        boxShadow: AppShadows.surface,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: textTheme.titleMedium?.copyWith(
-                color: AppColors.textStrong,
-                fontWeight: FontWeight.w800,
-                height: 1.28,
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: AppColors.primary,
+              inactiveTrackColor: AppColors.borderSoft,
+              thumbColor: AppColors.primarySoft,
+              overlayColor: AppColors.primary.withValues(alpha: 0.12),
+              valueIndicatorColor: AppColors.brown900,
+              valueIndicatorTextStyle: textTheme.labelMedium?.copyWith(
+                color: AppColors.white,
+                fontWeight: FontWeight.w900,
               ),
+              trackHeight: 6,
             ),
-            const SizedBox(height: AppSpacing.md),
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppColors.primary,
-                inactiveTrackColor: AppColors.borderSoft,
-                thumbColor: AppColors.primarySoft,
-                overlayColor: AppColors.primary.withValues(alpha: 0.12),
-                valueIndicatorColor: AppColors.brown900,
-                valueIndicatorTextStyle: textTheme.labelMedium?.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.w900,
+            child: Slider(
+              value: minutes,
+              min: 1,
+              max: 60,
+              label: sliderLabel,
+              onChanged: onChanged,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: _MinuteAdjustButton(
+                  label: '-5',
+                  onPressed: () => onAdjust(-5),
                 ),
-                trackHeight: 6,
               ),
-              child: Slider(
-                value: minutes,
-                min: 1,
-                max: 60,
-                label: sliderLabel,
-                onChanged: onChanged,
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _MinuteAdjustButton(
+                  label: '-1',
+                  onPressed: () => onAdjust(-1),
+                ),
               ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                Expanded(
-                  child: _MinuteAdjustButton(
-                    label: '-5',
-                    onPressed: () => onAdjust(-5),
-                  ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _MinuteAdjustButton(
+                  label: '+1',
+                  onPressed: () => onAdjust(1),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: _MinuteAdjustButton(
-                    label: '-1',
-                    onPressed: () => onAdjust(-1),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: _MinuteAdjustButton(
-                    label: '+1',
-                    onPressed: () => onAdjust(1),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: _MinuteAdjustButton(
-                    label: '+5',
-                    onPressed: () => onAdjust(5),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            SizedBox(
-              width: double.infinity,
-              child: AppBouncyButton(
-                label: startLabel,
-                icon: Icons.flag_rounded,
-                onPressed: onStart,
-                variant: AppButtonVariant.soft,
-                size: AppButtonSize.medium,
               ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _MinuteAdjustButton(
+                  label: '+5',
+                  onPressed: () => onAdjust(5),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          SizedBox(
+            width: double.infinity,
+            child: AppBouncyButton(
+              label: startLabel,
+              icon: Icons.flag_rounded,
+              onPressed: onStart,
+              variant: AppButtonVariant.soft,
+              size: AppButtonSize.medium,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

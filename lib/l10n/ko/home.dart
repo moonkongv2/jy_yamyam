@@ -12,21 +12,21 @@ class HomeTexts implements HomeTextSet {
   String get morningCourse => '15분 아침 코스';
   String get morningCourseSubtitle => '가볍게 워밍업';
   String get normalCourse => '25분 보통 코스';
-  String get normalCourseSubtitle => '든든한 기본 미션';
   String get slowCourse => '35분 천천히 코스';
   String get slowCourseSubtitle => '천천히 완주하기';
-  String get recommendedBadge => '추천';
+  String get quickCourseTitle => '다른 코스';
   String get customStartButton => '직접 설정으로 출발';
+  String get customSheetTitle => '직접 설정';
   String get mealSummaryLabel => '식사';
   String get stickerKindSummaryLabel => '종류';
   String get stickerSummaryLabel => '스티커';
   String get noMealHistory => '아직 저장된 식사 이력이 없어.';
   String get openStickerCollection => '스티커 보관함 보기';
-  String get avatarCtaTitle => '우리 아이 아바타';
   String get avatarCtaSubtitle => '아이 사진으로 만든 귀여운 라이더 얼굴을 차량에 태워보세요.';
   String get avatarCtaButton => '아바타 만들기';
+  String get avatarCtaEditButton => '편집하기';
+  String get avatarInlineCustomState => '아이 얼굴 탑승 중';
 
-  String customSettingMinutes(int minutes) => '직접 설정: $minutes분';
   String minuteLabel(int minutes) => '$minutes분';
   String progressTitle(String childName) =>
       '${_casualKoreanName(childName)}의 냠냠 기록';
