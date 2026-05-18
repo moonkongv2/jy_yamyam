@@ -185,7 +185,7 @@ void main() {
     await tester.tap(find.text('이름 저장'));
     await tester.pumpAndSettle();
 
-    expect(find.text('냠냠 라이더'), findsOneWidget);
+    expect(find.byKey(const ValueKey('homeLogo')), findsOneWidget);
     final preferences = await SharedPreferences.getInstance();
     expect(preferences.getString('childName'), '민준');
   });
@@ -195,7 +195,7 @@ void main() {
 
     await _startApp(tester, const Locale('ko'));
 
-    expect(find.text('냠냠 라이더'), findsOneWidget);
+    expect(find.byKey(const ValueKey('homeLogo')), findsOneWidget);
     expect(find.text('우리 아이 아바타'), findsOneWidget);
     expect(find.text('기본 이미지 사용 중'), findsOneWidget);
     expect(find.text('아바타 만들기'), findsOneWidget);
@@ -1060,7 +1060,7 @@ void main() {
 
     await _startApp(tester, const Locale('en'));
 
-    expect(find.text('Yamyam Rider'), findsOneWidget);
+    expect(find.byKey(const ValueKey('homeLogo')), findsOneWidget);
     expect(find.text("Today's Yamyam Mission"), findsOneWidget);
     expect(
       find.text('Your rider is waiting for a tasty finish'),
@@ -1129,7 +1129,7 @@ void main() {
 
     await _startApp(tester, const Locale('ja'));
 
-    expect(find.text('Yamyam Rider'), findsOneWidget);
+    expect(find.byKey(const ValueKey('homeLogo')), findsOneWidget);
     await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pumpAndSettle();
     expect(find.text('Start Custom Ride'), findsOneWidget);

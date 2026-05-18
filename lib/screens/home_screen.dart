@@ -23,6 +23,9 @@ import 'settings_screen.dart';
 import 'sticker_collection_screen.dart';
 import 'timer_screen.dart';
 
+const _homeLogoAssetPath = 'assets/images/logo_eng.png';
+const _settingsIconAssetPath = 'assets/images/icon_setting_rgba.png';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
@@ -101,7 +104,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final texts = AppTexts.of(context);
     final childName = _config.childName.trim().isEmpty
         ? texts.common.defaultChildName
@@ -137,28 +139,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        texts.common.appTitle,
-                        style: textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.brown900,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        texts.home.subtitle,
-                        style: textTheme.titleSmall?.copyWith(
-                          color: AppColors.brown500,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                    children: [_HomeLogo(semanticLabel: texts.common.appTitle)],
                   ),
                 ),
                 IconButton.filledTonal(
                   onPressed: _openSettings,
-                  icon: const Icon(Icons.settings_rounded),
+                  icon: SizedBox(
+                    width: 34,
+                    height: 34,
+                    child: Transform.scale(
+                      scale: 1.42,
+                      child: Image.asset(
+                        _settingsIconAssetPath,
+                        fit: BoxFit.contain,
+                        cacheWidth: 96,
+                      ),
+                    ),
+                  ),
                   tooltip: texts.common.settings,
                   style: IconButton.styleFrom(
                     backgroundColor: AppColors.white,
@@ -329,6 +326,53 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeLogo extends StatelessWidget {
+  const _HomeLogo({required this.semanticLabel});
+
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Semantics(
+      image: true,
+      label: semanticLabel,
+      child: ExcludeSemantics(
+        child: SizedBox(
+          width: 220,
+          height: 86,
+          child: Transform.translate(
+            offset: const Offset(-30, 0),
+            child: Image.asset(
+              _homeLogoAssetPath,
+              key: const ValueKey('homeLogo'),
+              fit: BoxFit.cover,
+              alignment: const Alignment(0, -0.05),
+              cacheWidth: 440,
+              errorBuilder: (context, error, stackTrace) {
+                return ColoredBox(
+                  color: AppColors.transparent,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      semanticLabel,
+                      style: textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: AppColors.brown900,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -524,6 +568,15 @@ class _HeroMissionCard extends StatelessWidget {
                         style: textTheme.titleLarge?.copyWith(
                           color: AppColors.textStrong,
                           fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        texts.home.subtitle,
+                        style: textTheme.titleSmall?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w700,
+                          height: 1.25,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
