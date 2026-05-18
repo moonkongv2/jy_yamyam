@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../catalogs/vehicle_catalog.dart';
@@ -7,6 +9,7 @@ import '../l10n/text_sets.dart';
 import '../models/meal_session_result.dart';
 import '../models/meal_timer_config.dart';
 import '../services/local_meal_progress_service.dart';
+import '../services/screen_awake_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
@@ -42,11 +45,13 @@ class TimerScreen extends StatefulWidget {
     required this.config,
     required this.mealProgressService,
     required this.onConfigChanged,
+    this.screenAwakeService = const WakelockScreenAwakeService(),
   });
 
   final MealTimerConfig config;
   final LocalMealProgressService mealProgressService;
   final ValueChanged<MealTimerConfig> onConfigChanged;
+  final ScreenAwakeService screenAwakeService;
 
   @override
   State<TimerScreen> createState() => _TimerScreenState();
@@ -70,6 +75,7 @@ class _TimerScreenState extends State<TimerScreen> {
   late final MealTimerController _controller;
   final Set<int> _shownMotivationMilestones = {};
   bool _arrivalPromptShown = false;
+  bool _screenAwakeEnabled = false;
   int? _activeMotivationMilestone;
   String? _activeMotivationVideoPath;
 
@@ -79,12 +85,36 @@ class _TimerScreenState extends State<TimerScreen> {
     _controller = MealTimerController(config: widget.config);
     _controller.addListener(_handleTimerChanged);
     _controller.start();
+    _applyScreenAwakeSetting();
+  }
+
+  @override
+  void didUpdateWidget(covariant TimerScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.screenAwakeService != widget.screenAwakeService &&
+        _screenAwakeEnabled) {
+      unawaited(oldWidget.screenAwakeService.setEnabled(false));
+      _screenAwakeEnabled = false;
+    }
+    _applyScreenAwakeSetting();
   }
 
   @override
   void dispose() {
+    if (_screenAwakeEnabled) {
+      unawaited(widget.screenAwakeService.setEnabled(false));
+    }
     _controller.dispose();
     super.dispose();
+  }
+
+  void _applyScreenAwakeSetting() {
+    final shouldKeepAwake = widget.config.keepScreenAwake;
+    if (_screenAwakeEnabled == shouldKeepAwake) {
+      return;
+    }
+    _screenAwakeEnabled = shouldKeepAwake;
+    unawaited(widget.screenAwakeService.setEnabled(shouldKeepAwake));
   }
 
   void _handleTimerChanged() {

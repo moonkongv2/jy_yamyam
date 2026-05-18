@@ -10,6 +10,8 @@ class EnSettingsTexts implements SettingsTextSet {
   String get soundEnabled => 'Sound effects';
   String get keepScreenAwake => 'Keep screen awake';
   String get savedOnlySubtitle => 'This setting is saved but not active yet.';
+  String get keepScreenAwakeSubtitle =>
+      'Applies while the meal timer is running.';
   String get defaultMealDuration => 'Default meal time';
   String get vehicleSelection => 'Choose vehicle';
   String get childNameTitle => "Child's name";

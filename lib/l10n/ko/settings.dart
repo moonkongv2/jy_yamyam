@@ -10,6 +10,7 @@ class SettingsTexts implements SettingsTextSet {
   String get soundEnabled => '효과음 사용';
   String get keepScreenAwake => '화면 계속 켜두기';
   String get savedOnlySubtitle => 'MVP에서는 설정만 저장해요';
+  String get keepScreenAwakeSubtitle => '식사 타이머 중에 적용돼요';
   String get defaultMealDuration => '기본 식사 시간';
   String get vehicleSelection => '빠방 고르기';
   String get childNameTitle => '아이 이름';

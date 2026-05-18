@@ -46,6 +46,7 @@ abstract interface class SettingsTextSet {
   String get soundEnabled;
   String get keepScreenAwake;
   String get savedOnlySubtitle;
+  String get keepScreenAwakeSubtitle;
   String get defaultMealDuration;
   String get vehicleSelection;
   String get childNameTitle;
