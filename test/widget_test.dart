@@ -16,6 +16,7 @@ import 'package:jy_yamyam/models/reward_item.dart';
 import 'package:jy_yamyam/models/vehicle.dart';
 import 'package:jy_yamyam/screens/avatar_setup_screen.dart';
 import 'package:jy_yamyam/screens/home_screen.dart';
+import 'package:jy_yamyam/screens/result_screen.dart';
 import 'package:jy_yamyam/screens/settings_screen.dart';
 import 'package:jy_yamyam/screens/timer_screen.dart';
 import 'package:jy_yamyam/services/avatar_image_picker.dart';
@@ -128,6 +129,32 @@ void main() {
   test('Every catalog vehicle defines an avatar slot', () {
     for (final vehicle in VehicleCatalog.all) {
       expect(vehicle.avatarSlot, isNotNull, reason: vehicle.id);
+    }
+  });
+
+  test('Every catalog vehicle has success and failure result videos', () {
+    for (final vehicle in VehicleCatalog.all) {
+      final successPath = resultVideoAssetPathForVehicle(
+        vehicleId: vehicle.id,
+        mealCompleted: true,
+      );
+      final failurePath = resultVideoAssetPathForVehicle(
+        vehicleId: vehicle.id,
+        mealCompleted: false,
+      );
+
+      expect(
+        successPath,
+        'assets/videos/result_${vehicle.id}_success.mp4',
+        reason: vehicle.id,
+      );
+      expect(
+        failurePath,
+        'assets/videos/result_${vehicle.id}_failure.mp4',
+        reason: vehicle.id,
+      );
+      expect(File(successPath).existsSync(), isTrue, reason: successPath);
+      expect(File(failurePath).existsSync(), isTrue, reason: failurePath);
     }
   });
 
