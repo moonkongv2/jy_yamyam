@@ -12,7 +12,6 @@ class TimerTexts implements TimerTextSet {
   String get progressAlmostThere => '거의 도착했어요!';
   String get progressArrived => '도착했어요!';
   String get completeDialogTitle => '식사를 완료했어?';
-  String get arrivalDialogMessage => '오토바이가 지나갔어. 식사를 마무리했어?';
   String get completeDialogMessage => '오늘의 냠냠코스를 마무리할까?';
   String get pauseButton => '일시정지';
   String get completeMealButton => '식사 완료';
@@ -24,8 +23,28 @@ class TimerTexts implements TimerTextSet {
   String get arrivedProgressMessage => '도착했어요!';
   String get idleProgressMessage => '출발 준비 중';
 
+  String arrivalDialogMessage(String vehicleLabel) {
+    return '$vehicleLabel${_subjectParticle(vehicleLabel)} 지나갔어. 식사를 마무리했어?';
+  }
+
   String remainingTime(String remaining) => '남은 시간 $remaining';
   String remainingTimeSemanticLabel(String label, String remaining) {
     return '$label, 남은 시간 $remaining';
+  }
+
+  String _subjectParticle(String value) {
+    if (value.isEmpty) {
+      return '가';
+    }
+
+    final lastCodeUnit = value.codeUnitAt(value.length - 1);
+    const hangulStart = 0xAC00;
+    const hangulEnd = 0xD7A3;
+    if (lastCodeUnit < hangulStart || lastCodeUnit > hangulEnd) {
+      return '가';
+    }
+
+    final hasFinalConsonant = (lastCodeUnit - hangulStart) % 28 != 0;
+    return hasFinalConsonant ? '이' : '가';
   }
 }

@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:jy_yamyam/catalogs/avatar_prompt_catalog.dart';
 import 'package:jy_yamyam/catalogs/vehicle_catalog.dart';
+import 'package:jy_yamyam/l10n/app_texts.dart';
 import 'package:jy_yamyam/main.dart' as app;
 import 'package:jy_yamyam/models/meal_session_result.dart';
 import 'package:jy_yamyam/models/meal_timer_config.dart';
@@ -156,6 +157,86 @@ void main() {
       expect(File(successPath).existsSync(), isTrue, reason: successPath);
       expect(File(failurePath).existsSync(), isTrue, reason: failurePath);
     }
+  });
+
+  test('Motivation video catalog has vehicle videos for every milestone', () {
+    for (final vehicle in VehicleCatalog.all) {
+      for (var milestone = 10; milestone <= 90; milestone += 10) {
+        final videoNumber = milestone ~/ 10;
+        final path = motivationVideoAssetPathForVehicle(
+          vehicleId: vehicle.id,
+          milestone: milestone,
+        );
+
+        expect(
+          path,
+          'assets/videos/motivation_${vehicle.id}_$videoNumber.mp4',
+          reason: '${vehicle.id} $milestone%',
+        );
+        expect(File(path!).existsSync(), isTrue, reason: path);
+      }
+    }
+  });
+
+  test('Motivation video catalog falls back for missing vehicle videos', () {
+    const fallbackPath = 'assets/videos/motivation_10.mp4';
+
+    expect(
+      motivationVideoAssetPathForVehicle(
+        vehicleId: 'fire_truck',
+        milestone: 20,
+      ),
+      'assets/videos/motivation_fire_truck_2.mp4',
+    );
+    expect(
+      motivationVideoAssetPathForVehicle(
+        vehicleId: 'missing_vehicle',
+        milestone: 10,
+      ),
+      fallbackPath,
+    );
+    expect(
+      motivationVideoAssetPathForVehicle(
+        vehicleId: 'motorcycle',
+        milestone: 95,
+      ),
+      isNull,
+    );
+    expect(File(fallbackPath).existsSync(), isTrue, reason: fallbackPath);
+  });
+
+  test('Motivation milestone selection keeps the first crossed milestone', () {
+    expect(nextMotivationMilestoneForProgress(0.09, {}), isNull);
+    expect(nextMotivationMilestoneForProgress(0.10, {}), 10);
+    expect(nextMotivationMilestoneForProgress(0.24, {}), 10);
+    expect(nextMotivationMilestoneForProgress(0.24, {10}), 20);
+    expect(nextMotivationMilestoneForProgress(1.0, {}), isNull);
+  });
+
+  test('Arrival dialog copy uses the selected vehicle label', () {
+    final timerTexts = AppTexts.ko.timer;
+
+    expect(timerTexts.arrivalDialogMessage('경찰차'), '경찰차가 지나갔어. 식사를 마무리했어?');
+    expect(timerTexts.arrivalDialogMessage('포크레인'), '포크레인이 지나갔어. 식사를 마무리했어?');
+  });
+
+  test('Timer arrival dialog copy uses the configured vehicle', () {
+    expect(
+      timerArrivalDialogMessage(
+        texts: AppTexts.ko.timer,
+        vehicleId: 'excavator',
+        languageCode: 'ko',
+      ),
+      '포크레인이 지나갔어. 식사를 마무리했어?',
+    );
+    expect(
+      timerArrivalDialogMessage(
+        texts: AppTexts.en.timer,
+        vehicleId: 'police_car',
+        languageCode: 'en',
+      ),
+      'The police car passed by... did you finish your meal?',
+    );
   });
 
   test('Avatar prompt catalog returns prompts for every vehicle', () {

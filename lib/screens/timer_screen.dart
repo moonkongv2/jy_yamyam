@@ -19,25 +19,58 @@ import '../widgets/road_view.dart';
 import '../widgets/timer_control_bar.dart';
 import 'result_screen.dart';
 
-const _motivationVideoByMilestone = {
-  10: 'assets/videos/motivation_10.mp4',
-  20: 'assets/videos/motivation_10.mp4',
-  30: 'assets/videos/motivation_10.mp4',
-  40: 'assets/videos/motivation_10.mp4',
-  50: 'assets/videos/motivation_10.mp4',
-  60: 'assets/videos/motivation_10.mp4',
-  70: 'assets/videos/motivation_10.mp4',
-  80: 'assets/videos/motivation_10.mp4',
-  90: 'assets/videos/motivation_10.mp4',
-  // 20: 'assets/videos/motivation_20.mp4',
-  // 30: 'assets/videos/motivation_30.mp4',
-  // 40: 'assets/videos/motivation_40.mp4',
-  // 50: 'assets/videos/motivation_50.mp4',
-  // 60: 'assets/videos/motivation_60.mp4',
-  // 70: 'assets/videos/motivation_70.mp4',
-  // 80: 'assets/videos/motivation_80.mp4',
-  // 90: 'assets/videos/motivation_90.mp4',
+const _fallbackMotivationVideoPath = 'assets/videos/motivation_10.mp4';
+
+const _motivationVideoVehicleIds = {
+  'motorcycle',
+  'fire_truck',
+  'police_car',
+  'excavator',
 };
+
+String? motivationVideoAssetPathForVehicle({
+  required String vehicleId,
+  required int milestone,
+}) {
+  if (milestone < 10 || milestone > 90 || milestone % 10 != 0) {
+    return null;
+  }
+
+  final videoNumber = milestone ~/ 10;
+  if (!_motivationVideoVehicleIds.contains(vehicleId)) {
+    return _fallbackMotivationVideoPath;
+  }
+
+  return 'assets/videos/motivation_${vehicleId}_$videoNumber.mp4';
+}
+
+int? nextMotivationMilestoneForProgress(
+  double progress,
+  Set<int> shownMilestones,
+) {
+  if (progress <= 0 || progress >= 1) {
+    return null;
+  }
+
+  final reachedPercent = (progress * 100).floor();
+  for (var milestone = 10; milestone <= 90; milestone += 10) {
+    if (reachedPercent >= milestone && !shownMilestones.contains(milestone)) {
+      return milestone;
+    }
+  }
+
+  return null;
+}
+
+String timerArrivalDialogMessage({
+  required TimerTextSet texts,
+  required String vehicleId,
+  required String languageCode,
+}) {
+  final vehicle = VehicleCatalog.findById(vehicleId);
+  final vehicleLabel = vehicle.labelForLanguage(languageCode);
+  return texts.arrivalDialogMessage(vehicleLabel);
+}
 
 class TimerScreen extends StatefulWidget {
   const TimerScreen({
@@ -137,28 +170,27 @@ class _TimerScreenState extends State<TimerScreen> {
   }
 
   void _maybeShowMotivationVideo() {
-    if (!mounted || _controller.progress >= 1) {
+    if (!mounted || _activeMotivationMilestone != null) {
       return;
     }
 
-    final milestone = (_controller.progress * 10).floor() * 10;
-    if (milestone < 10 || milestone > 90) {
+    final milestone = nextMotivationMilestoneForProgress(
+      _controller.progress,
+      _shownMotivationMilestones,
+    );
+    if (milestone == null) {
       return;
     }
 
-    if (!_shownMotivationMilestones.add(milestone)) {
-      return;
-    }
-
-    if (_activeMotivationMilestone != null) {
-      return;
-    }
-
-    final videoPath = _motivationVideoByMilestone[milestone];
+    final videoPath = motivationVideoAssetPathForVehicle(
+      vehicleId: widget.config.motorcycleId,
+      milestone: milestone,
+    );
     if (videoPath == null) {
       return;
     }
 
+    _shownMotivationMilestones.add(milestone);
     setState(() {
       _activeMotivationMilestone = milestone;
       _activeMotivationVideoPath = videoPath;
@@ -178,6 +210,11 @@ class _TimerScreenState extends State<TimerScreen> {
 
   Future<void> _confirmComplete({bool showFailureOnDecline = false}) async {
     final texts = AppTexts.of(context);
+    final arrivalDialogMessage = timerArrivalDialogMessage(
+      texts: texts.timer,
+      vehicleId: widget.config.motorcycleId,
+      languageCode: Localizations.localeOf(context).languageCode,
+    );
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: !showFailureOnDecline,
@@ -186,7 +223,7 @@ class _TimerScreenState extends State<TimerScreen> {
           title: Text(texts.timer.completeDialogTitle),
           content: Text(
             showFailureOnDecline
-                ? texts.timer.arrivalDialogMessage
+                ? arrivalDialogMessage
                 : texts.timer.completeDialogMessage,
           ),
           actions: [

@@ -12,8 +12,6 @@ class EnTimerTexts implements TimerTextSet {
   String get progressAlmostThere => 'Almost there!';
   String get progressArrived => 'You arrived!';
   String get completeDialogTitle => 'Did you finish your meal?';
-  String get arrivalDialogMessage =>
-      'The rider passed by... did you finish your meal?';
   String get completeDialogMessage => 'Finish this mealtime ride?';
   String get pauseButton => 'Pause';
   String get completeMealButton => 'Meal done';
@@ -24,6 +22,10 @@ class EnTimerTexts implements TimerTextSet {
   String get pausedProgressMessage => 'Taking a little break';
   String get arrivedProgressMessage => 'Arrived!';
   String get idleProgressMessage => 'Getting ready';
+
+  String arrivalDialogMessage(String vehicleLabel) {
+    return 'The ${vehicleLabel.toLowerCase()} passed by... did you finish your meal?';
+  }
 
   String remainingTime(String remaining) => 'Time left $remaining';
   String remainingTimeSemanticLabel(String label, String remaining) {

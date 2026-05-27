@@ -67,7 +67,12 @@ class RoadView extends StatelessWidget {
         final videoFrameTop = videoMargin;
         final videoFrameLeft = videoMargin;
         final videoFrameWidth = math.max(0.0, size.width - (videoMargin * 2));
-        final videoFrameHeight = (size.height * 0.34).clamp(104.0, 220.0);
+        final preferredVideoFrameHeight = videoFrameWidth * 0.62;
+        final maxVideoFrameHeight = math.max(140.0, size.height * 0.44);
+        final videoFrameHeight = preferredVideoFrameHeight.clamp(
+          132.0,
+          maxVideoFrameHeight,
+        );
 
         return DecoratedBox(
           decoration: BoxDecoration(
@@ -340,7 +345,7 @@ class _MotivationVideoBubbleState extends State<_MotivationVideoBubble> {
         boxShadow: AppShadows.hero,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.xs),
         child: ClipRRect(
           borderRadius: AppRadius.compactCard,
           child: FittedBox(
