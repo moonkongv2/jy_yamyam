@@ -12,6 +12,7 @@
 .swiftpm/
 migrate_working_dir/
 screenshots/
+assets/resources
 
 # IntelliJ related
 *.iml
