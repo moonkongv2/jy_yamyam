@@ -202,17 +202,21 @@ class _ResultScreenState extends State<ResultScreen> {
                                             rewards:
                                                 recordedSession?.awardedRewards,
                                           ),
-                                          if (recordedSession
-                                                  ?.updatedRewardGoal !=
-                                              null) ...[
+                                          if (recordedSession != null &&
+                                              (recordedSession
+                                                      .updatedRewardGoals
+                                                      .isNotEmpty ||
+                                                  recordedSession
+                                                      .earnedRewardGoals
+                                                      .isNotEmpty)) ...[
                                             const SizedBox(
                                               height: AppSpacing.md,
                                             ),
                                             _RewardGoalResultBox(
-                                              goal: recordedSession!
-                                                  .updatedRewardGoal!,
-                                              justReady: recordedSession
-                                                  .rewardGoalJustReady,
+                                              updatedGoals: recordedSession
+                                                  .updatedRewardGoals,
+                                              earnedGoals: recordedSession
+                                                  .earnedRewardGoals,
                                               mealProgressService:
                                                   widget.mealProgressService,
                                             ),
@@ -268,22 +272,24 @@ class _ResultScreenState extends State<ResultScreen> {
 
 class _RewardGoalResultBox extends StatelessWidget {
   const _RewardGoalResultBox({
-    required this.goal,
-    required this.justReady,
+    required this.updatedGoals,
+    required this.earnedGoals,
     required this.mealProgressService,
   });
 
-  final RewardGoal goal;
-  final bool justReady;
+  final List<RewardGoal> updatedGoals;
+  final List<RewardGoal> earnedGoals;
   final LocalMealProgressService mealProgressService;
 
   @override
   Widget build(BuildContext context) {
     final texts = AppTexts.of(context);
+    final justEarned = earnedGoals.isNotEmpty;
+    final goals = [...earnedGoals, ...updatedGoals];
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: justReady ? AppColors.surfaceYellow : AppColors.surfaceWarm,
+        color: justEarned ? AppColors.surfaceYellow : AppColors.surfaceWarm,
         borderRadius: AppRadius.card,
         border: Border.all(color: AppColors.borderWarm),
       ),
@@ -292,7 +298,7 @@ class _RewardGoalResultBox extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              justReady
+              justEarned
                   ? texts.rewards.rewardGoalReadyMessage
                   : texts.rewards.rewardGoalProgressTitle,
               textAlign: TextAlign.center,
@@ -302,17 +308,11 @@ class _RewardGoalResultBox extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              '${goal.rewardText} · ${texts.rewards.rewardGoalProgress(goal.filledCount, goal.requiredStickerCount)}',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            _RewardGoalMiniBoard(goal: goal),
-            if (justReady) ...[
+            for (final goal in goals) ...[
+              _RewardGoalProgressRow(goal: goal),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+            if (justEarned) ...[
               const SizedBox(height: AppSpacing.md),
               FilledButton.icon(
                 onPressed: () {
@@ -335,54 +335,51 @@ class _RewardGoalResultBox extends StatelessWidget {
   }
 }
 
-class _RewardGoalMiniBoard extends StatelessWidget {
-  const _RewardGoalMiniBoard({required this.goal});
+class _RewardGoalProgressRow extends StatelessWidget {
+  const _RewardGoalProgressRow({required this.goal});
 
   final RewardGoal goal;
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
-      children: [
-        for (var index = 0; index < goal.requiredStickerCount; index += 1)
-          _RewardGoalMiniSlot(
-            slot: index < goal.filledSlots.length
-                ? goal.filledSlots[index]
-                : null,
-          ),
-      ],
-    );
-  }
-}
-
-class _RewardGoalMiniSlot extends StatelessWidget {
-  const _RewardGoalMiniSlot({required this.slot});
-
-  final RewardGoalSlot? slot;
-
-  @override
-  Widget build(BuildContext context) {
-    final reward = slot == null ? null : RewardCatalog.findById(slot!.rewardId);
+    final texts = AppTexts.of(context);
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: reward == null ? AppColors.surfaceSoft : AppColors.white,
+        color: AppColors.white.withValues(alpha: 0.72),
         borderRadius: AppRadius.compactCard,
         border: Border.all(color: AppColors.borderWarm),
       ),
-      child: SizedBox.square(
-        dimension: 44,
-        child: Center(
-          child: reward == null
-              ? const Icon(
-                  Icons.circle_outlined,
-                  size: 18,
-                  color: AppColors.textMuted,
-                )
-              : RewardStickerImage(reward: reward, size: 34),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                goal.rewardText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppColors.textStrong,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Text(
+              texts.rewards.rewardGoalProgress(
+                goal.filledCount,
+                goal.requiredStickerCount,
+              ),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
         ),
       ),
     );

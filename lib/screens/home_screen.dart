@@ -1126,7 +1126,8 @@ class _ProgressSummary extends StatelessWidget {
     final texts = AppTexts.of(context);
     final history = snapshot?.history ?? const [];
     final inventory = snapshot?.inventory ?? const [];
-    final activeRewardGoal = snapshot?.activeRewardGoal;
+    final activeRewardGoals = snapshot?.activeRewardGoals ?? const [];
+    final earnedRewardCount = snapshot?.earnedRewardGoals.length ?? 0;
     final recent = history.isEmpty ? null : history.first;
     final knownStickers = inventory.where(
       (item) =>
@@ -1207,7 +1208,11 @@ class _ProgressSummary extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        _RewardGoalCta(goal: activeRewardGoal, onPressed: onOpenRewardGoal),
+        _RewardGoalCta(
+          goals: activeRewardGoals,
+          earnedRewardCount: earnedRewardCount,
+          onPressed: onOpenRewardGoal,
+        ),
         const SizedBox(height: AppSpacing.md),
         _StickerCollectionCta(
           label: texts.home.openStickerCollection,
@@ -1219,21 +1224,24 @@ class _ProgressSummary extends StatelessWidget {
 }
 
 class _RewardGoalCta extends StatelessWidget {
-  const _RewardGoalCta({required this.goal, required this.onPressed});
+  const _RewardGoalCta({
+    required this.goals,
+    required this.earnedRewardCount,
+    required this.onPressed,
+  });
 
-  final RewardGoal? goal;
+  final List<RewardGoal> goals;
+  final int earnedRewardCount;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     final texts = AppTexts.of(context);
-    final goal = this.goal;
+    final hasEarnedRewards = earnedRewardCount > 0;
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: goal?.isReady == true
-            ? AppColors.surfaceYellow
-            : AppColors.white,
+        color: hasEarnedRewards ? AppColors.surfaceYellow : AppColors.white,
         borderRadius: AppRadius.card,
         border: Border.all(color: AppColors.borderWarm),
         boxShadow: AppShadows.surface,
@@ -1246,9 +1254,19 @@ class _RewardGoalCta extends StatelessWidget {
           onTap: onPressed,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.lg),
-            child: goal == null
-                ? _EmptyRewardGoalCta(label: texts.rewards.createRewardGoal)
-                : _ActiveRewardGoalCta(goal: goal),
+            child: goals.isEmpty
+                ? _EmptyRewardGoalCta(
+                    label: hasEarnedRewards
+                        ? texts.rewards.earnedRewardGoalsTitle
+                        : texts.rewards.createRewardGoal,
+                    subtitle: hasEarnedRewards
+                        ? texts.rewards.stickerCount(earnedRewardCount)
+                        : null,
+                  )
+                : _ActiveRewardGoalsCta(
+                    goals: goals,
+                    earnedRewardCount: earnedRewardCount,
+                  ),
           ),
         ),
       ),
@@ -1257,9 +1275,10 @@ class _RewardGoalCta extends StatelessWidget {
 }
 
 class _EmptyRewardGoalCta extends StatelessWidget {
-  const _EmptyRewardGoalCta({required this.label});
+  const _EmptyRewardGoalCta({required this.label, this.subtitle});
 
   final String label;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -1280,12 +1299,27 @@ class _EmptyRewardGoalCta extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.textStrong,
-              fontWeight: FontWeight.w800,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: AppColors.textStrong,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  subtitle!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
         const Icon(Icons.arrow_forward_rounded, color: AppColors.textPrimary),
@@ -1294,10 +1328,14 @@ class _EmptyRewardGoalCta extends StatelessWidget {
   }
 }
 
-class _ActiveRewardGoalCta extends StatelessWidget {
-  const _ActiveRewardGoalCta({required this.goal});
+class _ActiveRewardGoalsCta extends StatelessWidget {
+  const _ActiveRewardGoalsCta({
+    required this.goals,
+    required this.earnedRewardCount,
+  });
 
-  final RewardGoal goal;
+  final List<RewardGoal> goals;
+  final int earnedRewardCount;
 
   @override
   Widget build(BuildContext context) {
@@ -1311,9 +1349,7 @@ class _ActiveRewardGoalCta extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                goal.isReady
-                    ? texts.rewards.rewardGoalReadyMessage
-                    : texts.rewards.rewardGoalPromiseTitle,
+                texts.rewards.activeRewardGoalsTitle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -1322,31 +1358,31 @@ class _ActiveRewardGoalCta extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              Text(
-                goal.rewardText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: AppColors.textStrong,
-                  fontWeight: FontWeight.w900,
+              for (final goal in goals.take(2)) ...[
+                Text(
+                  '${goal.rewardText} · ${texts.rewards.rewardGoalProgress(goal.filledCount, goal.requiredStickerCount)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppColors.textStrong,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                texts.rewards.rewardGoalProgress(
-                  goal.filledCount,
-                  goal.requiredStickerCount,
+                const SizedBox(height: AppSpacing.xs),
+              ],
+              if (earnedRewardCount > 0)
+                Text(
+                  '${texts.rewards.earnedRewardGoalsTitle} $earnedRewardCount',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
             ],
           ),
         ),
         const SizedBox(width: AppSpacing.md),
-        _MiniRewardGoalBoard(goal: goal),
+        _MiniRewardGoalBoard(goal: goals.first),
         const SizedBox(width: AppSpacing.sm),
         const Icon(Icons.arrow_forward_rounded, color: AppColors.textPrimary),
       ],

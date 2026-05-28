@@ -19,15 +19,21 @@ class EnRewardTexts implements RewardTextSet {
   String get rewardGoalRequiredStickerCountLabel => 'Stickers needed';
   String get rewardGoalSaveButton => 'Save Promise';
   String get rewardGoalReadyMessage => 'Your reward is ready!';
-  String get rewardGoalGivenButton => 'Reward Given';
+  String get rewardGoalGivenButton => 'Use Reward';
   String get rewardGoalCreatedMessage => 'Reward promise saved.';
   String get rewardGoalUpdatedMessage => 'Reward promise updated.';
   String get rewardGoalCanceledMessage => 'Reward promise canceled.';
   String get rewardGoalRedeemedMessage => 'Reward given.';
+  String get rewardGoalUsedMessage => 'Reward used.';
   String get rewardGoalProgressTitle => 'Reward Board';
   String get rewardGoalEmptySlotSemanticLabel => 'Empty reward slot';
   String get openRewardGoal => 'View Reward Board';
   String get rewardGoalPromiseTitle => 'Current Reward';
+  String get activeRewardGoalsTitle => 'Active Reward Promises';
+  String get earnedRewardGoalsTitle => 'Earned Rewards';
+  String get usedRewardGoalsTitle => 'Used Rewards';
+  String get maxActiveRewardGoalsMessage =>
+      'You can keep up to 2 active reward promises.';
   String get editRewardGoal => 'Edit Promise';
   String get cancelRewardGoal => 'Cancel Promise';
   String get rewardGoalHistoryTitle => 'Reward History';
@@ -41,6 +47,10 @@ class EnRewardTexts implements RewardTextSet {
   String get keepRewardGoal => 'Keep Promise';
   String get confirmRewardGiven => 'Mark Given';
   String get confirmCancelGoal => 'Cancel Promise';
+  String get confirmUseRewardGoalTitle => 'Use this reward?';
+  String get confirmUseRewardGoalMessage =>
+      'It will move from earned rewards to used rewards.';
+  String get confirmUseRewardGoal => 'Use Reward';
 
   String stickerCount(int count) => '$count';
   String rewardGoalProgress(int filledCount, int requiredCount) =>

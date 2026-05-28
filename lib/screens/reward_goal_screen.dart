@@ -98,6 +98,7 @@ class _RewardGoalScreenState extends State<RewardGoalScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(texts.rewards.rewardGoalCreatedMessage)),
         );
+        _stopEditingGoal();
         _refresh();
       }
     } finally {
@@ -118,6 +119,7 @@ class _RewardGoalScreenState extends State<RewardGoalScreen> {
     setState(() => _isSaving = true);
     try {
       await widget.mealProgressService.updateActiveRewardGoal(
+        goalId: editingGoal.id,
         requiredStickerCount: _requiredStickerCount,
         rewardText: rewardText,
       );
@@ -135,15 +137,15 @@ class _RewardGoalScreenState extends State<RewardGoalScreen> {
     }
   }
 
-  Future<void> _redeemGoal() async {
+  Future<void> _useEarnedGoal(RewardGoal goal) async {
     if (_isSaving) {
       return;
     }
 
     final confirmed = await _confirmRewardGoalAction(
-      title: AppTexts.of(context).rewards.confirmRedeemRewardGoalTitle,
-      message: AppTexts.of(context).rewards.confirmRedeemRewardGoalMessage,
-      confirmLabel: AppTexts.of(context).rewards.confirmRewardGiven,
+      title: AppTexts.of(context).rewards.confirmUseRewardGoalTitle,
+      message: AppTexts.of(context).rewards.confirmUseRewardGoalMessage,
+      confirmLabel: AppTexts.of(context).rewards.confirmUseRewardGoal,
     );
     if (!confirmed) {
       return;
@@ -155,11 +157,12 @@ class _RewardGoalScreenState extends State<RewardGoalScreen> {
     final texts = AppTexts.of(context);
     setState(() => _isSaving = true);
     try {
-      final redeemedGoal = await widget.mealProgressService
-          .redeemActiveRewardGoal();
-      if (mounted && redeemedGoal != null) {
+      final usedGoal = await widget.mealProgressService.useEarnedRewardGoal(
+        goalId: goal.id,
+      );
+      if (mounted && usedGoal != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(texts.rewards.rewardGoalRedeemedMessage)),
+          SnackBar(content: Text(texts.rewards.rewardGoalUsedMessage)),
         );
         _stopEditingGoal();
         _refresh();
@@ -171,7 +174,7 @@ class _RewardGoalScreenState extends State<RewardGoalScreen> {
     }
   }
 
-  Future<void> _cancelGoal() async {
+  Future<void> _cancelGoal(RewardGoal goal) async {
     if (_isSaving) {
       return;
     }
@@ -186,11 +189,14 @@ class _RewardGoalScreenState extends State<RewardGoalScreen> {
     if (!confirmed) {
       return;
     }
+    if (!mounted) {
+      return;
+    }
 
     setState(() => _isSaving = true);
     try {
       final canceledGoal = await widget.mealProgressService
-          .cancelActiveRewardGoal();
+          .cancelActiveRewardGoal(goalId: goal.id);
       if (mounted && canceledGoal != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(texts.rewards.rewardGoalCanceledMessage)),
@@ -250,15 +256,22 @@ class _RewardGoalScreenState extends State<RewardGoalScreen> {
         child: FutureBuilder<MealProgressSnapshot>(
           future: _snapshotFuture,
           builder: (context, snapshot) {
-            final activeGoal = snapshot.data?.activeRewardGoal;
-            final redeemedRewardGoals =
-                snapshot.data?.redeemedRewardGoals ?? const <RewardGoal>[];
+            final activeGoals =
+                snapshot.data?.activeRewardGoals ?? const <RewardGoal>[];
+            final earnedRewardGoals =
+                snapshot.data?.earnedRewardGoals ?? const <RewardGoal>[];
+            final usedRewardGoals =
+                snapshot.data?.usedRewardGoals ?? const <RewardGoal>[];
             final editingGoal = _editingGoal;
+            final canCreate =
+                activeGoals.length <
+                    LocalMealProgressService.maxActiveRewardGoals &&
+                editingGoal == null;
 
             return ListView(
               padding: const EdgeInsets.all(AppSpacing.xl),
               children: [
-                if (activeGoal == null) ...[
+                if (canCreate) ...[
                   _RewardGoalCreationForm(
                     title: texts.rewards.rewardGoalEmptyTitle,
                     body: texts.rewards.rewardGoalEmptyBody,
@@ -270,8 +283,7 @@ class _RewardGoalScreenState extends State<RewardGoalScreen> {
                     onSelectRequiredStickerCount: _setRequiredStickerCount,
                     onSave: _createGoal,
                   ),
-                ] else if (editingGoal != null &&
-                    editingGoal.id == activeGoal.id) ...[
+                ] else if (editingGoal != null) ...[
                   _RewardGoalCreationForm(
                     title: texts.rewards.editRewardGoal,
                     body: texts.rewards.rewardGoalEmptyBody,
@@ -285,16 +297,25 @@ class _RewardGoalScreenState extends State<RewardGoalScreen> {
                     onCancel: _stopEditingGoal,
                   ),
                 ] else ...[
-                  _ActiveRewardGoalView(
-                    goal: activeGoal,
-                    isSaving: _isSaving,
-                    onEdit: () => _startEditingGoal(activeGoal),
-                    onCancel: _cancelGoal,
-                    onRedeem: _redeemGoal,
+                  _MaxActiveRewardGoalsNotice(
+                    message: texts.rewards.maxActiveRewardGoalsMessage,
                   ),
                 ],
                 const SizedBox(height: AppSpacing.xl),
-                _RewardGoalHistorySection(goals: redeemedRewardGoals),
+                _ActiveRewardGoalsSection(
+                  goals: activeGoals,
+                  isSaving: _isSaving,
+                  onEdit: _startEditingGoal,
+                  onCancel: _cancelGoal,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                _EarnedRewardGoalsSection(
+                  goals: earnedRewardGoals,
+                  isSaving: _isSaving,
+                  onUse: _useEarnedGoal,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                _RewardGoalHistorySection(goals: usedRewardGoals),
               ],
             );
           },
@@ -476,20 +497,102 @@ class _StickerCountSelector extends StatelessWidget {
   }
 }
 
+class _MaxActiveRewardGoalsNotice extends StatelessWidget {
+  const _MaxActiveRewardGoalsNotice({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWarm,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.borderWarm),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.info_outline_rounded,
+              color: AppColors.textPrimary,
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Text(
+                message,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w700,
+                  height: 1.34,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActiveRewardGoalsSection extends StatelessWidget {
+  const _ActiveRewardGoalsSection({
+    required this.goals,
+    required this.isSaving,
+    required this.onEdit,
+    required this.onCancel,
+  });
+
+  final List<RewardGoal> goals;
+  final bool isSaving;
+  final ValueChanged<RewardGoal> onEdit;
+  final ValueChanged<RewardGoal> onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final texts = AppTexts.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          texts.rewards.activeRewardGoalsTitle,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: AppColors.textStrong,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        if (goals.isEmpty)
+          _RewardGoalEmptyMessage(message: texts.rewards.rewardGoalEmptyBody)
+        else
+          for (final goal in goals) ...[
+            _ActiveRewardGoalView(
+              goal: goal,
+              isSaving: isSaving,
+              onEdit: () => onEdit(goal),
+              onCancel: () => onCancel(goal),
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+      ],
+    );
+  }
+}
+
 class _ActiveRewardGoalView extends StatelessWidget {
   const _ActiveRewardGoalView({
     required this.goal,
     required this.isSaving,
     required this.onEdit,
     required this.onCancel,
-    required this.onRedeem,
   });
 
   final RewardGoal goal;
   final bool isSaving;
   final VoidCallback onEdit;
   final VoidCallback onCancel;
-  final VoidCallback onRedeem;
 
   @override
   Widget build(BuildContext context) {
@@ -562,33 +665,6 @@ class _ActiveRewardGoalView extends StatelessWidget {
                 ),
               ],
             ),
-            if (goal.isReady) ...[
-              const SizedBox(height: AppSpacing.xl),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceYellow,
-                  borderRadius: AppRadius.card,
-                  border: Border.all(color: AppColors.borderWarm),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Text(
-                    texts.rewards.rewardGoalReadyMessage,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textStrong,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton.icon(
-                onPressed: isSaving ? null : onRedeem,
-                icon: const Icon(Icons.card_giftcard_rounded),
-                label: Text(texts.rewards.rewardGoalGivenButton),
-              ),
-            ],
           ],
         ),
       ),
@@ -609,7 +685,7 @@ class _RewardGoalHistorySection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          texts.rewards.rewardGoalHistoryTitle,
+          texts.rewards.usedRewardGoalsTitle,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w900,
             color: AppColors.textStrong,
@@ -617,29 +693,140 @@ class _RewardGoalHistorySection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         if (goals.isEmpty)
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: AppColors.surfaceWarm,
-              borderRadius: AppRadius.card,
-              border: Border.all(color: AppColors.borderWarm),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Text(
-                texts.rewards.rewardGoalNoHistory,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          )
+          _RewardGoalEmptyMessage(message: texts.rewards.rewardGoalNoHistory)
         else
           for (final goal in goals) ...[
             _RewardGoalHistoryTile(goal: goal),
             const SizedBox(height: AppSpacing.sm),
           ],
       ],
+    );
+  }
+}
+
+class _EarnedRewardGoalsSection extends StatelessWidget {
+  const _EarnedRewardGoalsSection({
+    required this.goals,
+    required this.isSaving,
+    required this.onUse,
+  });
+
+  final List<RewardGoal> goals;
+  final bool isSaving;
+  final ValueChanged<RewardGoal> onUse;
+
+  @override
+  Widget build(BuildContext context) {
+    final texts = AppTexts.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          texts.rewards.earnedRewardGoalsTitle,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: AppColors.textStrong,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        if (goals.isEmpty)
+          _RewardGoalEmptyMessage(message: texts.rewards.rewardGoalNoHistory)
+        else
+          for (final goal in goals) ...[
+            _EarnedRewardGoalTile(
+              goal: goal,
+              isSaving: isSaving,
+              onUse: () => onUse(goal),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+      ],
+    );
+  }
+}
+
+class _EarnedRewardGoalTile extends StatelessWidget {
+  const _EarnedRewardGoalTile({
+    required this.goal,
+    required this.isSaving,
+    required this.onUse,
+  });
+
+  final RewardGoal goal;
+  final bool isSaving;
+  final VoidCallback onUse;
+
+  @override
+  Widget build(BuildContext context) {
+    final texts = AppTexts.of(context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceYellow,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.borderWarm),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              goal.rewardText,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: AppColors.textStrong,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              texts.rewards.rewardGoalReadyAt(
+                _formatDateLabel(goal.earnedAt ?? goal.readyAt),
+              ),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            FilledButton.icon(
+              onPressed: isSaving ? null : onUse,
+              icon: const Icon(Icons.redeem_rounded),
+              label: Text(texts.rewards.rewardGoalGivenButton),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RewardGoalEmptyMessage extends StatelessWidget {
+  const _RewardGoalEmptyMessage({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceWarm,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: AppColors.borderWarm),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Text(
+          message,
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -684,21 +871,23 @@ class _RewardGoalHistoryTile extends StatelessWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
-            if (goal.readyAt != null) ...[
+            if (goal.earnedAt != null || goal.readyAt != null) ...[
               const SizedBox(height: AppSpacing.xs),
               Text(
-                texts.rewards.rewardGoalReadyAt(_formatDateLabel(goal.readyAt)),
+                texts.rewards.rewardGoalReadyAt(
+                  _formatDateLabel(goal.earnedAt ?? goal.readyAt),
+                ),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ],
-            if (goal.redeemedAt != null) ...[
+            if (goal.usedAt != null || goal.redeemedAt != null) ...[
               const SizedBox(height: AppSpacing.xs),
               Text(
                 texts.rewards.rewardGoalRedeemedAt(
-                  _formatDateLabel(goal.redeemedAt),
+                  _formatDateLabel(goal.usedAt ?? goal.redeemedAt),
                 ),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,

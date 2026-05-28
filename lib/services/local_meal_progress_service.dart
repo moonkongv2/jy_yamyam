@@ -14,8 +14,12 @@ class LocalMealProgressService {
 
   static const _historyKey = 'mealHistory';
   static const _inventoryKey = 'rewardInventory';
-  static const _activeRewardGoalKey = 'activeRewardGoal';
-  static const _redeemedRewardGoalsKey = 'redeemedRewardGoals';
+  static const _legacyActiveRewardGoalKey = 'activeRewardGoal';
+  static const _legacyRedeemedRewardGoalsKey = 'redeemedRewardGoals';
+  static const _activeRewardGoalsKey = 'activeRewardGoals';
+  static const _earnedRewardGoalsKey = 'earnedRewardGoals';
+  static const _usedRewardGoalsKey = 'usedRewardGoals';
+  static const maxActiveRewardGoals = 2;
 
   final Random _random;
 
@@ -31,16 +35,21 @@ class LocalMealProgressService {
         preferences.getStringList(_inventoryKey),
         RewardInventoryItem.fromJson,
       ),
-      activeRewardGoal: _decodeRewardGoal(preferences),
-      redeemedRewardGoals: _decodeRewardGoalList(
-        preferences.getStringList(_redeemedRewardGoalsKey),
-      ),
+      activeRewardGoals: _loadActiveRewardGoals(preferences),
+      earnedRewardGoals: _loadEarnedRewardGoals(preferences),
+      usedRewardGoals: _loadUsedRewardGoals(preferences),
     );
   }
 
   Future<RewardGoal?> loadActiveRewardGoal() async {
     final preferences = await SharedPreferences.getInstance();
-    return _decodeRewardGoal(preferences);
+    final goals = _loadActiveRewardGoals(preferences);
+    return goals.isEmpty ? null : goals.first;
+  }
+
+  Future<List<RewardGoal>> loadActiveRewardGoals() async {
+    final preferences = await SharedPreferences.getInstance();
+    return _loadActiveRewardGoals(preferences);
   }
 
   Future<RewardGoal> createRewardGoal({
@@ -53,9 +62,9 @@ class LocalMealProgressService {
     }
 
     final preferences = await SharedPreferences.getInstance();
-    final existingGoal = _decodeRewardGoal(preferences);
-    if (existingGoal != null) {
-      throw StateError('Only one active reward goal is supported.');
+    final activeGoals = _loadActiveRewardGoals(preferences).toList();
+    if (activeGoals.length >= maxActiveRewardGoals) {
+      throw StateError('Up to two active reward goals are supported.');
     }
 
     final now = DateTime.now();
@@ -67,11 +76,14 @@ class LocalMealProgressService {
       createdAt: now,
       status: RewardGoalStatus.active,
     );
-    await _saveActiveRewardGoal(preferences, goal);
+    activeGoals.add(goal);
+    await _saveRewardGoalList(preferences, _activeRewardGoalsKey, activeGoals);
+    await preferences.remove(_legacyActiveRewardGoalKey);
     return goal;
   }
 
   Future<RewardGoal?> updateActiveRewardGoal({
+    String? goalId,
     required int requiredStickerCount,
     required String rewardText,
   }) async {
@@ -81,61 +93,110 @@ class LocalMealProgressService {
     }
 
     final preferences = await SharedPreferences.getInstance();
-    final activeGoal = _decodeRewardGoal(preferences);
-    if (activeGoal == null) {
+    final activeGoals = _loadActiveRewardGoals(preferences).toList();
+    if (activeGoals.isEmpty) {
       return null;
     }
 
+    final targetIndex = goalId == null
+        ? 0
+        : activeGoals.indexWhere((goal) => goal.id == goalId);
+    if (targetIndex == -1) {
+      return null;
+    }
+
+    final activeGoal = activeGoals[targetIndex];
     final nextRequiredStickerCount = requiredStickerCount.clamp(1, 20).toInt();
-    final isReady = activeGoal.filledCount >= nextRequiredStickerCount;
+    final isEarned = activeGoal.filledCount >= nextRequiredStickerCount;
     final updatedGoal = activeGoal.copyWith(
       rewardText: trimmedRewardText,
       requiredStickerCount: nextRequiredStickerCount,
-      status: isReady ? RewardGoalStatus.ready : RewardGoalStatus.active,
-      readyAt: isReady ? activeGoal.readyAt ?? DateTime.now() : null,
+      status: isEarned ? RewardGoalStatus.earned : RewardGoalStatus.active,
+      earnedAt: isEarned ? activeGoal.earnedAt ?? DateTime.now() : null,
+      readyAt: isEarned ? activeGoal.readyAt ?? DateTime.now() : null,
     );
-    await _saveActiveRewardGoal(preferences, updatedGoal);
+    if (isEarned) {
+      activeGoals.removeAt(targetIndex);
+      final earnedGoals = _loadEarnedRewardGoals(preferences).toList()
+        ..insert(0, updatedGoal);
+      await _saveRewardGoalList(
+        preferences,
+        _activeRewardGoalsKey,
+        activeGoals,
+      );
+      await _saveRewardGoalList(
+        preferences,
+        _earnedRewardGoalsKey,
+        earnedGoals,
+      );
+    } else {
+      activeGoals[targetIndex] = updatedGoal;
+      await _saveRewardGoalList(
+        preferences,
+        _activeRewardGoalsKey,
+        activeGoals,
+      );
+    }
+    await preferences.remove(_legacyActiveRewardGoalKey);
     return updatedGoal;
   }
 
-  Future<RewardGoal?> cancelActiveRewardGoal() async {
+  Future<RewardGoal?> cancelActiveRewardGoal({String? goalId}) async {
     final preferences = await SharedPreferences.getInstance();
-    final activeGoal = _decodeRewardGoal(preferences);
-    if (activeGoal == null) {
+    final activeGoals = _loadActiveRewardGoals(preferences).toList();
+    if (activeGoals.isEmpty) {
       return null;
     }
 
-    await preferences.remove(_activeRewardGoalKey);
-    return activeGoal;
+    final targetIndex = goalId == null
+        ? 0
+        : activeGoals.indexWhere((goal) => goal.id == goalId);
+    if (targetIndex == -1) {
+      return null;
+    }
+
+    final canceledGoal = activeGoals.removeAt(targetIndex);
+    await _saveRewardGoalList(preferences, _activeRewardGoalsKey, activeGoals);
+    await preferences.remove(_legacyActiveRewardGoalKey);
+    return canceledGoal;
   }
 
   Future<RewardGoal?> redeemActiveRewardGoal() async {
+    return useEarnedRewardGoal();
+  }
+
+  Future<RewardGoal?> useEarnedRewardGoal({String? goalId}) async {
     final preferences = await SharedPreferences.getInstance();
-    final activeGoal = _decodeRewardGoal(preferences);
-    if (activeGoal == null || activeGoal.status != RewardGoalStatus.ready) {
+    final earnedGoals = _loadEarnedRewardGoals(preferences).toList();
+    if (earnedGoals.isEmpty) {
       return null;
     }
 
-    final redeemedGoal = activeGoal.copyWith(
-      status: RewardGoalStatus.redeemed,
+    final targetIndex = goalId == null
+        ? 0
+        : earnedGoals.indexWhere((goal) => goal.id == goalId);
+    if (targetIndex == -1) {
+      return null;
+    }
+
+    final earnedGoal = earnedGoals.removeAt(targetIndex);
+    final usedGoal = earnedGoal.copyWith(
+      status: RewardGoalStatus.used,
+      usedAt: DateTime.now(),
       redeemedAt: DateTime.now(),
     );
-    final redeemedGoals = _decodeRewardGoalList(
-      preferences.getStringList(_redeemedRewardGoalsKey),
-    ).toList();
-    redeemedGoals.insert(0, redeemedGoal);
+    final usedGoals = _loadUsedRewardGoals(preferences).toList()
+      ..insert(0, usedGoal);
 
-    await preferences.setStringList(
-      _redeemedRewardGoalsKey,
-      redeemedGoals.map((goal) => jsonEncode(goal.toJson())).toList(),
-    );
-    await clearActiveRewardGoal();
-    return redeemedGoal;
+    await _saveRewardGoalList(preferences, _earnedRewardGoalsKey, earnedGoals);
+    await _saveRewardGoalList(preferences, _usedRewardGoalsKey, usedGoals);
+    return usedGoal;
   }
 
   Future<void> clearActiveRewardGoal() async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.remove(_activeRewardGoalKey);
+    await preferences.remove(_legacyActiveRewardGoalKey);
+    await preferences.remove(_activeRewardGoalsKey);
   }
 
   Future<RecordedMealSession> recordMealResult(MealSessionResult result) async {
@@ -148,7 +209,8 @@ class LocalMealProgressService {
       preferences.getStringList(_inventoryKey),
       RewardInventoryItem.fromJson,
     ).toList();
-    final activeRewardGoal = _decodeRewardGoal(preferences);
+    final activeRewardGoals = _loadActiveRewardGoals(preferences).toList();
+    final earnedRewardGoals = _loadEarnedRewardGoals(preferences).toList();
 
     final awardedRewards = _selectRewards(result);
     final entry = MealHistoryEntry(
@@ -163,8 +225,8 @@ class LocalMealProgressService {
 
     history.insert(0, entry);
     _addRewardsToInventory(inventory, awardedRewards, result.endedAt);
-    final goalUpdate = _fillRewardGoalSlotIfEligible(
-      goal: activeRewardGoal,
+    final goalUpdate = _fillRewardGoalSlotsIfEligible(
+      goals: activeRewardGoals,
       awardedRewards: awardedRewards,
       result: result,
       mealSessionId: entry.id,
@@ -178,16 +240,26 @@ class LocalMealProgressService {
       _inventoryKey,
       inventory.map((item) => jsonEncode(item.toJson())).toList(),
     );
-    final updatedRewardGoal = goalUpdate.goal;
-    if (updatedRewardGoal != null) {
-      await _saveActiveRewardGoal(preferences, updatedRewardGoal);
+    if (goalUpdate.changed) {
+      earnedRewardGoals.insertAll(0, goalUpdate.earnedGoals);
+      await _saveRewardGoalList(
+        preferences,
+        _activeRewardGoalsKey,
+        goalUpdate.activeGoals,
+      );
+      await _saveRewardGoalList(
+        preferences,
+        _earnedRewardGoalsKey,
+        earnedRewardGoals,
+      );
+      await preferences.remove(_legacyActiveRewardGoalKey);
     }
 
     return RecordedMealSession(
       entry: entry,
       awardedRewards: awardedRewards,
-      updatedRewardGoal: goalUpdate.goal,
-      rewardGoalJustReady: goalUpdate.justReady,
+      updatedRewardGoals: goalUpdate.updatedGoals,
+      earnedRewardGoals: goalUpdate.earnedGoals,
     );
   }
 
@@ -227,41 +299,63 @@ class LocalMealProgressService {
     }
   }
 
-  _RewardGoalUpdate _fillRewardGoalSlotIfEligible({
-    required RewardGoal? goal,
+  _RewardGoalUpdate _fillRewardGoalSlotsIfEligible({
+    required List<RewardGoal> goals,
     required List<RewardDefinition> awardedRewards,
     required MealSessionResult result,
     required String mealSessionId,
   }) {
-    if (goal == null ||
-        goal.status != RewardGoalStatus.active ||
-        !result.mealCompleted ||
-        goal.filledCount >= goal.requiredStickerCount) {
-      return const _RewardGoalUpdate();
+    if (goals.isEmpty || !result.mealCompleted) {
+      return _RewardGoalUpdate(activeGoals: goals);
     }
 
     final slotReward = _rewardGoalSlotReward(awardedRewards);
     if (slotReward == null) {
-      return const _RewardGoalUpdate();
+      return _RewardGoalUpdate(activeGoals: goals);
     }
 
-    final filledSlots = [
-      ...goal.filledSlots,
-      RewardGoalSlot(
-        rewardId: slotReward.id,
-        filledAt: result.endedAt,
-        mealSessionId: mealSessionId,
-      ),
-    ];
-    final becameReady = filledSlots.length >= goal.requiredStickerCount;
+    final activeGoals = <RewardGoal>[];
+    final updatedGoals = <RewardGoal>[];
+    final earnedGoals = <RewardGoal>[];
+
+    for (final goal in goals) {
+      if (goal.status != RewardGoalStatus.active ||
+          goal.filledCount >= goal.requiredStickerCount) {
+        activeGoals.add(goal);
+        continue;
+      }
+
+      final filledSlots = [
+        ...goal.filledSlots,
+        RewardGoalSlot(
+          rewardId: slotReward.id,
+          filledAt: result.endedAt,
+          mealSessionId: mealSessionId,
+        ),
+      ];
+      final becameEarned = filledSlots.length >= goal.requiredStickerCount;
+      final updatedGoal = goal.copyWith(
+        filledSlots: filledSlots,
+        status: becameEarned
+            ? RewardGoalStatus.earned
+            : RewardGoalStatus.active,
+        earnedAt: becameEarned ? result.endedAt : goal.earnedAt,
+        readyAt: becameEarned ? result.endedAt : goal.readyAt,
+      );
+
+      if (becameEarned) {
+        earnedGoals.add(updatedGoal);
+      } else {
+        activeGoals.add(updatedGoal);
+        updatedGoals.add(updatedGoal);
+      }
+    }
 
     return _RewardGoalUpdate(
-      goal: goal.copyWith(
-        filledSlots: filledSlots,
-        status: becameReady ? RewardGoalStatus.ready : RewardGoalStatus.active,
-        readyAt: becameReady ? result.endedAt : goal.readyAt,
-      ),
-      justReady: becameReady,
+      activeGoals: activeGoals,
+      updatedGoals: updatedGoals,
+      earnedGoals: earnedGoals,
+      changed: updatedGoals.isNotEmpty || earnedGoals.isNotEmpty,
     );
   }
 
@@ -274,8 +368,70 @@ class LocalMealProgressService {
     return null;
   }
 
-  RewardGoal? _decodeRewardGoal(SharedPreferences preferences) {
-    final rawGoal = preferences.getString(_activeRewardGoalKey);
+  List<RewardGoal> _loadActiveRewardGoals(SharedPreferences preferences) {
+    final rawGoals = preferences.getStringList(_activeRewardGoalsKey);
+    if (rawGoals != null) {
+      return _decodeRewardGoalList(rawGoals)
+          .where((goal) => goal.status == RewardGoalStatus.active)
+          .take(maxActiveRewardGoals)
+          .toList();
+    }
+
+    final legacyGoal = _decodeRewardGoal(
+      preferences,
+      _legacyActiveRewardGoalKey,
+    );
+    if (legacyGoal == null || legacyGoal.status != RewardGoalStatus.active) {
+      return <RewardGoal>[];
+    }
+    return [legacyGoal];
+  }
+
+  List<RewardGoal> _loadEarnedRewardGoals(SharedPreferences preferences) {
+    final rawGoals = preferences.getStringList(_earnedRewardGoalsKey);
+    if (rawGoals != null) {
+      return _decodeRewardGoalList(
+        rawGoals,
+      ).where((goal) => goal.status == RewardGoalStatus.earned).toList();
+    }
+
+    final legacyGoal = _decodeRewardGoal(
+      preferences,
+      _legacyActiveRewardGoalKey,
+    );
+    if (legacyGoal == null || !legacyGoal.isReady) {
+      return <RewardGoal>[];
+    }
+    return [
+      legacyGoal.copyWith(
+        status: RewardGoalStatus.earned,
+        earnedAt: legacyGoal.earnedAt ?? legacyGoal.readyAt,
+      ),
+    ];
+  }
+
+  List<RewardGoal> _loadUsedRewardGoals(SharedPreferences preferences) {
+    final rawGoals = preferences.getStringList(_usedRewardGoalsKey);
+    if (rawGoals != null) {
+      return _decodeRewardGoalList(
+        rawGoals,
+      ).where((goal) => goal.isUsed).toList();
+    }
+
+    return _decodeRewardGoalList(
+          preferences.getStringList(_legacyRedeemedRewardGoalsKey),
+        )
+        .map(
+          (goal) => goal.copyWith(
+            status: RewardGoalStatus.used,
+            usedAt: goal.usedAt ?? goal.redeemedAt,
+          ),
+        )
+        .toList();
+  }
+
+  RewardGoal? _decodeRewardGoal(SharedPreferences preferences, String key) {
+    final rawGoal = preferences.getString(key);
     if (rawGoal == null || rawGoal.isEmpty) {
       return null;
     }
@@ -315,13 +471,14 @@ class LocalMealProgressService {
     return goals;
   }
 
-  Future<void> _saveActiveRewardGoal(
+  Future<void> _saveRewardGoalList(
     SharedPreferences preferences,
-    RewardGoal goal,
+    String key,
+    List<RewardGoal> goals,
   ) {
-    return preferences.setString(
-      _activeRewardGoalKey,
-      jsonEncode(goal.toJson()),
+    return preferences.setStringList(
+      key,
+      goals.map((goal) => jsonEncode(goal.toJson())).toList(),
     );
   }
 
@@ -345,8 +502,15 @@ class LocalMealProgressService {
 }
 
 class _RewardGoalUpdate {
-  const _RewardGoalUpdate({this.goal, this.justReady = false});
+  const _RewardGoalUpdate({
+    required this.activeGoals,
+    this.updatedGoals = const [],
+    this.earnedGoals = const [],
+    this.changed = false,
+  });
 
-  final RewardGoal? goal;
-  final bool justReady;
+  final List<RewardGoal> activeGoals;
+  final List<RewardGoal> updatedGoals;
+  final List<RewardGoal> earnedGoals;
+  final bool changed;
 }

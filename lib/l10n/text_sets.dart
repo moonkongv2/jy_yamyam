@@ -117,10 +117,15 @@ abstract interface class RewardTextSet {
   String get rewardGoalUpdatedMessage;
   String get rewardGoalCanceledMessage;
   String get rewardGoalRedeemedMessage;
+  String get rewardGoalUsedMessage;
   String get rewardGoalProgressTitle;
   String get rewardGoalEmptySlotSemanticLabel;
   String get openRewardGoal;
   String get rewardGoalPromiseTitle;
+  String get activeRewardGoalsTitle;
+  String get earnedRewardGoalsTitle;
+  String get usedRewardGoalsTitle;
+  String get maxActiveRewardGoalsMessage;
   String get editRewardGoal;
   String get cancelRewardGoal;
   String get rewardGoalHistoryTitle;
@@ -132,6 +137,9 @@ abstract interface class RewardTextSet {
   String get keepRewardGoal;
   String get confirmRewardGiven;
   String get confirmCancelGoal;
+  String get confirmUseRewardGoalTitle;
+  String get confirmUseRewardGoalMessage;
+  String get confirmUseRewardGoal;
 
   String stickerCount(int count);
   String rewardGoalProgress(int filledCount, int requiredCount);

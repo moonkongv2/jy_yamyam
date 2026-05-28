@@ -6,26 +6,39 @@ class MealProgressSnapshot {
   const MealProgressSnapshot({
     required this.history,
     required this.inventory,
-    required this.activeRewardGoal,
-    required this.redeemedRewardGoals,
+    required this.activeRewardGoals,
+    required this.earnedRewardGoals,
+    required this.usedRewardGoals,
   });
 
   final List<MealHistoryEntry> history;
   final List<RewardInventoryItem> inventory;
-  final RewardGoal? activeRewardGoal;
-  final List<RewardGoal> redeemedRewardGoals;
+  final List<RewardGoal> activeRewardGoals;
+  final List<RewardGoal> earnedRewardGoals;
+  final List<RewardGoal> usedRewardGoals;
+
+  RewardGoal? get activeRewardGoal =>
+      activeRewardGoals.isEmpty ? null : activeRewardGoals.first;
+  List<RewardGoal> get redeemedRewardGoals => usedRewardGoals;
 }
 
 class RecordedMealSession {
   const RecordedMealSession({
     required this.entry,
     required this.awardedRewards,
-    required this.updatedRewardGoal,
-    required this.rewardGoalJustReady,
+    required this.updatedRewardGoals,
+    required this.earnedRewardGoals,
   });
 
   final MealHistoryEntry entry;
   final List<RewardDefinition> awardedRewards;
-  final RewardGoal? updatedRewardGoal;
-  final bool rewardGoalJustReady;
+  final List<RewardGoal> updatedRewardGoals;
+  final List<RewardGoal> earnedRewardGoals;
+
+  RewardGoal? get updatedRewardGoal {
+    final goals = [...earnedRewardGoals, ...updatedRewardGoals];
+    return goals.isEmpty ? null : goals.first;
+  }
+
+  bool get rewardGoalJustReady => earnedRewardGoals.isNotEmpty;
 }

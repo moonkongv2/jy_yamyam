@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -1401,8 +1402,83 @@ void main() {
 
     expect(recordedSession.updatedRewardGoal?.filledCount, 1);
     expect(recordedSession.rewardGoalJustReady, isFalse);
-    expect(snapshot.activeRewardGoal?.filledCount, 1);
+    expect(snapshot.activeRewardGoals.single.filledCount, 1);
   });
+
+  test('Completed meal fills all active reward goals', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final service = LocalMealProgressService();
+    await service.createRewardGoal(
+      requiredStickerCount: 5,
+      rewardText: '아이스크림',
+    );
+    await service.createRewardGoal(requiredStickerCount: 7, rewardText: '딸기');
+
+    final recordedSession = await service.recordMealResult(_mealResult());
+    final snapshot = await service.loadSnapshot();
+
+    expect(recordedSession.updatedRewardGoals, hasLength(2));
+    expect(snapshot.activeRewardGoals, hasLength(2));
+    expect(snapshot.activeRewardGoals.map((goal) => goal.filledCount), [1, 1]);
+  });
+
+  test('Only two active reward goals can be created', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final service = LocalMealProgressService();
+    await service.createRewardGoal(
+      requiredStickerCount: 5,
+      rewardText: '아이스크림',
+    );
+    await service.createRewardGoal(requiredStickerCount: 7, rewardText: '딸기');
+
+    expect(
+      () =>
+          service.createRewardGoal(requiredStickerCount: 10, rewardText: '젤리'),
+      throwsStateError,
+    );
+  });
+
+  test(
+    'Legacy single reward goal storage loads into list storage shape',
+    () async {
+      final legacyGoal = RewardGoal(
+        id: 'legacy-active',
+        rewardText: '아이스크림',
+        requiredStickerCount: 5,
+        filledSlots: const [],
+        createdAt: DateTime(2026, 5, 4, 12),
+        status: RewardGoalStatus.active,
+      );
+      final legacyUsedGoal = RewardGoal(
+        id: 'legacy-used',
+        rewardText: '딸기',
+        requiredStickerCount: 1,
+        filledSlots: [
+          RewardGoalSlot(
+            rewardId: 'sticker_finish_flag',
+            filledAt: DateTime(2026, 5, 4, 12),
+            mealSessionId: 'meal-1',
+          ),
+        ],
+        createdAt: DateTime(2026, 5, 4, 12),
+        status: RewardGoalStatus.redeemed,
+        redeemedAt: DateTime(2026, 5, 5, 12),
+      );
+      SharedPreferences.setMockInitialValues({
+        'activeRewardGoal': jsonEncode(legacyGoal.toJson()),
+        'redeemedRewardGoals': [jsonEncode(legacyUsedGoal.toJson())],
+      });
+
+      final snapshot = await LocalMealProgressService().loadSnapshot();
+
+      expect(snapshot.activeRewardGoals, hasLength(1));
+      expect(snapshot.activeRewardGoals.first.rewardText, '아이스크림');
+      expect(snapshot.usedRewardGoals, hasLength(1));
+      expect(snapshot.usedRewardGoals.first.status, RewardGoalStatus.used);
+    },
+  );
 
   test('Fast meal fills only one reward goal slot', () async {
     SharedPreferences.setMockInitialValues({});
@@ -1422,7 +1498,7 @@ void main() {
     final snapshot = await service.loadSnapshot();
 
     expect(recordedSession.awardedRewards, hasLength(1));
-    expect(snapshot.activeRewardGoal?.filledCount, 1);
+    expect(snapshot.activeRewardGoals.single.filledCount, 1);
   });
 
   test('Incomplete meal does not fill a reward goal slot', () async {
@@ -1440,10 +1516,10 @@ void main() {
     final snapshot = await service.loadSnapshot();
 
     expect(recordedSession.updatedRewardGoal, isNull);
-    expect(snapshot.activeRewardGoal?.filledCount, 0);
+    expect(snapshot.activeRewardGoals.single.filledCount, 0);
   });
 
-  test('Reward goal becomes ready when required count is reached', () async {
+  test('Reward goal becomes earned when required count is reached', () async {
     SharedPreferences.setMockInitialValues({});
 
     final service = LocalMealProgressService();
@@ -1461,32 +1537,31 @@ void main() {
     final snapshot = await service.loadSnapshot();
 
     expect(recordedSession.rewardGoalJustReady, isTrue);
-    expect(snapshot.activeRewardGoal?.status, RewardGoalStatus.ready);
-    expect(snapshot.activeRewardGoal?.readyAt, isNotNull);
+    expect(snapshot.activeRewardGoals, isEmpty);
+    expect(snapshot.earnedRewardGoals.single.status, RewardGoalStatus.earned);
+    expect(snapshot.earnedRewardGoals.single.earnedAt, isNotNull);
   });
 
-  test(
-    'Redeeming a ready goal clears active goal and stores redeemed history',
-    () async {
-      SharedPreferences.setMockInitialValues({});
+  test('Using an earned goal moves it to used history', () async {
+    SharedPreferences.setMockInitialValues({});
 
-      final service = LocalMealProgressService();
-      await service.createRewardGoal(
-        requiredStickerCount: 1,
-        rewardText: '아이스크림',
-      );
-      await service.recordMealResult(_mealResult());
+    final service = LocalMealProgressService();
+    await service.createRewardGoal(
+      requiredStickerCount: 1,
+      rewardText: '아이스크림',
+    );
+    await service.recordMealResult(_mealResult());
 
-      final redeemedGoal = await service.redeemActiveRewardGoal();
-      final snapshot = await service.loadSnapshot();
+    final usedGoal = await service.useEarnedRewardGoal();
+    final snapshot = await service.loadSnapshot();
 
-      expect(redeemedGoal?.status, RewardGoalStatus.redeemed);
-      expect(redeemedGoal?.redeemedAt, isNotNull);
-      expect(snapshot.activeRewardGoal, isNull);
-      expect(snapshot.redeemedRewardGoals, hasLength(1));
-      expect(snapshot.redeemedRewardGoals.first.rewardText, '아이스크림');
-    },
-  );
+    expect(usedGoal?.status, RewardGoalStatus.used);
+    expect(usedGoal?.usedAt, isNotNull);
+    expect(snapshot.activeRewardGoals, isEmpty);
+    expect(snapshot.earnedRewardGoals, isEmpty);
+    expect(snapshot.usedRewardGoals, hasLength(1));
+    expect(snapshot.usedRewardGoals.first.rewardText, '아이스크림');
+  });
 
   test('Active reward goal can be updated', () async {
     SharedPreferences.setMockInitialValues({});
@@ -1505,12 +1580,12 @@ void main() {
 
     expect(updatedGoal?.rewardText, '딸기');
     expect(updatedGoal?.requiredStickerCount, 7);
-    expect(snapshot.activeRewardGoal?.rewardText, '딸기');
-    expect(snapshot.activeRewardGoal?.requiredStickerCount, 7);
+    expect(snapshot.activeRewardGoals.single.rewardText, '딸기');
+    expect(snapshot.activeRewardGoals.single.requiredStickerCount, 7);
   });
 
   test(
-    'Reducing required count to filled count makes reward goal ready',
+    'Reducing required count to filled count makes reward goal earned',
     () async {
       SharedPreferences.setMockInitialValues({});
 
@@ -1529,8 +1604,12 @@ void main() {
         rewardText: '아이스크림',
       );
 
-      expect(updatedGoal?.status, RewardGoalStatus.ready);
-      expect(updatedGoal?.readyAt, isNotNull);
+      final snapshot = await service.loadSnapshot();
+
+      expect(updatedGoal?.status, RewardGoalStatus.earned);
+      expect(updatedGoal?.earnedAt, isNotNull);
+      expect(snapshot.activeRewardGoals, isEmpty);
+      expect(snapshot.earnedRewardGoals, hasLength(1));
     },
   );
 
@@ -1547,8 +1626,8 @@ void main() {
     final snapshot = await service.loadSnapshot();
 
     expect(canceledGoal?.rewardText, '아이스크림');
-    expect(snapshot.activeRewardGoal, isNull);
-    expect(snapshot.redeemedRewardGoals, isEmpty);
+    expect(snapshot.activeRewardGoals, isEmpty);
+    expect(snapshot.usedRewardGoals, isEmpty);
   });
 
   test('Existing sticker inventory counts still increase', () async {
@@ -1568,7 +1647,7 @@ void main() {
     );
 
     expect(inventoryCount, recordedSession.awardedRewards.length);
-    expect(snapshot.activeRewardGoal?.filledCount, 1);
+    expect(snapshot.activeRewardGoals.single.filledCount, 1);
   });
 
   testWidgets('Home screen shows reward goal CTA', (tester) async {
@@ -1611,11 +1690,11 @@ void main() {
     await tester.pumpAndSettle();
 
     final snapshot = await service.loadSnapshot();
-    expect(snapshot.activeRewardGoal?.rewardText, 'ice cream');
-    expect(snapshot.activeRewardGoal?.requiredStickerCount, 7);
+    expect(snapshot.activeRewardGoals.single.rewardText, 'ice cream');
+    expect(snapshot.activeRewardGoals.single.requiredStickerCount, 7);
   });
 
-  testWidgets('Reward goal given flow asks for confirmation', (tester) async {
+  testWidgets('Earned reward use flow asks for confirmation', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
     await service.createRewardGoal(
@@ -1632,22 +1711,30 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Reward Given'));
+    await tester.drag(find.byType(ListView), const Offset(0, -700));
     await tester.pumpAndSettle();
-    expect(find.text('Was the reward given?'), findsOneWidget);
+    await tester.ensureVisible(find.text('Use Reward'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use Reward'));
+    await tester.pumpAndSettle();
+    expect(find.text('Use this reward?'), findsOneWidget);
 
     await tester.tap(find.text('Keep Promise'));
     await tester.pumpAndSettle();
-    expect((await service.loadSnapshot()).activeRewardGoal, isNotNull);
+    expect((await service.loadSnapshot()).earnedRewardGoals, hasLength(1));
 
-    await tester.tap(find.text('Reward Given'));
+    await tester.drag(find.byType(ListView), const Offset(0, -700));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Mark Given'));
+    await tester.ensureVisible(find.text('Use Reward'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use Reward'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Use Reward').last);
     await tester.pumpAndSettle();
 
     final snapshot = await service.loadSnapshot();
-    expect(snapshot.activeRewardGoal, isNull);
-    expect(snapshot.redeemedRewardGoals, hasLength(1));
+    expect(snapshot.earnedRewardGoals, isEmpty);
+    expect(snapshot.usedRewardGoals, hasLength(1));
   });
 }
 

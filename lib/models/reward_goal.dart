@@ -2,11 +2,20 @@ import 'reward_item.dart';
 
 enum RewardGoalStatus {
   active,
+  earned,
+  used,
   ready,
   redeemed,
   archived;
 
   static RewardGoalStatus fromName(String? name) {
+    if (name == 'ready') {
+      return RewardGoalStatus.earned;
+    }
+    if (name == 'redeemed') {
+      return RewardGoalStatus.used;
+    }
+
     for (final status in RewardGoalStatus.values) {
       if (status.name == name) {
         return status;
@@ -85,6 +94,8 @@ class RewardGoal {
     required this.filledSlots,
     required this.createdAt,
     required this.status,
+    this.earnedAt,
+    this.usedAt,
     this.readyAt,
     this.redeemedAt,
   });
@@ -138,6 +149,12 @@ class RewardGoal {
       filledSlots: filledSlots.take(clampedRequiredStickerCount).toList(),
       createdAt: createdAt,
       status: RewardGoalStatus.fromName(json['status'] as String?),
+      earnedAt:
+          _tryParseDateTime(json['earnedAt']) ??
+          _tryParseDateTime(json['readyAt']),
+      usedAt:
+          _tryParseDateTime(json['usedAt']) ??
+          _tryParseDateTime(json['redeemedAt']),
       readyAt: _tryParseDateTime(json['readyAt']),
       redeemedAt: _tryParseDateTime(json['redeemedAt']),
     );
@@ -151,13 +168,18 @@ class RewardGoal {
   final List<RewardGoalSlot> filledSlots;
   final DateTime createdAt;
   final RewardGoalStatus status;
+  final DateTime? earnedAt;
+  final DateTime? usedAt;
   final DateTime? readyAt;
   final DateTime? redeemedAt;
 
   int get filledCount => filledSlots.length;
   int get remainingCount =>
       (requiredStickerCount - filledCount).clamp(0, 20).toInt();
-  bool get isReady => status == RewardGoalStatus.ready;
+  bool get isReady =>
+      status == RewardGoalStatus.earned || status == RewardGoalStatus.ready;
+  bool get isUsed =>
+      status == RewardGoalStatus.used || status == RewardGoalStatus.redeemed;
 
   RewardGoal copyWith({
     String? id,
@@ -166,6 +188,8 @@ class RewardGoal {
     List<RewardGoalSlot>? filledSlots,
     DateTime? createdAt,
     RewardGoalStatus? status,
+    Object? earnedAt = _unset,
+    Object? usedAt = _unset,
     Object? readyAt = _unset,
     Object? redeemedAt = _unset,
   }) {
@@ -176,6 +200,8 @@ class RewardGoal {
       filledSlots: filledSlots ?? this.filledSlots,
       createdAt: createdAt ?? this.createdAt,
       status: status ?? this.status,
+      earnedAt: earnedAt == _unset ? this.earnedAt : earnedAt as DateTime?,
+      usedAt: usedAt == _unset ? this.usedAt : usedAt as DateTime?,
       readyAt: readyAt == _unset ? this.readyAt : readyAt as DateTime?,
       redeemedAt: redeemedAt == _unset
           ? this.redeemedAt
@@ -191,6 +217,8 @@ class RewardGoal {
       'filledSlots': filledSlots.map((slot) => slot.toJson()).toList(),
       'createdAt': createdAt.toIso8601String(),
       'status': status.name,
+      'earnedAt': earnedAt?.toIso8601String(),
+      'usedAt': usedAt?.toIso8601String(),
       'readyAt': readyAt?.toIso8601String(),
       'redeemedAt': redeemedAt?.toIso8601String(),
     };

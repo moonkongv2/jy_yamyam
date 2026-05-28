@@ -18,15 +18,20 @@ class RewardTexts implements RewardTextSet {
   String get rewardGoalRequiredStickerCountLabel => '필요한 스티커 수';
   String get rewardGoalSaveButton => '약속 저장';
   String get rewardGoalReadyMessage => '보상 받을 준비가 됐어요!';
-  String get rewardGoalGivenButton => '보상 지급 완료';
+  String get rewardGoalGivenButton => '사용하기';
   String get rewardGoalCreatedMessage => '보상 약속을 저장했어요.';
   String get rewardGoalUpdatedMessage => '보상 약속을 수정했어요.';
   String get rewardGoalCanceledMessage => '보상 약속을 취소했어요.';
   String get rewardGoalRedeemedMessage => '보상 지급을 기록했어요.';
+  String get rewardGoalUsedMessage => '보상을 사용했어요.';
   String get rewardGoalProgressTitle => '보상판';
   String get rewardGoalEmptySlotSemanticLabel => '비어 있는 보상칸';
   String get openRewardGoal => '보상판 보기';
   String get rewardGoalPromiseTitle => '이번 보상';
+  String get activeRewardGoalsTitle => '진행 중인 보상 약속';
+  String get earnedRewardGoalsTitle => '받은 보상';
+  String get usedRewardGoalsTitle => '사용한 보상';
+  String get maxActiveRewardGoalsMessage => '진행 중인 보상 약속은 최대 2개까지 만들 수 있어요.';
   String get editRewardGoal => '약속 수정';
   String get cancelRewardGoal => '약속 취소';
   String get rewardGoalHistoryTitle => '지급 완료 이력';
@@ -38,6 +43,10 @@ class RewardTexts implements RewardTextSet {
   String get keepRewardGoal => '계속 유지';
   String get confirmRewardGiven => '지급 완료';
   String get confirmCancelGoal => '약속 취소';
+  String get confirmUseRewardGoalTitle => '이 보상을 사용할까요?';
+  String get confirmUseRewardGoalMessage =>
+      '사용하면 받은 보상 목록에서 사라지고 사용한 보상에 기록돼요.';
+  String get confirmUseRewardGoal => '사용하기';
 
   String stickerCount(int count) => '$count장';
   String rewardGoalProgress(int filledCount, int requiredCount) =>
