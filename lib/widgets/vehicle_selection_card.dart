@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../catalogs/vehicle_catalog.dart';
@@ -104,45 +102,27 @@ class VehicleSelectionCard extends StatelessWidget {
                 final fourAcrossWidth =
                     (constraints.maxWidth - (spacing * 3)) / 4;
                 final itemSize = fourAcrossWidth.clamp(72.0, 84.0).toDouble();
-                final contentWidth =
-                    (itemSize * VehicleCatalog.all.length) +
-                    (spacing * (VehicleCatalog.all.length - 1));
-                final rowWidth = math.max(constraints.maxWidth, contentWidth);
 
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: spacing,
                   clipBehavior: Clip.none,
-                  child: SizedBox(
-                    width: rowWidth,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        for (
-                          var index = 0;
-                          index < VehicleCatalog.all.length;
-                          index++
-                        ) ...[
-                          if (index > 0) const SizedBox(width: spacing),
-                          _VehicleChoiceButton(
-                            size: itemSize,
-                            vehicle: VehicleCatalog.all[index],
-                            isSelected:
-                                selectedVehicle.id ==
-                                VehicleCatalog.all[index].id,
-                            onTap: () =>
-                                onVehicleSelected(VehicleCatalog.all[index].id),
-                            avatarMode: avatarMode,
-                            customAvatarImagePath: customAvatarImagePath,
-                            avatarScale: avatarScale,
-                            avatarOffsetX: avatarOffsetX,
-                            avatarOffsetY: avatarOffsetY,
-                            avatarRotationDegrees: avatarRotationDegrees,
-                            avatarImageBuilder: avatarImageBuilder,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+                  children: [
+                    for (final vehicle in VehicleCatalog.all)
+                      _VehicleChoiceButton(
+                        size: itemSize,
+                        vehicle: vehicle,
+                        isSelected: selectedVehicle.id == vehicle.id,
+                        onTap: () => onVehicleSelected(vehicle.id),
+                        avatarMode: avatarMode,
+                        customAvatarImagePath: customAvatarImagePath,
+                        avatarScale: avatarScale,
+                        avatarOffsetX: avatarOffsetX,
+                        avatarOffsetY: avatarOffsetY,
+                        avatarRotationDegrees: avatarRotationDegrees,
+                        avatarImageBuilder: avatarImageBuilder,
+                      ),
+                  ],
                 );
               },
             ),

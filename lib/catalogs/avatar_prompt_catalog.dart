@@ -48,6 +48,26 @@ Avoid full-body images, multiple people, or complex backgrounds.
 필요하면 작업복 느낌은 아주 약하게 넣어 주세요.
 얼굴 중심을 유지해 주세요.
 ''',
+    'airplane': '''
+비행기 조종사 컨셉으로 만들어 주세요.
+파일럿 모자 또는 항공 헬멧을 씌워 주세요.
+밝고 자신감 있는 표정으로 만들어 주세요.
+''',
+    'bus': '''
+버스 기사 컨셉으로 만들어 주세요.
+운전기사 모자 또는 단정한 모자를 씌워 주세요.
+친근하고 든든한 느낌으로 만들어 주세요.
+''',
+    'supercar': '''
+레이서 드라이버 컨셉으로 만들어 주세요.
+스포티한 모자 또는 가벼운 헬멧을 씌워 주세요.
+신나고 활기찬 표정으로 만들어 주세요.
+''',
+    'train': '''
+기차 기관사 컨셉으로 만들어 주세요.
+기관사 모자 또는 기차 승무원 느낌의 모자를 씌워 주세요.
+차분하고 믿음직한 느낌으로 만들어 주세요.
+''',
   };
 
   static const _englishAdditionsByVehicleId = {
@@ -72,6 +92,26 @@ Use an excavator operator concept.
 Add a yellow safety helmet.
 If needed, add only a very subtle workwear feeling.
 Keep the face centered.
+''',
+    'airplane': '''
+Use an airplane pilot concept.
+Add a pilot hat or aviation helmet.
+Use a bright, confident expression.
+''',
+    'bus': '''
+Use a bus driver concept.
+Add a driver hat or neat cap.
+Make the character feel friendly and dependable.
+''',
+    'supercar': '''
+Use a race driver concept.
+Add a sporty cap or light helmet.
+Use an excited, energetic expression.
+''',
+    'train': '''
+Use a train engineer concept.
+Add a train engineer hat or conductor-style cap.
+Make the character feel calm and reliable.
 ''',
   };
 

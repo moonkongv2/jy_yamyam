@@ -58,7 +58,72 @@ abstract final class VehicleCatalog {
     ),
   );
 
-  static const all = [motorcycle, fireTruck, policeCar, excavator];
+  static const airplane = VehicleDefinition(
+    id: 'airplane',
+    labelKo: '비행기',
+    labelEn: 'Airplane',
+    emoji: '✈️',
+    assetPath: 'assets/images/vehicle_airplane.png',
+    selectionAssetPath: 'assets/images/vehicle_airplane_chip.png',
+    avatarSlot: VehicleAvatarSlot(
+      centerX: 0.52,
+      centerY: 0.33,
+      sizeRatio: 0.25,
+    ),
+  );
+
+  static const bus = VehicleDefinition(
+    id: 'bus',
+    labelKo: '버스',
+    labelEn: 'Bus',
+    emoji: '🚌',
+    assetPath: 'assets/images/vehicle_bus.png',
+    selectionAssetPath: 'assets/images/vehicle_bus_chip.png',
+    avatarSlot: VehicleAvatarSlot(
+      centerX: 0.75,
+      centerY: 0.47,
+      sizeRatio: 0.23,
+    ),
+  );
+
+  static const supercar = VehicleDefinition(
+    id: 'supercar',
+    labelKo: '슈퍼카',
+    labelEn: 'Supercar',
+    emoji: '🏎️',
+    assetPath: 'assets/images/vehicle_supercar.png',
+    selectionAssetPath: 'assets/images/vehicle_supercar_chip.png',
+    avatarSlot: VehicleAvatarSlot(
+      centerX: 0.41,
+      centerY: 0.34,
+      sizeRatio: 0.27,
+    ),
+  );
+
+  static const train = VehicleDefinition(
+    id: 'train',
+    labelKo: '기차',
+    labelEn: 'Train',
+    emoji: '🚆',
+    assetPath: 'assets/images/vehicle_train.png',
+    selectionAssetPath: 'assets/images/vehicle_train_chip.png',
+    avatarSlot: VehicleAvatarSlot(
+      centerX: 0.36,
+      centerY: 0.39,
+      sizeRatio: 0.25,
+    ),
+  );
+
+  static const all = [
+    motorcycle,
+    fireTruck,
+    policeCar,
+    excavator,
+    airplane,
+    bus,
+    supercar,
+    train,
+  ];
 
   static VehicleDefinition findById(String id) {
     for (final vehicle in all) {

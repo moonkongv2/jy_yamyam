@@ -133,7 +133,14 @@ void main() {
     }
   });
 
-  test('Every catalog vehicle has success and failure result videos', () {
+  test('Catalog vehicles use result videos or the motorcycle fallback', () {
+    const vehiclesWithResultVideos = {
+      'motorcycle',
+      'fire_truck',
+      'police_car',
+      'excavator',
+    };
+
     for (final vehicle in VehicleCatalog.all) {
       final successPath = resultVideoAssetPathForVehicle(
         vehicleId: vehicle.id,
@@ -144,39 +151,50 @@ void main() {
         mealCompleted: false,
       );
 
-      expect(
-        successPath,
-        'assets/videos/result_${vehicle.id}_success.mp4',
-        reason: vehicle.id,
-      );
-      expect(
-        failurePath,
-        'assets/videos/result_${vehicle.id}_failure.mp4',
-        reason: vehicle.id,
-      );
+      final expectedSuccessPath = vehiclesWithResultVideos.contains(vehicle.id)
+          ? 'assets/videos/result_${vehicle.id}_success.mp4'
+          : 'assets/videos/result_motorcycle_success.mp4';
+      final expectedFailurePath = vehiclesWithResultVideos.contains(vehicle.id)
+          ? 'assets/videos/result_${vehicle.id}_failure.mp4'
+          : 'assets/videos/result_motorcycle_failure.mp4';
+
+      expect(successPath, expectedSuccessPath, reason: vehicle.id);
+      expect(failurePath, expectedFailurePath, reason: vehicle.id);
       expect(File(successPath).existsSync(), isTrue, reason: successPath);
       expect(File(failurePath).existsSync(), isTrue, reason: failurePath);
     }
   });
 
-  test('Motivation video catalog has vehicle videos for every milestone', () {
-    for (final vehicle in VehicleCatalog.all) {
-      for (var milestone = 10; milestone <= 90; milestone += 10) {
-        final videoNumber = milestone ~/ 10;
-        final path = motivationVideoAssetPathForVehicle(
-          vehicleId: vehicle.id,
-          milestone: milestone,
-        );
+  test(
+    'Motivation video catalog has vehicle videos for supported vehicles',
+    () {
+      const vehiclesWithMotivationVideos = {
+        'motorcycle',
+        'fire_truck',
+        'police_car',
+        'excavator',
+      };
 
-        expect(
-          path,
-          'assets/videos/motivation_${vehicle.id}_$videoNumber.mp4',
-          reason: '${vehicle.id} $milestone%',
-        );
-        expect(File(path!).existsSync(), isTrue, reason: path);
+      for (final vehicle in VehicleCatalog.all.where(
+        (vehicle) => vehiclesWithMotivationVideos.contains(vehicle.id),
+      )) {
+        for (var milestone = 10; milestone <= 90; milestone += 10) {
+          final videoNumber = milestone ~/ 10;
+          final path = motivationVideoAssetPathForVehicle(
+            vehicleId: vehicle.id,
+            milestone: milestone,
+          );
+
+          expect(
+            path,
+            'assets/videos/motivation_${vehicle.id}_$videoNumber.mp4',
+            reason: '${vehicle.id} $milestone%',
+          );
+          expect(File(path!).existsSync(), isTrue, reason: path);
+        }
       }
-    }
-  });
+    },
+  );
 
   test('Motivation video catalog falls back for missing vehicle videos', () {
     const fallbackPath = 'assets/videos/motivation_10.mp4';
@@ -187,6 +205,10 @@ void main() {
         milestone: 20,
       ),
       'assets/videos/motivation_fire_truck_2.mp4',
+    );
+    expect(
+      motivationVideoAssetPathForVehicle(vehicleId: 'airplane', milestone: 10),
+      fallbackPath,
     );
     expect(
       motivationVideoAssetPathForVehicle(
@@ -268,6 +290,22 @@ void main() {
       VehicleCatalog.excavator,
       'ko',
     );
+    final airplanePrompt = AvatarPromptCatalog.promptForVehicle(
+      VehicleCatalog.airplane,
+      'ko',
+    );
+    final busPrompt = AvatarPromptCatalog.promptForVehicle(
+      VehicleCatalog.bus,
+      'ko',
+    );
+    final supercarPrompt = AvatarPromptCatalog.promptForVehicle(
+      VehicleCatalog.supercar,
+      'ko',
+    );
+    final trainPrompt = AvatarPromptCatalog.promptForVehicle(
+      VehicleCatalog.train,
+      'ko',
+    );
 
     expect(
       motorcyclePrompt.contains('오토바이') || motorcyclePrompt.contains('라이더'),
@@ -279,6 +317,10 @@ void main() {
       excavatorPrompt.contains('안전모') || excavatorPrompt.contains('포크레인'),
       isTrue,
     );
+    expect(airplanePrompt, contains('조종사'));
+    expect(busPrompt, contains('버스 기사'));
+    expect(supercarPrompt, contains('레이서'));
+    expect(trainPrompt, contains('기관사'));
   });
 
   testWidgets('First launch asks for child name before home', (tester) async {
@@ -411,6 +453,8 @@ void main() {
 
     await _startApp(tester, const Locale('ko'));
 
+    await tester.ensureVisible(find.text('만들기'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('만들기'));
     await tester.pumpAndSettle();
 
@@ -859,34 +903,34 @@ void main() {
     expect(find.text('소방차'), findsNothing);
     expect(find.text('경찰차'), findsNothing);
     expect(find.text('포크레인'), findsNothing);
+
+    for (final vehicle in VehicleCatalog.all) {
+      expect(_assetImage(vehicle.selectionImagePath), findsOneWidget);
+    }
+
+    final firstRowTop = tester
+        .getTopLeft(_vehicleChoiceFinder('motorcycle'))
+        .dy;
     expect(
-      _assetImage('assets/images/vehicle_motorcycle_chip.png'),
-      findsOneWidget,
-    );
-    expect(
-      _assetImage('assets/images/vehicle_fire_truck_chip.png'),
-      findsOneWidget,
-    );
-    expect(
-      _assetImage('assets/images/vehicle_police_car_chip.png'),
-      findsOneWidget,
-    );
-    expect(
-      _assetImage('assets/images/vehicle_excavator_chip.png'),
-      findsOneWidget,
-    );
-    expect(
-      tester.getTopLeft(_vehicleChoiceFinder('motorcycle')).dy,
       tester.getTopLeft(_vehicleChoiceFinder('fire_truck')).dy,
+      firstRowTop,
     );
     expect(
       tester.getTopLeft(_vehicleChoiceFinder('police_car')).dy,
-      tester.getTopLeft(_vehicleChoiceFinder('motorcycle')).dy,
+      firstRowTop,
     );
     expect(
       tester.getTopLeft(_vehicleChoiceFinder('excavator')).dy,
-      tester.getTopLeft(_vehicleChoiceFinder('motorcycle')).dy,
+      firstRowTop,
     );
+    final secondRowTop = tester.getTopLeft(_vehicleChoiceFinder('airplane')).dy;
+    expect(secondRowTop, greaterThan(firstRowTop));
+    expect(tester.getTopLeft(_vehicleChoiceFinder('bus')).dy, secondRowTop);
+    expect(
+      tester.getTopLeft(_vehicleChoiceFinder('supercar')).dy,
+      secondRowTop,
+    );
+    expect(tester.getTopLeft(_vehicleChoiceFinder('train')).dy, secondRowTop);
     expect(
       tester.getSize(_vehicleChoiceFinder('motorcycle')).width,
       tester.getSize(_vehicleChoiceFinder('fire_truck')).width,
