@@ -98,7 +98,6 @@ class RoadView extends StatelessWidget {
             borderRadius: AppRadius.hero,
             child: Stack(
               children: [
-                const Positioned.fill(child: _RoadScenery()),
                 Positioned.fill(
                   child: CustomPaint(painter: RoadPainter(progress: progress)),
                 ),
@@ -208,54 +207,6 @@ class _RoadMarker extends StatelessWidget {
           child: Semantics(
             label: label ?? 'milestone',
             child: Icon(icon, color: iconColor, size: 20),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RoadScenery extends StatelessWidget {
-  const _RoadScenery();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: const [
-        _SceneryEmoji(emoji: '☁️', alignment: Alignment(-0.76, -0.86)),
-        _SceneryEmoji(emoji: '🌤️', alignment: Alignment(0.78, -0.78)),
-        _SceneryEmoji(emoji: '🌷', alignment: Alignment(-0.82, 0.34)),
-        _SceneryEmoji(emoji: '🌿', alignment: Alignment(0.84, 0.42)),
-      ],
-    );
-  }
-}
-
-class _SceneryEmoji extends StatelessWidget {
-  const _SceneryEmoji({required this.emoji, required this.alignment});
-
-  final String emoji;
-  final Alignment alignment;
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: alignment,
-      child: Opacity(
-        opacity: 0.46,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.white.withValues(alpha: 0.34),
-            borderRadius: AppRadius.pill,
-            border: Border.all(color: AppColors.white.withValues(alpha: 0.36)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xs),
-            child: Text(
-              emoji,
-              textScaler: TextScaler.noScaling,
-              style: const TextStyle(fontSize: 19, height: 1),
-            ),
           ),
         ),
       ),

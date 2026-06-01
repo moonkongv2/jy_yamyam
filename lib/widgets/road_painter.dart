@@ -44,7 +44,8 @@ Path createRoadPath(Size size) {
     ..lineTo(left, bottom - (rowHeight * 7))
     ..lineTo(left, bottom - (rowHeight * 8))
     ..lineTo(right, bottom - (rowHeight * 8))
-    ..lineTo(right, top);
+    ..lineTo(right, top)
+    ..lineTo(left, top);
 }
 
 PathMetric _roadMetric(Size size) {

@@ -1076,7 +1076,7 @@ void main() {
     expect(sideChanges, greaterThanOrEqualTo(7));
     expect(
       roadPointForProgress(roadSize, 1).dx,
-      greaterThan(roadBounds.center.dx),
+      lessThan(roadBounds.center.dx),
     );
 
     await tester.pumpWidget(
@@ -1085,7 +1085,7 @@ void main() {
           body: SizedBox(
             width: 420,
             height: 640,
-            child: RoadView(progress: 0.2, vehicle: VehicleCatalog.fireTruck),
+            child: RoadView(progress: 0.15, vehicle: VehicleCatalog.fireTruck),
           ),
         ),
       ),
