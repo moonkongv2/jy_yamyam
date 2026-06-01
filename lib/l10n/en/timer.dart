@@ -13,6 +13,11 @@ class EnTimerTexts implements TimerTextSet {
   String get progressArrived => 'You arrived!';
   String get completeDialogTitle => 'Did you finish your meal?';
   String get completeDialogMessage => 'Finish this mealtime ride?';
+  String get exitDialogTitle => 'Leave this ride?';
+  String get exitDialogMessage =>
+      "If you leave now, this mealtime ride won't be saved.";
+  String get exitDialogCancelButton => 'Keep going';
+  String get exitDialogConfirmButton => 'Leave';
   String get pauseButton => 'Pause';
   String get completeMealButton => 'Meal done';
   String get runningArrivalLabel => 'Until arrival';

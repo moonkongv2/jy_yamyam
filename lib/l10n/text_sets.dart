@@ -75,6 +75,10 @@ abstract interface class TimerTextSet {
   String get progressArrived;
   String get completeDialogTitle;
   String get completeDialogMessage;
+  String get exitDialogTitle;
+  String get exitDialogMessage;
+  String get exitDialogCancelButton;
+  String get exitDialogConfirmButton;
   String get pauseButton;
   String get completeMealButton;
   String get runningArrivalLabel;

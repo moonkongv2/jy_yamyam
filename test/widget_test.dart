@@ -1283,6 +1283,64 @@ void main() {
     },
   );
 
+  testWidgets('Timer screen asks before leaving with the back button', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final navigatorKey = GlobalKey<NavigatorState>();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        navigatorKey: navigatorKey,
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: const Scaffold(body: Center(child: Text('타이머 열기'))),
+      ),
+    );
+    navigatorKey.currentState!.push(
+      MaterialPageRoute(
+        builder: (_) => TimerScreen(
+          config: MealTimerConfig.defaults(),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('오늘의 냠냠코스'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 320));
+
+    expect(find.text('코스를 그만할까요?'), findsOneWidget);
+    expect(find.text('지금 나가면 진행 중인 냠냠코스가 저장되지 않아요.'), findsOneWidget);
+
+    await tester.tap(find.text('계속하기'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 320));
+
+    expect(find.text('코스를 그만할까요?'), findsNothing);
+    expect(find.text('오늘의 냠냠코스'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 320));
+    await tester.tap(find.text('그만하기'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text('타이머 열기'), findsOneWidget);
+    expect(find.text('오늘의 냠냠코스'), findsNothing);
+  });
+
   testWidgets('English locale shows English home copy', (tester) async {
     SharedPreferences.setMockInitialValues({});
 

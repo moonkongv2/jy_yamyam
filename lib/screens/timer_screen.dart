@@ -109,6 +109,8 @@ class _TimerScreenState extends State<TimerScreen> {
   final Set<int> _shownMotivationMilestones = {};
   bool _arrivalPromptShown = false;
   bool _screenAwakeEnabled = false;
+  bool _exitPromptShown = false;
+  bool _allowExit = false;
   int? _activeMotivationMilestone;
   String? _activeMotivationVideoPath;
 
@@ -206,6 +208,61 @@ class _TimerScreenState extends State<TimerScreen> {
       _activeMotivationMilestone = null;
       _activeMotivationVideoPath = null;
     });
+  }
+
+  Future<void> _confirmExit() async {
+    if (_exitPromptShown || _allowExit || !mounted) {
+      return;
+    }
+
+    _exitPromptShown = true;
+    final shouldResumeAfterPrompt =
+        _controller.state == MealTimerState.running ||
+        _controller.state == MealTimerState.arrived;
+    if (shouldResumeAfterPrompt) {
+      _controller.pause();
+    }
+
+    final route = ModalRoute.of(context);
+    final texts = AppTexts.of(context);
+    final shouldExit = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(texts.timer.exitDialogTitle),
+          content: Text(texts.timer.exitDialogMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(texts.timer.exitDialogCancelButton),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(texts.timer.exitDialogConfirmButton),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    _exitPromptShown = false;
+    if (shouldExit == true) {
+      _allowExit = true;
+      final navigator = Navigator.of(context);
+      if (route != null && navigator.canPop()) {
+        navigator.removeRoute(route);
+      }
+      return;
+    }
+
+    if (shouldResumeAfterPrompt && _controller.isPaused) {
+      _controller.resume();
+    }
   }
 
   Future<void> _confirmComplete({bool showFailureOnDecline = false}) async {
@@ -338,71 +395,80 @@ class _TimerScreenState extends State<TimerScreen> {
           progress,
         );
 
-        return Scaffold(
-          backgroundColor: AppColors.cream,
-          appBar: AppBar(
-            title: Text(texts.timer.courseTitle),
+        return PopScope(
+          canPop: _allowExit,
+          onPopInvokedWithResult: (didPop, result) {
+            if (!didPop) {
+              _confirmExit();
+            }
+          },
+          child: Scaffold(
             backgroundColor: AppColors.cream,
-            foregroundColor: AppColors.brown900,
-            elevation: 0,
-          ),
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.xl,
-                AppSpacing.xs,
-                AppSpacing.xl,
-                AppSpacing.xl,
-              ),
-              child: Column(
-                children: [
-                  _ProgressMessageCard(
-                    message: statusCopy.progressMessage,
-                    progress: progress,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Expanded(
-                    child: RoadView(
+            appBar: AppBar(
+              title: Text(texts.timer.courseTitle),
+              backgroundColor: AppColors.cream,
+              foregroundColor: AppColors.brown900,
+              elevation: 0,
+            ),
+            body: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.xl,
+                  AppSpacing.xs,
+                  AppSpacing.xl,
+                  AppSpacing.xl,
+                ),
+                child: Column(
+                  children: [
+                    _ProgressMessageCard(
+                      message: statusCopy.progressMessage,
                       progress: progress,
-                      vehicle: vehicle,
-                      avatarMode: vehicleAvatarMode,
-                      customAvatarImagePath: vehicleAvatarImagePath,
-                      avatarScale: widget.config.avatarScale,
-                      avatarOffsetX: widget.config.avatarOffsetX,
-                      avatarOffsetY: widget.config.avatarOffsetY,
-                      avatarRotationDegrees:
-                          widget.config.avatarRotationDegrees,
-                      motivationVideoAssetPath: _activeMotivationVideoPath,
-                      motivationVideoMilestone: _activeMotivationMilestone,
-                      onMotivationVideoFinished: _handleMotivationVideoFinished,
                     ),
-                  ),
-                  if (widget.config.showRemainingTime) ...[
                     const SizedBox(height: AppSpacing.lg),
-                    _RemainingTimeCard(
-                      label: statusCopy.timeLabel,
-                      remaining: _controller.remaining,
-                      icon: statusCopy.icon,
-                      iconBackgroundColor: statusCopy.iconBackgroundColor,
-                      semanticLabel: texts.timer.remainingTimeSemanticLabel(
-                        statusCopy.timeLabel,
-                        formatDuration(_controller.remaining),
+                    Expanded(
+                      child: RoadView(
+                        progress: progress,
+                        vehicle: vehicle,
+                        avatarMode: vehicleAvatarMode,
+                        customAvatarImagePath: vehicleAvatarImagePath,
+                        avatarScale: widget.config.avatarScale,
+                        avatarOffsetX: widget.config.avatarOffsetX,
+                        avatarOffsetY: widget.config.avatarOffsetY,
+                        avatarRotationDegrees:
+                            widget.config.avatarRotationDegrees,
+                        motivationVideoAssetPath: _activeMotivationVideoPath,
+                        motivationVideoMilestone: _activeMotivationMilestone,
+                        onMotivationVideoFinished:
+                            _handleMotivationVideoFinished,
                       ),
                     ),
+                    if (widget.config.showRemainingTime) ...[
+                      const SizedBox(height: AppSpacing.lg),
+                      _RemainingTimeCard(
+                        label: statusCopy.timeLabel,
+                        remaining: _controller.remaining,
+                        icon: statusCopy.icon,
+                        iconBackgroundColor: statusCopy.iconBackgroundColor,
+                        semanticLabel: texts.timer.remainingTimeSemanticLabel(
+                          statusCopy.timeLabel,
+                          formatDuration(_controller.remaining),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.lg),
+                    TimerControlBar(
+                      isPaused: _controller.isPaused,
+                      onPauseResume: () {
+                        if (_controller.isPaused) {
+                          _controller.resume();
+                        } else {
+                          _controller.pause();
+                        }
+                      },
+                      onComplete: _confirmComplete,
+                    ),
                   ],
-                  const SizedBox(height: AppSpacing.lg),
-                  TimerControlBar(
-                    isPaused: _controller.isPaused,
-                    onPauseResume: () {
-                      if (_controller.isPaused) {
-                        _controller.resume();
-                      } else {
-                        _controller.pause();
-                      }
-                    },
-                    onComplete: _confirmComplete,
-                  ),
-                ],
+                ),
               ),
             ),
           ),

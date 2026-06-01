@@ -13,6 +13,10 @@ class TimerTexts implements TimerTextSet {
   String get progressArrived => '도착했어요!';
   String get completeDialogTitle => '식사를 완료했어?';
   String get completeDialogMessage => '오늘의 냠냠코스를 마무리할까?';
+  String get exitDialogTitle => '코스를 그만할까요?';
+  String get exitDialogMessage => '지금 나가면 진행 중인 냠냠코스가 저장되지 않아요.';
+  String get exitDialogCancelButton => '계속하기';
+  String get exitDialogConfirmButton => '그만하기';
   String get pauseButton => '일시정지';
   String get completeMealButton => '식사 완료';
   String get runningArrivalLabel => '도착까지';
