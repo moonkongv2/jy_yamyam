@@ -16,38 +16,15 @@ import 'reward_goal_screen.dart';
 import 'timer_screen.dart';
 
 const _fallbackSuccessVideoPath = 'assets/videos/result_motorcycle_success.mp4';
-const _fallbackFailureVideoPath = 'assets/videos/result_motorcycle_failure.mp4';
 const _resultVideoPathsByVehicle = {
-  'motorcycle': (
-    success: 'assets/videos/result_motorcycle_success.mp4',
-    failure: 'assets/videos/result_motorcycle_failure.mp4',
-  ),
-  'fire_truck': (
-    success: 'assets/videos/result_fire_truck_success.mp4',
-    failure: 'assets/videos/result_fire_truck_failure.mp4',
-  ),
-  'police_car': (
-    success: 'assets/videos/result_police_car_success.mp4',
-    failure: 'assets/videos/result_police_car_failure.mp4',
-  ),
-  'excavator': (
-    success: 'assets/videos/result_excavator_success.mp4',
-    failure: 'assets/videos/result_excavator_failure.mp4',
-  ),
+  'motorcycle': 'assets/videos/result_motorcycle_success.mp4',
+  'fire_truck': 'assets/videos/result_fire_truck_success.mp4',
+  'police_car': 'assets/videos/result_police_car_success.mp4',
+  'excavator': 'assets/videos/result_excavator_success.mp4',
 };
 
-String resultVideoAssetPathForVehicle({
-  required String vehicleId,
-  required bool mealCompleted,
-}) {
-  final paths = _resultVideoPathsByVehicle[vehicleId];
-  if (paths == null) {
-    return mealCompleted
-        ? _fallbackSuccessVideoPath
-        : _fallbackFailureVideoPath;
-  }
-
-  return mealCompleted ? paths.success : paths.failure;
+String resultVideoAssetPathForVehicle({required String vehicleId}) {
+  return _resultVideoPathsByVehicle[vehicleId] ?? _fallbackSuccessVideoPath;
 }
 
 class ResultScreen extends StatefulWidget {
@@ -70,9 +47,8 @@ class ResultScreen extends StatefulWidget {
 
 class _ResultScreenState extends State<ResultScreen> {
   static const _successImagePath = 'assets/images/result_success.png';
-  static const _failureImagePath = 'assets/images/result_failure.png';
 
-  late final VideoPlayerController _introController;
+  VideoPlayerController? _introController;
   late final Future<RecordedMealSession> _recordedSession = widget
       .mealProgressService
       .recordMealResult(widget.result);
@@ -82,21 +58,27 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   void initState() {
     super.initState();
-    _introController = VideoPlayerController.asset(_introVideoPath);
-    _introController.addListener(_handleIntroChanged);
+    if (!widget.result.mealCompleted) {
+      _introFinished = true;
+      return;
+    }
+
+    final introController = VideoPlayerController.asset(_introVideoPath);
+    _introController = introController;
+    introController.addListener(_handleIntroChanged);
     _initializeIntroVideo();
   }
 
-  String get _introVideoPath => resultVideoAssetPathForVehicle(
-    vehicleId: widget.config.motorcycleId,
-    mealCompleted: widget.result.mealCompleted,
-  );
-
-  String get _introFallbackImagePath =>
-      widget.result.mealCompleted ? _successImagePath : _failureImagePath;
+  String get _introVideoPath =>
+      resultVideoAssetPathForVehicle(vehicleId: widget.config.motorcycleId);
 
   void _handleIntroChanged() {
-    final value = _introController.value;
+    final controller = _introController;
+    if (controller == null) {
+      return;
+    }
+
+    final value = controller.value;
     if (_introFinished ||
         !value.isInitialized ||
         value.duration == Duration.zero) {
@@ -109,10 +91,15 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   Future<void> _initializeIntroVideo() async {
+    final controller = _introController;
+    if (controller == null) {
+      return;
+    }
+
     try {
-      await _introController.initialize();
-      await _introController.setLooping(false);
-      await _introController.play();
+      await controller.initialize();
+      await controller.setLooping(false);
+      await controller.play();
       if (mounted) {
         setState(() {});
       }
@@ -128,8 +115,11 @@ class _ResultScreenState extends State<ResultScreen> {
 
   @override
   void dispose() {
-    _introController.removeListener(_handleIntroChanged);
-    _introController.dispose();
+    final controller = _introController;
+    if (controller != null) {
+      controller.removeListener(_handleIntroChanged);
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -154,10 +144,11 @@ class _ResultScreenState extends State<ResultScreen> {
     final mealCompleted = widget.result.mealCompleted;
     final texts = AppTexts.of(context);
 
-    if (!_introFinished) {
+    final introController = _introController;
+    if (!_introFinished && introController != null) {
       return _ResultIntroScreen(
-        controller: _introController,
-        fallbackImageAssetPath: _introFallbackImagePath,
+        controller: introController,
+        fallbackImageAssetPath: _successImagePath,
         showFallback: _introFallback,
       );
     }

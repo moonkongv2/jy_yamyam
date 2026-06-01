@@ -135,36 +135,56 @@ void main() {
     }
   });
 
-  test('Catalog vehicles use result videos or the motorcycle fallback', () {
-    const vehiclesWithResultVideos = {
-      'motorcycle',
-      'fire_truck',
-      'police_car',
-      'excavator',
-    };
+  test(
+    'Catalog vehicles use success result videos or the motorcycle fallback',
+    () {
+      const vehiclesWithResultVideos = {
+        'motorcycle',
+        'fire_truck',
+        'police_car',
+        'excavator',
+      };
 
-    for (final vehicle in VehicleCatalog.all) {
-      final successPath = resultVideoAssetPathForVehicle(
-        vehicleId: vehicle.id,
-        mealCompleted: true,
-      );
-      final failurePath = resultVideoAssetPathForVehicle(
-        vehicleId: vehicle.id,
-        mealCompleted: false,
-      );
+      for (final vehicle in VehicleCatalog.all) {
+        final successPath = resultVideoAssetPathForVehicle(
+          vehicleId: vehicle.id,
+        );
 
-      final expectedSuccessPath = vehiclesWithResultVideos.contains(vehicle.id)
-          ? 'assets/videos/result_${vehicle.id}_success.mp4'
-          : 'assets/videos/result_motorcycle_success.mp4';
-      final expectedFailurePath = vehiclesWithResultVideos.contains(vehicle.id)
-          ? 'assets/videos/result_${vehicle.id}_failure.mp4'
-          : 'assets/videos/result_motorcycle_failure.mp4';
+        final expectedSuccessPath =
+            vehiclesWithResultVideos.contains(vehicle.id)
+            ? 'assets/videos/result_${vehicle.id}_success.mp4'
+            : 'assets/videos/result_motorcycle_success.mp4';
 
-      expect(successPath, expectedSuccessPath, reason: vehicle.id);
-      expect(failurePath, expectedFailurePath, reason: vehicle.id);
-      expect(File(successPath).existsSync(), isTrue, reason: successPath);
-      expect(File(failurePath).existsSync(), isTrue, reason: failurePath);
-    }
+        expect(successPath, expectedSuccessPath, reason: vehicle.id);
+        expect(File(successPath).existsSync(), isTrue, reason: successPath);
+      }
+    },
+  );
+
+  testWidgets('Failed result screen skips the intro video', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: ResultScreen(
+          result: _mealResult(mealCompleted: false),
+          config: MealTimerConfig.defaults(),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('아쉽지만 조금 늦었어'), findsOneWidget);
+    expect(find.text('오토바이가 먼저 지나갔어.'), findsOneWidget);
   });
 
   test(
