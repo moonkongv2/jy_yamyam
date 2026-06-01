@@ -352,9 +352,9 @@ void main() {
     expect(find.text('기본 얼굴 사용 중'), findsOneWidget);
     expect(find.text('만들기'), findsOneWidget);
     expect(find.text('다른 코스'), findsOneWidget);
-    expect(find.text('15분 아침 코스'), findsOneWidget);
+    expect(find.text('15분 코스'), findsOneWidget);
     expect(find.textContaining('25분 보통 코스'), findsOneWidget);
-    expect(find.text('35분 천천히 코스'), findsOneWidget);
+    expect(find.text('35분 코스'), findsOneWidget);
     expect(find.textContaining('직접 설정'), findsOneWidget);
   });
 
@@ -939,7 +939,7 @@ void main() {
     );
 
     final vehicleTitleTop = tester.getTopLeft(find.text('오늘의 빠방')).dy;
-    final firstCourseTop = tester.getTopLeft(find.text('15분 아침 코스')).dy;
+    final firstCourseTop = tester.getTopLeft(find.text('15분 코스')).dy;
     expect(firstCourseTop, lessThan(vehicleTitleTop));
   });
 
@@ -1271,11 +1271,11 @@ void main() {
       findsOneWidget,
     );
     expect(find.text("Today's vehicle"), findsOneWidget);
-    expect(find.text('15-min Morning Ride'), findsOneWidget);
+    expect(find.text('15-min Ride'), findsOneWidget);
     expect(find.text('A light warm-up'), findsOneWidget);
     expect(find.textContaining('25-min Regular Ride'), findsOneWidget);
     expect(find.text('Other rides'), findsOneWidget);
-    expect(find.text('35-min Easy Ride'), findsOneWidget);
+    expect(find.text('35-min Ride'), findsOneWidget);
     expect(find.text('Cruise to the finish'), findsOneWidget);
     expect(find.textContaining('Custom time'), findsOneWidget);
   });

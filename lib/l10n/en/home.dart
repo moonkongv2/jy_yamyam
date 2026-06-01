@@ -9,10 +9,10 @@ class EnHomeTexts implements HomeTextSet {
   String get heroMissionTitle => "Today's Yamyam Mission";
   String get heroMissionSubtitle => 'Your rider is waiting for a tasty finish';
   String get todayVehicleTitle => "Today's vehicle";
-  String get morningCourse => '15-min Morning Ride';
+  String get morningCourse => '15-min Ride';
   String get morningCourseSubtitle => 'A light warm-up';
   String get normalCourse => '25-min Regular Ride';
-  String get slowCourse => '35-min Easy Ride';
+  String get slowCourse => '35-min Ride';
   String get slowCourseSubtitle => 'Cruise to the finish';
   String get quickCourseTitle => 'Other rides';
   String get customStartButton => 'Start Custom Ride';

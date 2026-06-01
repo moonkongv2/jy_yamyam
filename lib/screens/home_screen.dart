@@ -851,7 +851,14 @@ class _QuickCourseSection extends StatelessWidget {
             LayoutBuilder(
               builder: (context, constraints) {
                 const spacing = AppSpacing.sm;
-                final columns = constraints.maxWidth >= 520 ? 3 : 2;
+                final textScale = MediaQuery.textScalerOf(context).scale(1.0);
+                final useSingleColumn =
+                    constraints.maxWidth < 300 || textScale >= 1.25;
+                final columns = useSingleColumn
+                    ? 1
+                    : constraints.maxWidth >= 520
+                    ? 3
+                    : 2;
                 final itemWidth =
                     (constraints.maxWidth - (spacing * (columns - 1))) /
                     columns;
