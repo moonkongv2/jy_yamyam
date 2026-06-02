@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/meal_timer_config.dart';
@@ -16,6 +18,7 @@ class LocalSettingsService {
   static const _avatarOffsetXKey = 'avatarOffsetX';
   static const _avatarOffsetYKey = 'avatarOffsetY';
   static const _avatarRotationDegreesKey = 'avatarRotationDegrees';
+  static const _customAvatarsByVehicleKey = 'customAvatarsByVehicle';
 
   Future<MealTimerConfig> loadConfig() async {
     final preferences = await SharedPreferences.getInstance();
@@ -28,6 +31,15 @@ class LocalSettingsService {
     final customAvatarImagePath = preferences.getString(
       _customAvatarImagePathKey,
     );
+    final avatarScale =
+        preferences.getDouble(_avatarScaleKey) ?? defaults.avatarScale;
+    final avatarOffsetX =
+        preferences.getDouble(_avatarOffsetXKey) ?? defaults.avatarOffsetX;
+    final avatarOffsetY =
+        preferences.getDouble(_avatarOffsetYKey) ?? defaults.avatarOffsetY;
+    final avatarRotationDegrees =
+        preferences.getDouble(_avatarRotationDegreesKey) ??
+        defaults.avatarRotationDegrees;
     final customAvatarVehicleId =
         preferences.getString(_customAvatarVehicleIdKey) ??
         (avatarMode == AvatarImageMode.custom &&
@@ -35,6 +47,23 @@ class LocalSettingsService {
                 customAvatarImagePath.trim().isNotEmpty
             ? motorcycleId
             : null);
+    final customAvatarsByVehicle = _loadCustomAvatarsByVehicle(
+      preferences,
+      legacyAvatarMode: avatarMode,
+      legacyImagePath: customAvatarImagePath,
+      legacyVehicleId: customAvatarVehicleId,
+      legacyScale: avatarScale,
+      legacyOffsetX: avatarOffsetX,
+      legacyOffsetY: avatarOffsetY,
+      legacyRotationDegrees: avatarRotationDegrees,
+    );
+    final activeAvatarVehicleId =
+        customAvatarsByVehicle.containsKey(motorcycleId)
+        ? motorcycleId
+        : customAvatarVehicleId;
+    final activeAvatarConfig = activeAvatarVehicleId == null
+        ? null
+        : customAvatarsByVehicle[activeAvatarVehicleId];
 
     return defaults.copyWith(
       duration: Duration(
@@ -52,17 +81,15 @@ class LocalSettingsService {
       motorcycleId: motorcycleId,
       childName: preferences.getString(_childNameKey) ?? defaults.childName,
       avatarMode: avatarMode,
-      customAvatarImagePath: customAvatarImagePath,
-      customAvatarVehicleId: customAvatarVehicleId,
-      avatarScale:
-          preferences.getDouble(_avatarScaleKey) ?? defaults.avatarScale,
-      avatarOffsetX:
-          preferences.getDouble(_avatarOffsetXKey) ?? defaults.avatarOffsetX,
-      avatarOffsetY:
-          preferences.getDouble(_avatarOffsetYKey) ?? defaults.avatarOffsetY,
+      customAvatarImagePath:
+          activeAvatarConfig?.imagePath ?? customAvatarImagePath,
+      customAvatarVehicleId: activeAvatarVehicleId,
+      avatarScale: activeAvatarConfig?.scale ?? avatarScale,
+      avatarOffsetX: activeAvatarConfig?.offsetX ?? avatarOffsetX,
+      avatarOffsetY: activeAvatarConfig?.offsetY ?? avatarOffsetY,
       avatarRotationDegrees:
-          preferences.getDouble(_avatarRotationDegreesKey) ??
-          defaults.avatarRotationDegrees,
+          activeAvatarConfig?.rotationDegrees ?? avatarRotationDegrees,
+      customAvatarsByVehicle: customAvatarsByVehicle,
     );
   }
 
@@ -78,6 +105,7 @@ class LocalSettingsService {
       _avatarModeKey,
       _avatarModeToString(config.avatarMode),
     );
+    final customAvatarsByVehicle = _customAvatarsForSaving(config);
 
     final customAvatarImagePath = config.customAvatarImagePath?.trim();
     if (customAvatarImagePath == null || customAvatarImagePath.isEmpty) {
@@ -106,6 +134,19 @@ class LocalSettingsService {
       _avatarRotationDegreesKey,
       config.avatarRotationDegrees,
     );
+    if (customAvatarsByVehicle.isEmpty) {
+      await preferences.remove(_customAvatarsByVehicleKey);
+    } else {
+      await preferences.setString(
+        _customAvatarsByVehicleKey,
+        jsonEncode(
+          customAvatarsByVehicle.map(
+            (vehicleId, avatarConfig) =>
+                MapEntry(vehicleId, avatarConfig.toJson()),
+          ),
+        ),
+      );
+    }
   }
 
   AvatarImageMode _avatarModeFromString(String? value) {
@@ -120,5 +161,83 @@ class LocalSettingsService {
       AvatarImageMode.defaultImage => 'defaultImage',
       AvatarImageMode.custom => 'custom',
     };
+  }
+
+  Map<String, VehicleAvatarConfig> _loadCustomAvatarsByVehicle(
+    SharedPreferences preferences, {
+    required AvatarImageMode legacyAvatarMode,
+    required String? legacyImagePath,
+    required String? legacyVehicleId,
+    required double legacyScale,
+    required double legacyOffsetX,
+    required double legacyOffsetY,
+    required double legacyRotationDegrees,
+  }) {
+    final avatarsByVehicle = <String, VehicleAvatarConfig>{};
+    final rawAvatars = preferences.getString(_customAvatarsByVehicleKey);
+    if (rawAvatars != null && rawAvatars.trim().isNotEmpty) {
+      try {
+        final decoded = jsonDecode(rawAvatars);
+        if (decoded is Map<String, Object?>) {
+          for (final entry in decoded.entries) {
+            final value = entry.value;
+            if (value is Map<String, Object?>) {
+              final avatarConfig = VehicleAvatarConfig.fromJson(value);
+              if (entry.key.trim().isNotEmpty && avatarConfig.hasImagePath) {
+                avatarsByVehicle[entry.key] = avatarConfig;
+              }
+            }
+          }
+        }
+      } catch (_) {
+        // Ignore malformed avatar maps and fall back to legacy single-avatar keys.
+      }
+    }
+
+    final legacyVehicleIdValue = legacyVehicleId?.trim();
+    final legacyImagePathValue = legacyImagePath?.trim();
+    if (legacyAvatarMode == AvatarImageMode.custom &&
+        legacyVehicleIdValue != null &&
+        legacyVehicleIdValue.isNotEmpty &&
+        legacyImagePathValue != null &&
+        legacyImagePathValue.isNotEmpty) {
+      avatarsByVehicle.putIfAbsent(
+        legacyVehicleIdValue,
+        () => VehicleAvatarConfig(
+          imagePath: legacyImagePathValue,
+          scale: legacyScale,
+          offsetX: legacyOffsetX,
+          offsetY: legacyOffsetY,
+          rotationDegrees: legacyRotationDegrees,
+        ),
+      );
+    }
+
+    return Map.unmodifiable(avatarsByVehicle);
+  }
+
+  Map<String, VehicleAvatarConfig> _customAvatarsForSaving(
+    MealTimerConfig config,
+  ) {
+    final avatarsByVehicle = Map<String, VehicleAvatarConfig>.from(
+      config.customAvatarsByVehicle,
+    );
+    final legacyVehicleId = config.customAvatarVehicleId?.trim();
+    final legacyImagePath = config.customAvatarImagePath?.trim();
+    if (config.avatarMode == AvatarImageMode.custom &&
+        legacyVehicleId != null &&
+        legacyVehicleId.isNotEmpty &&
+        legacyImagePath != null &&
+        legacyImagePath.isNotEmpty) {
+      avatarsByVehicle[legacyVehicleId] = VehicleAvatarConfig(
+        imagePath: legacyImagePath,
+        scale: config.avatarScale,
+        offsetX: config.avatarOffsetX,
+        offsetY: config.avatarOffsetY,
+        rotationDegrees: config.avatarRotationDegrees,
+      );
+    }
+
+    return avatarsByVehicle;
   }
 }

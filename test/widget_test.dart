@@ -44,6 +44,7 @@ void main() {
     expect(config.avatarOffsetX, 0.0);
     expect(config.avatarOffsetY, 0.0);
     expect(config.avatarRotationDegrees, 0.0);
+    expect(config.customAvatarsByVehicle, isEmpty);
   });
 
   test('Local settings saves and loads avatar settings', () async {
@@ -74,6 +75,58 @@ void main() {
     expect(loadedConfig.avatarOffsetX, 8.0);
     expect(loadedConfig.avatarOffsetY, -6.0);
     expect(loadedConfig.avatarRotationDegrees, 12.0);
+    final policeCarAvatar = loadedConfig.customAvatarConfigForVehicle(
+      'police_car',
+    );
+    expect(policeCarAvatar?.imagePath, '/local/avatar.png');
+    expect(policeCarAvatar?.scale, 1.25);
+    expect(policeCarAvatar?.offsetX, 8.0);
+    expect(policeCarAvatar?.offsetY, -6.0);
+    expect(policeCarAvatar?.rotationDegrees, 12.0);
+  });
+
+  test('Local settings saves and loads vehicle avatar maps', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final service = LocalSettingsService();
+    await service.saveConfig(
+      MealTimerConfig.defaults().copyWith(
+        avatarMode: AvatarImageMode.custom,
+        motorcycleId: 'bus',
+        customAvatarsByVehicle: const {
+          'bus': VehicleAvatarConfig(
+            imagePath: '/local/bus.png',
+            scale: 1.1,
+            offsetX: 0.05,
+            offsetY: -0.02,
+            rotationDegrees: 3.0,
+          ),
+          'train': VehicleAvatarConfig(
+            imagePath: '/local/train.png',
+            scale: 1.2,
+            offsetX: -0.04,
+            offsetY: 0.03,
+            rotationDegrees: -5.0,
+          ),
+        },
+      ),
+    );
+
+    final loadedConfig = await service.loadConfig();
+    expect(
+      loadedConfig.customAvatarsByVehicle.keys,
+      containsAll(['bus', 'train']),
+    );
+    expect(
+      loadedConfig.customAvatarConfigForVehicle('bus')?.imagePath,
+      '/local/bus.png',
+    );
+    expect(
+      loadedConfig.customAvatarConfigForVehicle('train')?.rotationDegrees,
+      -5.0,
+    );
+    expect(loadedConfig.customAvatarImagePath, '/local/bus.png');
+    expect(loadedConfig.customAvatarVehicleId, 'bus');
   });
 
   test('Custom avatar image path can be cleared to null', () async {
@@ -128,6 +181,31 @@ void main() {
       expect(config.avatarMode, AvatarImageMode.custom);
       expect(config.customAvatarImagePath, '/local/avatar.png');
       expect(config.customAvatarVehicleId, 'police_car');
+      expect(
+        config.customAvatarConfigForVehicle('police_car')?.imagePath,
+        '/local/avatar.png',
+      );
+    },
+  );
+
+  test(
+    'Malformed vehicle avatar map falls back to legacy avatar keys',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'motorcycleId': 'fire_truck',
+        'avatarMode': 'custom',
+        'customAvatarImagePath': '/local/fire-truck.png',
+        'customAvatarVehicleId': 'fire_truck',
+        'customAvatarsByVehicle': '{not-json',
+      });
+
+      final config = await LocalSettingsService().loadConfig();
+
+      expect(config.customAvatarsByVehicle.keys, contains('fire_truck'));
+      expect(
+        config.customAvatarConfigForVehicle('fire_truck')?.imagePath,
+        '/local/fire-truck.png',
+      );
     },
   );
 
