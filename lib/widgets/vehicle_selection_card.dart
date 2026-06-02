@@ -9,6 +9,9 @@ import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
 import 'avatar/avatar_composite_preview.dart';
 
+typedef VehicleAvatarConfigResolver =
+    VehicleAvatarConfig? Function(String vehicleId);
+
 class VehicleSelectionCard extends StatelessWidget {
   const VehicleSelectionCard({
     super.key,
@@ -22,6 +25,7 @@ class VehicleSelectionCard extends StatelessWidget {
     this.avatarOffsetX = 0.0,
     this.avatarOffsetY = 0.0,
     this.avatarRotationDegrees = 0.0,
+    this.avatarConfigForVehicle,
     this.avatarImageBuilder,
     this.footer,
   });
@@ -36,6 +40,7 @@ class VehicleSelectionCard extends StatelessWidget {
   final double avatarOffsetX;
   final double avatarOffsetY;
   final double avatarRotationDegrees;
+  final VehicleAvatarConfigResolver? avatarConfigForVehicle;
   final Widget Function(BuildContext context, String imagePath)?
   avatarImageBuilder;
   final Widget? footer;
@@ -114,6 +119,7 @@ class VehicleSelectionCard extends StatelessWidget {
                         vehicle: vehicle,
                         isSelected: selectedVehicle.id == vehicle.id,
                         onTap: () => onVehicleSelected(vehicle.id),
+                        avatarConfig: avatarConfigForVehicle?.call(vehicle.id),
                         avatarMode: avatarMode,
                         customAvatarImagePath: customAvatarImagePath,
                         avatarScale: avatarScale,
@@ -149,6 +155,7 @@ class _VehicleChoiceButton extends StatelessWidget {
     required this.vehicle,
     required this.isSelected,
     required this.onTap,
+    required this.avatarConfig,
     required this.avatarMode,
     required this.customAvatarImagePath,
     required this.avatarScale,
@@ -162,6 +169,7 @@ class _VehicleChoiceButton extends StatelessWidget {
   final VehicleDefinition vehicle;
   final bool isSelected;
   final VoidCallback onTap;
+  final VehicleAvatarConfig? avatarConfig;
   final AvatarImageMode avatarMode;
   final String? customAvatarImagePath;
   final double avatarScale;
@@ -180,6 +188,22 @@ class _VehicleChoiceButton extends StatelessWidget {
         ? AppColors.surfaceYellow.withValues(alpha: 0.72)
         : AppColors.white.withValues(alpha: 0.72);
     final borderRadius = AppRadius.compactCard;
+    final choiceAvatarMode = avatarConfig != null
+        ? AvatarImageMode.custom
+        : isSelected
+        ? avatarMode
+        : AvatarImageMode.defaultImage;
+    final choiceAvatarImagePath =
+        avatarConfig?.imagePath ?? (isSelected ? customAvatarImagePath : null);
+    final choiceAvatarScale =
+        avatarConfig?.scale ?? (isSelected ? avatarScale : 1.0);
+    final choiceAvatarOffsetX =
+        avatarConfig?.offsetX ?? (isSelected ? avatarOffsetX : 0.0);
+    final choiceAvatarOffsetY =
+        avatarConfig?.offsetY ?? (isSelected ? avatarOffsetY : 0.0);
+    final choiceAvatarRotationDegrees =
+        avatarConfig?.rotationDegrees ??
+        (isSelected ? avatarRotationDegrees : 0.0);
 
     return SizedBox(
       width: size,
@@ -209,16 +233,12 @@ class _VehicleChoiceButton extends StatelessWidget {
                     child: _VehicleChoiceImage(
                       vehicle: vehicle,
                       size: size - 20,
-                      avatarMode: isSelected
-                          ? avatarMode
-                          : AvatarImageMode.defaultImage,
-                      customAvatarImagePath: isSelected
-                          ? customAvatarImagePath
-                          : null,
-                      avatarScale: avatarScale,
-                      avatarOffsetX: avatarOffsetX,
-                      avatarOffsetY: avatarOffsetY,
-                      avatarRotationDegrees: avatarRotationDegrees,
+                      avatarMode: choiceAvatarMode,
+                      customAvatarImagePath: choiceAvatarImagePath,
+                      avatarScale: choiceAvatarScale,
+                      avatarOffsetX: choiceAvatarOffsetX,
+                      avatarOffsetY: choiceAvatarOffsetY,
+                      avatarRotationDegrees: choiceAvatarRotationDegrees,
                       avatarImageBuilder: avatarImageBuilder,
                     ),
                   ),

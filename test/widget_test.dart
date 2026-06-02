@@ -31,6 +31,7 @@ import 'package:jy_yamyam/widgets/app/app_bouncy_button.dart';
 import 'package:jy_yamyam/widgets/avatar/avatar_composite_preview.dart';
 import 'package:jy_yamyam/widgets/road_painter.dart';
 import 'package:jy_yamyam/widgets/road_view.dart';
+import 'package:jy_yamyam/widgets/vehicle_selection_card.dart';
 import 'package:jy_yamyam/widgets/vehicle_widget.dart';
 
 void main() {
@@ -641,7 +642,7 @@ void main() {
     await tester.pump();
   });
 
-  testWidgets('Home screen does not apply saved avatar to another vehicle', (
+  testWidgets('Home screen shows saved avatar only on its vehicle choice', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -679,6 +680,14 @@ void main() {
 
     expect(
       find.byKey(const ValueKey('avatarCompositeOverlayImage')),
+      findsOneWidget,
+    );
+    expect(
+      find.byWidgetPredicate((widget) {
+        return widget is AvatarCompositePreview &&
+            widget.vehicle.id == 'excavator' &&
+            widget.avatarMode == AvatarImageMode.custom;
+      }),
       findsNothing,
     );
 
@@ -772,7 +781,7 @@ void main() {
     await _scrollAvatarVehicleSelectionIntoView(tester);
     expect(find.text('아바타를 태울 차량'), findsOneWidget);
 
-    await tester.tap(_vehicleChoiceFinder('fire_truck'));
+    await _tapVisible(tester, _vehicleChoiceFinder('fire_truck'));
     await tester.pump();
     await _scrollAvatarPromptIntoView(tester);
 
@@ -1297,6 +1306,62 @@ void main() {
     final firstCourseTop = tester.getTopLeft(find.text('15분 코스')).dy;
     expect(firstCourseTop, lessThan(vehicleTitleTop));
   });
+
+  testWidgets(
+    'Vehicle selection card renders custom avatars on saved choices',
+    (tester) async {
+      final busAvatarFile = _createTemporaryAvatarImage();
+      final fireTruckAvatarFile = _createTemporaryAvatarImage();
+      final avatarConfigs = {
+        'bus': VehicleAvatarConfig(
+          imagePath: busAvatarFile.path,
+          scale: 1.2,
+          offsetX: 0.08,
+          offsetY: -0.04,
+          rotationDegrees: 4.0,
+        ),
+        'fire_truck': VehicleAvatarConfig(
+          imagePath: fireTruckAvatarFile.path,
+          scale: 1.35,
+          offsetX: -0.06,
+          offsetY: 0.03,
+          rotationDegrees: -8.0,
+        ),
+      };
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ko'),
+          home: Scaffold(
+            body: SizedBox(
+              width: 420,
+              child: VehicleSelectionCard(
+                title: '차량 선택',
+                selectedVehicleId: 'motorcycle',
+                onVehicleSelected: (_) {},
+                avatarConfigForVehicle: (vehicleId) => avatarConfigs[vehicleId],
+                avatarImageBuilder: (context, imagePath) {
+                  return ColoredBox(
+                    key: ValueKey('customAvatar.$imagePath'),
+                    color: Colors.pink,
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      expect(
+        find.byKey(ValueKey('customAvatar.${busAvatarFile.path}')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(ValueKey('customAvatar.${fireTruckAvatarFile.path}')),
+        findsOneWidget,
+      );
+    },
+  );
 
   testWidgets('Selected vehicle on home is saved to preferences', (
     tester,
@@ -2284,8 +2349,13 @@ Future<void> _pumpAvatarSetupScreen(
 }
 
 Future<void> _scrollAvatarPromptIntoView(WidgetTester tester) async {
-  await tester.drag(find.byType(ListView), const Offset(0, -700));
-  await tester.pumpAndSettle();
+  for (var index = 0; index < 4; index += 1) {
+    if (find.byKey(const ValueKey('avatarPromptText')).evaluate().isNotEmpty) {
+      return;
+    }
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+  }
 }
 
 Future<void> _scrollAvatarVehicleSelectionIntoView(WidgetTester tester) async {

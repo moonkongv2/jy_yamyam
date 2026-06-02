@@ -105,6 +105,24 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
         );
   }
 
+  VehicleAvatarConfig? _avatarConfigForVehicleChoice(String vehicleId) {
+    if (vehicleId == _config.motorcycleId &&
+        _avatarMode == AvatarImageMode.custom) {
+      final imagePath = _selectedAvatarImagePath;
+      if (imagePath != null && imagePath.trim().isNotEmpty) {
+        return VehicleAvatarConfig(
+          imagePath: imagePath,
+          scale: _avatarScale,
+          offsetX: _avatarOffsetX,
+          offsetY: _avatarOffsetY,
+          rotationDegrees: _avatarRotationDegrees,
+        );
+      }
+    }
+
+    return _config.customAvatarConfigForVehicle(vehicleId);
+  }
+
   String get _avatarModeLabel {
     return switch (_avatarMode) {
       AvatarImageMode.defaultImage => '기본 이미지 사용',
@@ -243,7 +261,9 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
   void _handleVehicleSelected(String vehicleId) {
     final nextConfig = _config.copyWith(motorcycleId: vehicleId);
     final nextAvatarConfig = _avatarConfigForVehicle(nextConfig);
-    final nextAvatarMode = _avatarModeForConfig(nextConfig);
+    final nextAvatarMode = _avatarMode == AvatarImageMode.custom
+        ? AvatarImageMode.custom
+        : _avatarModeForConfig(nextConfig);
     setState(() {
       _config = nextConfig;
       _avatarMode = nextAvatarMode;
@@ -407,6 +427,7 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
               avatarRotationDegrees:
                   vehicleAvatarConfig?.rotationDegrees ??
                   _avatarRotationDegrees,
+              avatarConfigForVehicle: _avatarConfigForVehicleChoice,
             ),
             if (_avatarMode == AvatarImageMode.custom) ...[
               const SizedBox(height: AppSpacing.xl),

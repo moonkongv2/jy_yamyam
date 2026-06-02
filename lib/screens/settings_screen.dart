@@ -216,6 +216,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             avatarOffsetX: vehicleAvatarConfig?.offsetX ?? 0.0,
             avatarOffsetY: vehicleAvatarConfig?.offsetY ?? 0.0,
             avatarRotationDegrees: vehicleAvatarConfig?.rotationDegrees ?? 0.0,
+            avatarConfigForVehicle: _config.customAvatarConfigForVehicle,
           ),
           const SizedBox(height: 20),
           Card(
