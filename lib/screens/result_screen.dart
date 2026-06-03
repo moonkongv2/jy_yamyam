@@ -25,6 +25,8 @@ const _resultVideoPathsByVehicle = {
   'bus': 'assets/videos/result_bus_success.mp4',
   'supercar': 'assets/videos/result_supercar_success.mp4',
   'train': 'assets/videos/result_train_success.mp4',
+  't_rex': 'assets/videos/result_t_rex_success.mp4',
+  'shark': 'assets/videos/result_shark_success.mp4',
 };
 
 String resultVideoAssetPathForVehicle({required String vehicleId}) {

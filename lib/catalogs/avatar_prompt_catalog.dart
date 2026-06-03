@@ -68,6 +68,16 @@ Avoid full-body images, multiple people, or complex backgrounds.
 기관사 모자 또는 기차 승무원 느낌의 모자를 씌워 주세요.
 차분하고 믿음직한 느낌으로 만들어 주세요.
 ''',
+    't_rex': '''
+티렉스 탐험가 컨셉으로 만들어 주세요.
+귀여운 탐험가 모자 또는 공룡 테마 소품을 아주 약하게 넣어 주세요.
+신나고 용감한 표정으로 만들어 주세요.
+''',
+    'shark': '''
+상어 바다 탐험가 컨셉으로 만들어 주세요.
+귀여운 선원 모자 또는 바다 테마 소품을 아주 약하게 넣어 주세요.
+밝고 장난기 있는 표정으로 만들어 주세요.
+''',
   };
 
   static const _englishAdditionsByVehicleId = {
@@ -112,6 +122,16 @@ Use an excited, energetic expression.
 Use a train engineer concept.
 Add a train engineer hat or conductor-style cap.
 Make the character feel calm and reliable.
+''',
+    't_rex': '''
+Use a T-rex explorer concept.
+Add a cute explorer hat or very subtle dinosaur-themed detail.
+Use an excited, brave expression.
+''',
+    'shark': '''
+Use a shark ocean explorer concept.
+Add a cute sailor hat or very subtle ocean-themed detail.
+Use a bright, playful expression.
 ''',
   };
 

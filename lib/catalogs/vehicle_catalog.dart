@@ -114,6 +114,34 @@ abstract final class VehicleCatalog {
     ),
   );
 
+  static const tRex = VehicleDefinition(
+    id: 't_rex',
+    labelKo: '티렉스',
+    labelEn: 'T-rex',
+    emoji: '🦖',
+    assetPath: 'assets/images/vehicle_t_rex.png',
+    selectionAssetPath: 'assets/images/vehicle_t_rex_chip.png',
+    avatarSlot: VehicleAvatarSlot(
+      centerX: 0.56,
+      centerY: 0.31,
+      sizeRatio: 0.27,
+    ),
+  );
+
+  static const shark = VehicleDefinition(
+    id: 'shark',
+    labelKo: '상어',
+    labelEn: 'Shark',
+    emoji: '🦈',
+    assetPath: 'assets/images/vehicle_shark.png',
+    selectionAssetPath: 'assets/images/vehicle_shark_chip.png',
+    avatarSlot: VehicleAvatarSlot(
+      centerX: 0.56,
+      centerY: 0.34,
+      sizeRatio: 0.26,
+    ),
+  );
+
   static const all = [
     motorcycle,
     fireTruck,
@@ -123,6 +151,8 @@ abstract final class VehicleCatalog {
     bus,
     supercar,
     train,
+    tRex,
+    shark,
   ];
 
   static VehicleDefinition findById(String id) {

@@ -228,6 +228,8 @@ void main() {
         'bus',
         'supercar',
         'train',
+        't_rex',
+        'shark',
       };
 
       for (final vehicle in VehicleCatalog.all) {
@@ -1297,10 +1299,22 @@ void main() {
       secondRowTop,
     );
     expect(tester.getTopLeft(_vehicleChoiceFinder('train')).dy, secondRowTop);
+    final thirdRowTop = tester.getTopLeft(_vehicleChoiceFinder('t_rex')).dy;
+    expect(thirdRowTop, greaterThan(secondRowTop));
+    expect(tester.getTopLeft(_vehicleChoiceFinder('shark')).dy, thirdRowTop);
     expect(
       tester.getSize(_vehicleChoiceFinder('motorcycle')).width,
       tester.getSize(_vehicleChoiceFinder('fire_truck')).width,
     );
+    final firstRowCenterX =
+        (_vehicleChoiceRect(tester, 'motorcycle').left +
+            _vehicleChoiceRect(tester, 'excavator').right) /
+        2;
+    final thirdRowCenterX =
+        (_vehicleChoiceRect(tester, 't_rex').left +
+            _vehicleChoiceRect(tester, 'shark').right) /
+        2;
+    expect((thirdRowCenterX - firstRowCenterX).abs(), lessThan(1.0));
 
     final vehicleTitleTop = tester.getTopLeft(find.text('오늘의 빠방')).dy;
     final firstCourseTop = tester.getTopLeft(find.text('15분 코스')).dy;
@@ -2498,6 +2512,10 @@ final _transparentPngBytes = Uint8List.fromList([
 
 Material _vehicleChoiceMaterial(WidgetTester tester, String vehicleId) {
   return tester.widget<Material>(_vehicleChoiceFinder(vehicleId));
+}
+
+Rect _vehicleChoiceRect(WidgetTester tester, String vehicleId) {
+  return tester.getRect(_vehicleChoiceFinder(vehicleId));
 }
 
 Finder _vehicleChoiceFinder(String vehicleId) {

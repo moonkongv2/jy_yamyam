@@ -109,6 +109,7 @@ class VehicleSelectionCard extends StatelessWidget {
                 final itemSize = fourAcrossWidth.clamp(72.0, 84.0).toDouble();
 
                 return Wrap(
+                  alignment: WrapAlignment.center,
                   spacing: spacing,
                   runSpacing: spacing,
                   clipBehavior: Clip.none,
