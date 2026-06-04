@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -440,14 +441,22 @@ class _MotivationVideoBubble extends StatefulWidget {
 }
 
 class _MotivationVideoBubbleState extends State<_MotivationVideoBubble> {
+  static const _initialFallbackDuration = Duration(seconds: 6);
+
   late final VideoPlayerController _controller;
+  Timer? _fallbackTimer;
+  Timer? _completionPollTimer;
   bool _isReady = false;
   bool _didFinish = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset(widget.assetPath);
+    _fallbackTimer = Timer(_initialFallbackDuration, _finish);
+    _controller = VideoPlayerController.asset(
+      widget.assetPath,
+      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+    );
     _controller.addListener(_handleVideoChanged);
     _initializeVideo();
   }
@@ -456,7 +465,20 @@ class _MotivationVideoBubbleState extends State<_MotivationVideoBubble> {
     try {
       await _controller.initialize();
       await _controller.setLooping(false);
+      await _controller.setVolume(0);
+      if (_didFinish) {
+        return;
+      }
       await _controller.play();
+      _fallbackTimer?.cancel();
+      _fallbackTimer = Timer(
+        _controller.value.duration + const Duration(milliseconds: 900),
+        _finish,
+      );
+      _completionPollTimer = Timer.periodic(
+        const Duration(milliseconds: 200),
+        (_) => _handleVideoChanged(),
+      );
       if (mounted) {
         setState(() => _isReady = true);
       }
@@ -471,23 +493,39 @@ class _MotivationVideoBubbleState extends State<_MotivationVideoBubble> {
       return;
     }
 
-    if (value.position >= value.duration) {
+    final remaining = value.duration - value.position;
+    final isNearEnd = remaining <= const Duration(milliseconds: 250);
+    final isStoppedNearEnd =
+        !value.isPlaying &&
+        value.position > Duration.zero &&
+        remaining <= const Duration(milliseconds: 600);
+
+    if (value.isCompleted ||
+        value.position >= value.duration ||
+        isNearEnd ||
+        isStoppedNearEnd) {
       _finish();
     }
   }
 
   void _finish() {
-    if (_didFinish) {
+    if (_didFinish || !mounted) {
       return;
     }
     _didFinish = true;
-    if (mounted) {
-      widget.onFinished?.call();
-    }
+    _fallbackTimer?.cancel();
+    _completionPollTimer?.cancel();
+    Future<void>.microtask(() {
+      if (mounted) {
+        widget.onFinished?.call();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _fallbackTimer?.cancel();
+    _completionPollTimer?.cancel();
     _controller.removeListener(_handleVideoChanged);
     _controller.dispose();
     super.dispose();
