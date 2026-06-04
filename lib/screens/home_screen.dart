@@ -23,6 +23,7 @@ import '../widgets/avatar/avatar_composite_preview.dart';
 import '../widgets/reward_sticker_image.dart';
 import '../widgets/vehicle_selection_card.dart';
 import 'avatar_setup_screen.dart';
+import 'meal_history_screen.dart';
 import 'reward_goal_screen.dart';
 import 'settings_screen.dart';
 import 'sticker_collection_screen.dart';
@@ -452,6 +453,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 return _ProgressSummary(
                   childName: childName,
                   snapshot: snapshot.data,
+                  onOpenMealHistory: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => MealHistoryScreen(
+                          mealProgressService: widget.mealProgressService,
+                        ),
+                      ),
+                    );
+                  },
                   onOpenRewardGoal: () async {
                     await Navigator.of(context).push(
                       MaterialPageRoute(
@@ -1139,18 +1149,19 @@ class _ProgressSummary extends StatelessWidget {
   const _ProgressSummary({
     required this.childName,
     required this.snapshot,
+    required this.onOpenMealHistory,
     required this.onOpenRewardGoal,
     required this.onOpenStickers,
   });
 
   final String childName;
   final MealProgressSnapshot? snapshot;
+  final VoidCallback onOpenMealHistory;
   final VoidCallback onOpenRewardGoal;
   final VoidCallback onOpenStickers;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final texts = AppTexts.of(context);
     final history = snapshot?.history ?? const [];
     final inventory = snapshot?.inventory ?? const [];
@@ -1170,70 +1181,18 @@ class _ProgressSummary extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          texts.home.progressTitle(childName),
-          style: textTheme.titleMedium?.copyWith(
-            color: AppColors.textStrong,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            Expanded(
-              child: AppMetricTile(
-                icon: Icons.restaurant_rounded,
-                label: texts.home.mealSummaryLabel,
-                value: texts.home.mealCount(history.length),
-                backgroundColor: AppColors.surfaceMint,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: AppMetricTile(
-                icon: Icons.auto_awesome_rounded,
-                label: texts.home.stickerKindSummaryLabel,
-                value: texts.home.stickerKindCount(stickerKindCount),
-                backgroundColor: AppColors.surfaceBlue,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: AppMetricTile(
-                icon: Icons.stars_rounded,
-                label: texts.home.stickerSummaryLabel,
-                value: texts.home.stickerCount(stickerCount),
-                backgroundColor: AppColors.surfacePink,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceWarm,
-            borderRadius: AppRadius.card,
-            border: Border.all(color: AppColors.borderWarm),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
-            ),
-            child: Text(
-              recent == null
-                  ? texts.home.noMealHistory
-                  : texts.home.recentMealSummary(
-                      formatDuration(recent.actualDuration),
-                      recent.completedBeforeArrival,
-                    ),
-              style: textTheme.bodyLarge?.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w700,
-                height: 1.34,
-              ),
-            ),
-          ),
+        _MealHistorySummaryButton(
+          title: texts.home.progressTitle(childName),
+          mealValue: texts.home.mealCount(history.length),
+          stickerKindValue: texts.home.stickerKindCount(stickerKindCount),
+          stickerValue: texts.home.stickerCount(stickerCount),
+          recentSummary: recent == null
+              ? texts.home.noMealHistory
+              : texts.home.recentMealSummary(
+                  formatDuration(recent.actualDuration),
+                  recent.completedBeforeArrival,
+                ),
+          onPressed: onOpenMealHistory,
         ),
         const SizedBox(height: AppSpacing.md),
         _RewardGoalCta(
@@ -1247,6 +1206,130 @@ class _ProgressSummary extends StatelessWidget {
           onPressed: onOpenStickers,
         ),
       ],
+    );
+  }
+}
+
+class _MealHistorySummaryButton extends StatelessWidget {
+  const _MealHistorySummaryButton({
+    required this.title,
+    required this.mealValue,
+    required this.stickerKindValue,
+    required this.stickerValue,
+    required this.recentSummary,
+    required this.onPressed,
+  });
+
+  final String title;
+  final String mealValue;
+  final String stickerKindValue;
+  final String stickerValue;
+  final String recentSummary;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final texts = AppTexts.of(context);
+
+    return Material(
+      color: AppColors.transparent,
+      borderRadius: AppRadius.card,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xs),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: textTheme.titleMedium?.copyWith(
+                        color: AppColors.textStrong,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.textSecondary,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppMetricTile(
+                      icon: Icons.restaurant_rounded,
+                      label: texts.home.mealSummaryLabel,
+                      value: mealValue,
+                      backgroundColor: AppColors.surfaceMint,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: AppMetricTile(
+                      icon: Icons.auto_awesome_rounded,
+                      label: texts.home.stickerKindSummaryLabel,
+                      value: stickerKindValue,
+                      backgroundColor: AppColors.surfaceBlue,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: AppMetricTile(
+                      icon: Icons.stars_rounded,
+                      label: texts.home.stickerSummaryLabel,
+                      value: stickerValue,
+                      backgroundColor: AppColors.surfacePink,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceWarm,
+                  borderRadius: AppRadius.card,
+                  border: Border.all(color: AppColors.borderWarm),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.md,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          recentSummary,
+                          style: textTheme.bodyLarge?.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w700,
+                            height: 1.34,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: AppColors.textSecondary,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

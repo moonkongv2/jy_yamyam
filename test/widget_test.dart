@@ -2543,6 +2543,32 @@ void main() {
     expect(find.text('Create Reward Promise'), findsOneWidget);
   });
 
+  testWidgets('Home meal records summary opens meal history screen', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(childName: 'Jiyul'),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView), const Offset(0, -700));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text("Jiyul's meal records"));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(MealHistoryScreen), findsOneWidget);
+    expect(find.text('Meal Records'), findsOneWidget);
+  });
+
   testWidgets('Reward goal creation form saves a goal', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
