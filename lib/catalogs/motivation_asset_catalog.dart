@@ -8,21 +8,45 @@ abstract final class MotivationAssetCatalog {
       'assets/videos/motivation/motivation_motorcycle_2.mp4',
       'assets/videos/motivation/motivation_motorcycle_3.mp4',
     ],
-    'fire_truck': ['assets/videos/motivation/motivation_fire_truck_1.mp4'],
+    'fire_truck': [
+      'assets/videos/motivation/motivation_fire_truck_1.mp4',
+      'assets/videos/motivation/motivation_fire_truck_2.mp4',
+      'assets/videos/motivation/motivation_fire_truck_3.mp4',
+    ],
     'police_car': [
       'assets/videos/motivation/motivation_police_car_1.mp4',
       'assets/videos/motivation/motivation_police_car_2.mp4',
+      'assets/videos/motivation/motivation_police_car_3.mp4',
     ],
     'excavator': [
       'assets/videos/motivation/motivation_excavator_1.mp4',
       'assets/videos/motivation/motivation_excavator_2.mp4',
+      'assets/videos/motivation/motivation_excavator_3.mp4',
     ],
-    'airplane': ['assets/videos/motivation/motivation_airplane_1.mp4'],
-    'bus': ['assets/videos/motivation/motivation_bus_1.mp4'],
-    'supercar': ['assets/videos/motivation/motivation_supercar_1.mp4'],
-    'train': ['assets/videos/motivation/motivation_train_1.mp4'],
-    't_rex': ['assets/videos/motivation/motivation_t_rex_1.mp4'],
-    'shark': ['assets/videos/motivation/motivation_shark_1.mp4'],
+    'airplane': [
+      'assets/videos/motivation/motivation_airplane_1.mp4',
+      'assets/videos/motivation/motivation_airplane_2.mp4',
+    ],
+    'bus': [
+      'assets/videos/motivation/motivation_bus_1.mp4',
+      'assets/videos/motivation/motivation_bus_2.mp4',
+    ],
+    'supercar': [
+      'assets/videos/motivation/motivation_supercar_1.mp4',
+      'assets/videos/motivation/motivation_supercar_2.mp4',
+    ],
+    'train': [
+      'assets/videos/motivation/motivation_train_1.mp4',
+      'assets/videos/motivation/motivation_train_2.mp4',
+    ],
+    't_rex': [
+      'assets/videos/motivation/motivation_t_rex_1.mp4',
+      'assets/videos/motivation/motivation_t_rex_2.mp4',
+    ],
+    'shark': [
+      'assets/videos/motivation/motivation_shark_1.mp4',
+      'assets/videos/motivation/motivation_shark_2.mp4',
+    ],
   };
 
   static const _voicePathsByLanguageCode = {
