@@ -24,7 +24,7 @@ import '../widgets/timer_control_bar.dart';
 import 'result_screen.dart';
 
 const _landscapeCourseCanvasSize = Size(1200, 520);
-const motivationMinimumVideoInterval = Duration(seconds: 90);
+const motivationMinimumVideoInterval = Duration(seconds: 10);
 
 String? motivationVideoAssetPathForVehicle({
   required String vehicleId,

@@ -430,32 +430,32 @@ void main() {
     expect(nextMotivationMilestoneForProgress(1.0, {}), isNull);
   });
 
-  test('Motivation video interval requires at least 90 seconds', () {
+  test('Motivation video interval requires at least 10 seconds', () {
     expect(
       canShowMotivationVideoAt(
-        elapsed: const Duration(seconds: 89),
+        elapsed: const Duration(seconds: 9),
         lastShownAt: null,
       ),
       isFalse,
     );
     expect(
       canShowMotivationVideoAt(
-        elapsed: const Duration(seconds: 90),
+        elapsed: const Duration(seconds: 10),
         lastShownAt: null,
       ),
       isTrue,
     );
     expect(
       canShowMotivationVideoAt(
-        elapsed: const Duration(seconds: 150),
-        lastShownAt: const Duration(seconds: 70),
+        elapsed: const Duration(seconds: 15),
+        lastShownAt: const Duration(seconds: 6),
       ),
       isFalse,
     );
     expect(
       canShowMotivationVideoAt(
-        elapsed: const Duration(seconds: 160),
-        lastShownAt: const Duration(seconds: 70),
+        elapsed: const Duration(seconds: 16),
+        lastShownAt: const Duration(seconds: 6),
       ),
       isTrue,
     );
