@@ -39,6 +39,9 @@ BoxFit resultIntroMediaFitForSize(Size size) {
   return size.width > size.height ? BoxFit.contain : BoxFit.cover;
 }
 
+typedef ResultIntroControllerFactory =
+    VideoPlayerController Function(String assetPath);
+
 class ResultScreen extends StatefulWidget {
   const ResultScreen({
     super.key,
@@ -46,12 +49,14 @@ class ResultScreen extends StatefulWidget {
     required this.config,
     required this.mealProgressService,
     required this.onConfigChanged,
+    this.introControllerFactory,
   });
 
   final MealSessionResult result;
   final MealTimerConfig config;
   final LocalMealProgressService mealProgressService;
   final ValueChanged<MealTimerConfig> onConfigChanged;
+  final ResultIntroControllerFactory? introControllerFactory;
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -76,7 +81,9 @@ class _ResultScreenState extends State<ResultScreen> {
       return;
     }
 
-    final introController = VideoPlayerController.asset(_introVideoPath);
+    final introControllerFactory =
+        widget.introControllerFactory ?? VideoPlayerController.asset;
+    final introController = introControllerFactory(_introVideoPath);
     _introController = introController;
     introController.addListener(_handleIntroChanged);
     _initializeIntroVideo();
@@ -404,6 +411,7 @@ class _ResultIntroScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: const ValueKey('resultIntroScreen'),
       backgroundColor: AppColors.surfaceSoft,
       body: LayoutBuilder(
         builder: (context, constraints) {

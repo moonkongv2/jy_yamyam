@@ -7,8 +7,10 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart';
 
 import 'package:jy_yamyam/catalogs/avatar_prompt_catalog.dart';
+import 'package:jy_yamyam/catalogs/meal_ingredient_catalog.dart';
 import 'package:jy_yamyam/catalogs/motivation_asset_catalog.dart';
 import 'package:jy_yamyam/catalogs/vehicle_catalog.dart';
 import 'package:jy_yamyam/l10n/app_texts.dart';
@@ -55,7 +57,89 @@ void main() {
     expect(config.avatarOffsetY, 0.0);
     expect(config.avatarRotationDegrees, 0.0);
     expect(config.customAvatarsByVehicle, isEmpty);
+    expect(config.courseIngredientIds, isEmpty);
   });
+
+  test('Meal ingredient catalog has non-empty unique ids', () {
+    final ids = MealIngredientCatalog.all
+        .map((ingredient) => ingredient.id)
+        .toList();
+
+    expect(ids, isNotEmpty);
+    expect(ids.every((id) => id.trim().isNotEmpty), isTrue);
+    expect(ids.toSet(), hasLength(ids.length));
+  });
+
+  test('Meal ingredient random selection returns valid ids', () {
+    final ids = MealIngredientCatalog.randomSelectionIds();
+
+    expect(ids, isNotEmpty);
+    expect(ids, hasLength(5));
+    for (final id in ids) {
+      expect(MealIngredientCatalog.findById(id), isNotNull);
+    }
+  });
+
+  test('Meal ingredient course slots returns exactly 30 ingredients', () {
+    final slots = MealIngredientCatalog.courseSlotsFor(['carrot', 'egg']);
+
+    expect(slots, hasLength(30));
+  });
+
+  test('Meal ingredient course slots only uses selected ids', () {
+    const selectedIds = ['egg', 'rice', 'tomato'];
+    final slots = MealIngredientCatalog.courseSlotsFor(selectedIds);
+
+    expect(slots.map((ingredient) => ingredient.id).toSet(), {
+      'egg',
+      'rice',
+      'tomato',
+    });
+  });
+
+  test('Meal ingredient course slots fall back for invalid selected ids', () {
+    final slots = MealIngredientCatalog.courseSlotsFor(['missing']);
+
+    expect(
+      slots.map((ingredient) => ingredient.id).toSet(),
+      MealIngredientCatalog.defaultSelectionIds.toSet(),
+    );
+  });
+
+  test(
+    'Meal ingredient course slots avoids 3 consecutive identical ids when possible',
+    () {
+      final slots = MealIngredientCatalog.courseSlotsFor([
+        'carrot',
+        'carrot',
+        'egg',
+      ]);
+
+      for (var index = 2; index < slots.length; index += 1) {
+        expect(
+          slots[index].id == slots[index - 1].id &&
+              slots[index].id == slots[index - 2].id,
+          isFalse,
+        );
+      }
+    },
+  );
+
+  test(
+    'MealTimerConfig copyWith preserves and updates course ingredient ids',
+    () {
+      final config = MealTimerConfig.defaults().copyWith(
+        courseIngredientIds: const ['carrot', 'egg'],
+      );
+      final preservedConfig = config.copyWith(vehicleId: 'bus');
+      final updatedConfig = config.copyWith(
+        courseIngredientIds: const ['rice', 'tomato'],
+      );
+
+      expect(preservedConfig.courseIngredientIds, ['carrot', 'egg']);
+      expect(updatedConfig.courseIngredientIds, ['rice', 'tomato']);
+    },
+  );
 
   test('Local settings saves and loads avatar settings', () async {
     SharedPreferences.setMockInitialValues({});
@@ -72,6 +156,7 @@ void main() {
         avatarOffsetX: 8.0,
         avatarOffsetY: -6.0,
         avatarRotationDegrees: 12.0,
+        courseIngredientIds: const ['carrot', 'egg'],
       ),
     );
 
@@ -87,6 +172,8 @@ void main() {
     expect(loadedConfig.avatarOffsetX, 8.0);
     expect(loadedConfig.avatarOffsetY, -6.0);
     expect(loadedConfig.avatarRotationDegrees, 12.0);
+    expect(loadedConfig.courseIngredientIds, isEmpty);
+    expect(preferences.getStringList('courseIngredientIds'), isNull);
     final policeCarAvatar = loadedConfig.customAvatarConfigForVehicle(
       'police_car',
     );
@@ -261,9 +348,84 @@ void main() {
     },
   );
 
+  testWidgets('Completed-before-arrival result shows intro video screen', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final introVideoPaths = <String>[];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: ResultScreen(
+          result: _mealResult(completedBeforeArrival: true),
+          config: MealTimerConfig.defaults(),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          introControllerFactory: (assetPath) {
+            introVideoPaths.add(assetPath);
+            return VideoPlayerController.asset(assetPath);
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(introVideoPaths, [
+      resultVideoAssetPathForVehicle(vehicleId: 'motorcycle'),
+    ]);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Completed-after-arrival result also shows intro video screen', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final introVideoPaths = <String>[];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: ResultScreen(
+          result: _mealResult(completedBeforeArrival: false),
+          config: MealTimerConfig.defaults(),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          introControllerFactory: (assetPath) {
+            introVideoPaths.add(assetPath);
+            return VideoPlayerController.asset(assetPath);
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(introVideoPaths, [
+      resultVideoAssetPathForVehicle(vehicleId: 'motorcycle'),
+    ]);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
   testWidgets('Failed result screen skips the intro video', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
+    final introVideoPaths = <String>[];
 
     await tester.pumpWidget(
       MaterialApp(
@@ -279,11 +441,17 @@ void main() {
           config: MealTimerConfig.defaults(),
           mealProgressService: service,
           onConfigChanged: (_) {},
+          introControllerFactory: (assetPath) {
+            introVideoPaths.add(assetPath);
+            return VideoPlayerController.asset(assetPath);
+          },
         ),
       ),
     );
     await tester.pumpAndSettle();
 
+    expect(introVideoPaths, isEmpty);
+    expect(find.byKey(const ValueKey('resultIntroScreen')), findsNothing);
     expect(find.text('아쉽지만 조금 늦었어'), findsOneWidget);
     expect(find.text('오토바이가 먼저 지나갔어.'), findsOneWidget);
 
@@ -623,7 +791,7 @@ void main() {
     expect(find.textContaining('직접 설정'), findsOneWidget);
   });
 
-  testWidgets('Home regular course uses saved default meal duration', (
+  testWidgets('Starting a course opens the ingredient picker first', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -660,11 +828,156 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
+    expect(
+      find.byKey(const ValueKey('mealIngredientPickerSheet')),
+      findsOneWidget,
+    );
+    expect(find.byType(TimerScreen), findsNothing);
+  });
+
+  testWidgets('Tapping random start opens timer screen', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            childName: '지율',
+            duration: const Duration(minutes: 35),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final regularCourseButton = tester.widget<AppBouncyButton>(
+      find.ancestor(
+        of: find.textContaining('35분 보통 코스'),
+        matching: find.byType(AppBouncyButton),
+      ),
+    );
+    regularCourseButton.onPressed!();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.tap(
+      find.byKey(const ValueKey('randomStartMealIngredientsButton')),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
     expect(find.byType(TimerScreen), findsOneWidget);
     expect(
       tester.widget<TimerScreen>(find.byType(TimerScreen)).config.duration,
       const Duration(minutes: 35),
     );
+    expect(
+      tester
+          .widget<TimerScreen>(find.byType(TimerScreen))
+          .config
+          .courseIngredientIds,
+      hasLength(MealIngredientCatalog.maxSelectableIngredientCount),
+    );
+  });
+
+  testWidgets(
+    'Selecting carrot and egg opens timer with selected ingredients',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ko'),
+          supportedLocales: const [Locale('ko'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          home: HomeScreen(
+            config: MealTimerConfig.defaults().copyWith(childName: '지율'),
+            mealProgressService: LocalMealProgressService(),
+            onConfigChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final regularCourseButton = tester.widget<AppBouncyButton>(
+        find.ancestor(
+          of: find.textContaining('25분 보통 코스'),
+          matching: find.byType(AppBouncyButton),
+        ),
+      );
+      regularCourseButton.onPressed!();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      await tester.tap(find.byKey(const ValueKey('mealIngredientChip_carrot')));
+      await tester.pump();
+      await tester.tap(find.byKey(const ValueKey('mealIngredientChip_egg')));
+      await tester.pump();
+      await tester.tap(
+        find.byKey(const ValueKey('startSelectedMealIngredientsButton')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(
+        tester
+            .widget<TimerScreen>(find.byType(TimerScreen))
+            .config
+            .courseIngredientIds,
+        ['carrot', 'egg'],
+      );
+    },
+  );
+
+  testWidgets('Dismissing the ingredient picker does not open timer screen', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(childName: '지율'),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final regularCourseButton = tester.widget<AppBouncyButton>(
+      find.ancestor(
+        of: find.textContaining('25분 보통 코스'),
+        matching: find.byType(AppBouncyButton),
+      ),
+    );
+    regularCourseButton.onPressed!();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(
+      find.byKey(const ValueKey('mealIngredientPickerSheet')),
+      findsNothing,
+    );
+    expect(find.byType(TimerScreen), findsNothing);
   });
 
   testWidgets('Alternate courses exclude the selected default duration', (
@@ -729,6 +1042,18 @@ void main() {
           .first,
     );
     quickCourseButton.onTap!();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(
+      find.byKey(const ValueKey('mealIngredientPickerSheet')),
+      findsOneWidget,
+    );
+    expect(find.byType(TimerScreen), findsNothing);
+
+    await tester.tap(
+      find.byKey(const ValueKey('randomStartMealIngredientsButton')),
+    );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
@@ -1387,7 +1712,7 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('남은 시간'), findsNothing);
-    expect(find.text('도착까지'), findsNothing);
+    expect(find.text('남은 식사 시간'), findsNothing);
   });
 
   testWidgets('Settings screen keeps vehicle and avatar actions on home', (
@@ -1771,6 +2096,91 @@ void main() {
     );
   });
 
+  testWidgets('RoadView with 30 ingredients renders 30 ingredient markers', (
+    tester,
+  ) async {
+    final ingredients = MealIngredientCatalog.courseSlotsFor(['carrot', 'egg']);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 420,
+            height: 640,
+            child: RoadView(
+              progress: 0,
+              vehicle: VehicleCatalog.fireTruck,
+              ingredients: ingredients,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    for (var index = 0; index < ingredients.length; index += 1) {
+      expect(
+        find.byKey(ValueKey('roadIngredientMarker_$index')),
+        findsOneWidget,
+      );
+    }
+  });
+
+  testWidgets('RoadView at progress 1 hides ingredient markers', (
+    tester,
+  ) async {
+    final ingredients = MealIngredientCatalog.courseSlotsFor(['carrot', 'egg']);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 420,
+            height: 640,
+            child: RoadView(
+              progress: 0,
+              vehicle: VehicleCatalog.fireTruck,
+              ingredients: ingredients,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.byKey(const ValueKey('roadIngredientMarker_0')),
+      findsOneWidget,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 420,
+            height: 640,
+            child: RoadView(
+              progress: 1,
+              vehicle: VehicleCatalog.fireTruck,
+              ingredients: ingredients,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    for (var index = 0; index < ingredients.length; index += 1) {
+      expect(find.byKey(ValueKey('roadIngredientMarker_$index')), findsNothing);
+    }
+  });
+
+  test('RoadPainter roadStrokeWidthForSize stays within expected clamps', () {
+    expect(roadStrokeWidthForSize(const Size(100, 640)), 22);
+    expect(roadStrokeWidthForSize(const Size(1000, 1200)), 32);
+    expect(roadStrokeWidthForSize(const Size(1200, 100)), 30);
+    expect(roadStrokeWidthForSize(const Size(1200, 900)), 44);
+    expect(roadStrokeWidthForSize(const Size(420, 640)), closeTo(24.36, 0.01));
+  });
+
   testWidgets('Road view renders custom avatar overlay from local file', (
     tester,
   ) async {
@@ -2009,6 +2419,174 @@ void main() {
     expect(roadView.avatar.offsetX, 0.11);
     expect(roadView.avatar.offsetY, -0.07);
     expect(roadView.avatar.rotationDegrees, 9.0);
+  });
+
+  testWidgets('TimerScreen passes course ingredient ids to road ingredients', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            courseIngredientIds: const ['carrot', 'egg'],
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final roadView = tester.widget<RoadView>(find.byType(RoadView));
+    expect(roadView.ingredients, hasLength(30));
+    expect(roadView.ingredients.map((ingredient) => ingredient.id).toSet(), {
+      'carrot',
+      'egg',
+    });
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Meal done before arrival does not immediately push result', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(minutes: 10),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton).last);
+    await tester.pump();
+
+    expect(find.byType(TimerScreen), findsOneWidget);
+    expect(find.byType(ResultScreen), findsNothing);
+    expect(
+      tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete,
+      isNull,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Fast finish drive animates display progress to finish', (
+    tester,
+  ) async {
+    var now = DateTime(2026);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(seconds: 100),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          now: () => now,
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+    now = now.add(const Duration(seconds: 50));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton).last);
+    await tester.pump();
+
+    final driveDuration = finishDriveDurationForProgress(0.5);
+    await tester.pump(driveDuration - const Duration(milliseconds: 1));
+
+    expect(find.byType(ResultScreen), findsNothing);
+    expect(
+      tester.widget<RoadView>(find.byType(RoadView)).progress,
+      greaterThan(0.99),
+    );
+
+    await tester.pump(const Duration(milliseconds: 2));
+    await tester.pump();
+
+    expect(find.byType(ResultScreen), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Controls are disabled during fast finish drive', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(minutes: 10),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton).last);
+    await tester.pump();
+
+    final controls = tester.widget<TimerControlBar>(
+      find.byType(TimerControlBar),
+    );
+    expect(controls.onPauseResume, isNull);
+    expect(controls.onComplete, isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Completing after arrival opens result without fast finish', (
+    tester,
+  ) async {
+    var now = DateTime(2026);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(seconds: 1),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          now: () => now,
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+    now = now.add(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton).last);
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(ResultScreen), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
 
   testWidgets('Timer screen plays motivation voice after video starts', (
@@ -2352,7 +2930,7 @@ void main() {
 
     expect(find.text("Today's Yamyam Ride"), findsOneWidget);
     expect(find.text("We're off!"), findsOneWidget);
-    expect(find.text('Until arrival'), findsOneWidget);
+    expect(find.text('Mealtime left'), findsOneWidget);
     expect(find.text('출발했어요!'), findsNothing);
   });
 
