@@ -362,6 +362,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   avatar: selectedVehicleAvatar,
                   avatarForVehicle: _config.avatarPresentationForVehicle,
                   avatarImageBuilder: widget.avatarImageBuilder,
+                  showSelectedPreview: true,
                   footer: _AvatarInlineCta(
                     stateText: avatarStateText,
                     description: texts.home.avatarCtaSubtitle,
