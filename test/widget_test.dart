@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:video_player/video_player.dart';
 
 import 'package:jy_yamyam/catalogs/avatar_prompt_catalog.dart';
 import 'package:jy_yamyam/catalogs/meal_ingredient_catalog.dart';
@@ -346,9 +347,84 @@ void main() {
     },
   );
 
+  testWidgets('Completed-before-arrival result shows intro video screen', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final introVideoPaths = <String>[];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: ResultScreen(
+          result: _mealResult(completedBeforeArrival: true),
+          config: MealTimerConfig.defaults(),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          introControllerFactory: (assetPath) {
+            introVideoPaths.add(assetPath);
+            return VideoPlayerController.asset(assetPath);
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(introVideoPaths, [
+      resultVideoAssetPathForVehicle(vehicleId: 'motorcycle'),
+    ]);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Completed-after-arrival result also shows intro video screen', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final introVideoPaths = <String>[];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: ResultScreen(
+          result: _mealResult(completedBeforeArrival: false),
+          config: MealTimerConfig.defaults(),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          introControllerFactory: (assetPath) {
+            introVideoPaths.add(assetPath);
+            return VideoPlayerController.asset(assetPath);
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(introVideoPaths, [
+      resultVideoAssetPathForVehicle(vehicleId: 'motorcycle'),
+    ]);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
   testWidgets('Failed result screen skips the intro video', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
+    final introVideoPaths = <String>[];
 
     await tester.pumpWidget(
       MaterialApp(
@@ -364,11 +440,17 @@ void main() {
           config: MealTimerConfig.defaults(),
           mealProgressService: service,
           onConfigChanged: (_) {},
+          introControllerFactory: (assetPath) {
+            introVideoPaths.add(assetPath);
+            return VideoPlayerController.asset(assetPath);
+          },
         ),
       ),
     );
     await tester.pumpAndSettle();
 
+    expect(introVideoPaths, isEmpty);
+    expect(find.byKey(const ValueKey('resultIntroScreen')), findsNothing);
     expect(find.text('아쉽지만 조금 늦었어'), findsOneWidget);
     expect(find.text('오토바이가 먼저 지나갔어.'), findsOneWidget);
 
