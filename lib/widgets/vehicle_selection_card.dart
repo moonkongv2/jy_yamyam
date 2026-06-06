@@ -22,6 +22,7 @@ class VehicleSelectionCard extends StatelessWidget {
     this.avatar = VehicleAvatarPresentation.defaultImage,
     this.avatarForVehicle,
     this.avatarImageBuilder,
+    this.showSelectedPreview = false,
     this.footer,
   });
 
@@ -33,6 +34,7 @@ class VehicleSelectionCard extends StatelessWidget {
   final VehicleAvatarPresentationResolver? avatarForVehicle;
   final Widget Function(BuildContext context, String imagePath)?
   avatarImageBuilder;
+  final bool showSelectedPreview;
   final Widget? footer;
 
   @override
@@ -91,6 +93,14 @@ class VehicleSelectionCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.md),
+            if (showSelectedPreview) ...[
+              _SelectedVehiclePreview(
+                vehicle: selectedVehicle,
+                avatar: avatar,
+                avatarImageBuilder: avatarImageBuilder,
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
             LayoutBuilder(
               builder: (context, constraints) {
                 const spacing = AppSpacing.sm;
@@ -129,6 +139,55 @@ class VehicleSelectionCard extends StatelessWidget {
               footer!,
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectedVehiclePreview extends StatelessWidget {
+  const _SelectedVehiclePreview({
+    required this.vehicle,
+    required this.avatar,
+    this.avatarImageBuilder,
+  });
+
+  final VehicleDefinition vehicle;
+  final VehicleAvatarPresentation avatar;
+  final Widget Function(BuildContext context, String imagePath)?
+  avatarImageBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    final vehicleLabel = vehicle.labelForLanguage(
+      Localizations.localeOf(context).languageCode,
+    );
+
+    return Semantics(
+      label: vehicleLabel,
+      image: true,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceYellow.withValues(alpha: 0.42),
+          borderRadius: AppRadius.compactCard,
+          border: Border.all(color: AppColors.borderSoft),
+        ),
+        child: SizedBox(
+          key: const ValueKey('selectedVehiclePreview'),
+          height: 120,
+          width: double.infinity,
+          child: Center(
+            child: SizedBox(
+              width: 148,
+              height: 104,
+              child: _VehicleChoiceImage(
+                vehicle: vehicle,
+                size: 120,
+                avatar: avatar,
+                avatarImageBuilder: avatarImageBuilder,
+              ),
+            ),
+          ),
         ),
       ),
     );

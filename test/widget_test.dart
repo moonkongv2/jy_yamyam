@@ -786,7 +786,7 @@ void main() {
     expect(find.text('아이 얼굴 탑승 중'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('avatarCompositeOverlayImage')),
-      findsNWidgets(2),
+      findsNWidgets(3),
     );
     final customAvatarPreview = find.byWidgetPredicate((widget) {
       return widget is AvatarCompositePreview &&
@@ -795,7 +795,7 @@ void main() {
           widget.avatarOffsetY == -0.03 &&
           widget.avatarRotationDegrees == 5.0;
     });
-    expect(customAvatarPreview, findsNWidgets(2));
+    expect(customAvatarPreview, findsNWidgets(3));
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
@@ -1451,8 +1451,15 @@ void main() {
     expect(find.text('포크레인'), findsNothing);
 
     for (final vehicle in VehicleCatalog.all) {
-      expect(_assetImage(vehicle.selectionImagePath), findsOneWidget);
+      expect(
+        _assetImage(vehicle.selectionImagePath),
+        vehicle.id == 'motorcycle' ? findsNWidgets(2) : findsOneWidget,
+      );
     }
+    expect(
+      find.byKey(const ValueKey('selectedVehiclePreview')),
+      findsOneWidget,
+    );
 
     final firstRowTop = tester
         .getTopLeft(_vehicleChoiceFinder('motorcycle'))
@@ -1586,6 +1593,14 @@ void main() {
 
     final preferences = await SharedPreferences.getInstance();
     expect(preferences.getString('vehicleId'), 'police_car');
+    expect(
+      _assetImage(VehicleCatalog.policeCar.selectionImagePath),
+      findsNWidgets(2),
+    );
+    expect(
+      _assetImage(VehicleCatalog.motorcycle.selectionImagePath),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Vehicle selection updates even without parent rebuild', (
