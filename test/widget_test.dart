@@ -49,6 +49,7 @@ void main() {
     expect(config.customAvatarImagePath, isNull);
     expect(config.customAvatarVehicleId, isNull);
     expect(config.vehicleId, 'motorcycle');
+    expect(config.soundEnabled, isTrue);
     expect(config.avatarScale, 1.0);
     expect(config.avatarOffsetX, 0.0);
     expect(config.avatarOffsetY, 0.0);

@@ -66,7 +66,7 @@ class MealTimerConfig {
     return const MealTimerConfig(
       duration: MealCourseCatalog.defaultDuration,
       showRemainingTime: true,
-      soundEnabled: false,
+      soundEnabled: true,
       keepScreenAwake: false,
       courseId: 'park',
       vehicleId: 'motorcycle',
