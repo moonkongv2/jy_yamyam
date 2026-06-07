@@ -29,6 +29,7 @@ class RoadView extends StatelessWidget {
     this.showMotivationVideo = true,
     this.ingredients = const [],
     this.ingredientClearProgress,
+    this.isRoadMotionActive = false,
   });
 
   final double progress;
@@ -43,6 +44,7 @@ class RoadView extends StatelessWidget {
   final bool showMotivationVideo;
   final List<MealIngredientDefinition> ingredients;
   final double? ingredientClearProgress;
+  final bool isRoadMotionActive;
   static const double _portraitVehicleSize = 164;
   static const double _landscapeVehicleSize = 176;
 
@@ -120,8 +122,9 @@ class RoadView extends StatelessWidget {
             child: Stack(
               children: [
                 Positioned.fill(
-                  child: CustomPaint(
-                    painter: RoadPainter(progress: clampedProgress),
+                  child: _AnimatedRoadPaint(
+                    progress: clampedProgress,
+                    isMotionActive: isRoadMotionActive,
                   ),
                 ),
                 if (ingredients.isNotEmpty)
@@ -172,6 +175,89 @@ class RoadView extends StatelessWidget {
                   ),
               ],
             ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _AnimatedRoadPaint extends StatefulWidget {
+  const _AnimatedRoadPaint({
+    required this.progress,
+    required this.isMotionActive,
+  });
+
+  final double progress;
+  final bool isMotionActive;
+
+  @override
+  State<_AnimatedRoadPaint> createState() => _AnimatedRoadPaintState();
+}
+
+class _AnimatedRoadPaintState extends State<_AnimatedRoadPaint>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  bool get _disableAnimations =>
+      MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
+  bool get _shouldAnimate => widget.isMotionActive && !_disableAnimations;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: RoadPainter.laneDashAnimationDuration,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncController();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AnimatedRoadPaint oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.isMotionActive != widget.isMotionActive) {
+      _syncController();
+    }
+  }
+
+  void _syncController() {
+    if (_shouldAnimate) {
+      if (!_controller.isAnimating) {
+        _controller.repeat();
+      }
+      return;
+    }
+
+    _controller.stop();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_shouldAnimate) {
+      return CustomPaint(painter: RoadPainter(progress: widget.progress));
+    }
+
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return CustomPaint(
+          painter: RoadPainter(
+            progress: widget.progress,
+            laneDashPhase:
+                _controller.value * RoadPainter.laneDashPatternLength,
           ),
         );
       },

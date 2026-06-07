@@ -88,9 +88,18 @@ bool roadIsFacingLeftForProgress(Size size, double progress) {
 }
 
 class RoadPainter extends CustomPainter {
-  const RoadPainter({required this.progress});
+  const RoadPainter({required this.progress, this.laneDashPhase = 0});
+
+  static const laneDashWidth = 15.0;
+  static const laneDashGap = 22.0;
+  static const laneDashPatternLength = laneDashWidth + laneDashGap;
+  static const laneDashInset = 18.0;
+  static const laneDashStrokeWidth = 3.4;
+  static const laneDashOpacity = 0.72;
+  static const laneDashAnimationDuration = Duration(milliseconds: 1200);
 
   final double progress;
+  final double laneDashPhase;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -115,7 +124,7 @@ class RoadPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round
       ..strokeWidth = roadWidth + 5;
     final roadPaint = Paint()
-      ..color = const Color(0xFFD0F5DA)
+      ..color = const Color(0xFFBCEFD0)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
@@ -143,30 +152,41 @@ class RoadPainter extends CustomPainter {
     }
 
     final lanePaint = Paint()
-      ..color = AppColors.white.withValues(alpha: 0.68)
+      ..color = AppColors.white.withValues(alpha: laneDashOpacity)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 2.1;
+      ..strokeWidth = laneDashStrokeWidth;
 
-    _drawDashedPath(canvas, roadPath, lanePaint);
+    _drawDashedPath(canvas, roadPath, lanePaint, laneDashPhase);
   }
 
-  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
-    const dashWidth = 9.0;
-    const gap = 22.0;
-
+  void _drawDashedPath(Canvas canvas, Path path, Paint paint, double phase) {
+    final normalizedPhase = phase % laneDashPatternLength;
     for (final metric in path.computeMetrics()) {
-      var distance = 18.0;
-      while (distance < metric.length - 18) {
-        final nextDistance = (distance + dashWidth).clamp(0.0, metric.length);
-        canvas.drawPath(metric.extractPath(distance, nextDistance), paint);
-        distance += dashWidth + gap;
+      final startLimit = laneDashInset;
+      final endLimit = metric.length - laneDashInset;
+      if (endLimit <= startLimit) {
+        continue;
+      }
+
+      // Reversing the sign of laneDashPhase reverses the visual flow direction.
+      var distance = startLimit - normalizedPhase;
+      while (distance < endLimit) {
+        final dashStart = distance.clamp(startLimit, endLimit).toDouble();
+        final dashEnd = (distance + laneDashWidth)
+            .clamp(startLimit, endLimit)
+            .toDouble();
+        if (dashEnd > dashStart) {
+          canvas.drawPath(metric.extractPath(dashStart, dashEnd), paint);
+        }
+        distance += laneDashPatternLength;
       }
     }
   }
 
   @override
   bool shouldRepaint(covariant RoadPainter oldDelegate) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress != progress ||
+        oldDelegate.laneDashPhase != laneDashPhase;
   }
 }

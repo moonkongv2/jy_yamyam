@@ -2310,6 +2310,29 @@ void main() {
     expect(roadStrokeWidthForSize(const Size(420, 640)), closeTo(24.36, 0.01));
   });
 
+  test('RoadPainter repaints for progress or lane dash phase changes', () {
+    const basePainter = RoadPainter(progress: 0.3, laneDashPhase: 0);
+
+    expect(
+      basePainter.shouldRepaint(
+        const RoadPainter(progress: 0.3, laneDashPhase: 10),
+      ),
+      isTrue,
+    );
+    expect(
+      basePainter.shouldRepaint(
+        const RoadPainter(progress: 0.4, laneDashPhase: 0),
+      ),
+      isTrue,
+    );
+    expect(
+      basePainter.shouldRepaint(
+        const RoadPainter(progress: 0.3, laneDashPhase: 0),
+      ),
+      isFalse,
+    );
+  });
+
   testWidgets('Road view renders custom avatar overlay from local file', (
     tester,
   ) async {
