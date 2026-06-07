@@ -885,9 +885,6 @@ class _LandscapeCourseCanvas extends StatelessWidget {
                   ),
                 ),
               ),
-            if (vehicleLayer != null) Positioned.fill(child: vehicleLayer!),
-            if (motivationVideoLayer != null)
-              Positioned.fill(child: motivationVideoLayer!),
             Positioned(
               left: AppSpacing.md,
               top: AppSpacing.md,
@@ -899,6 +896,9 @@ class _LandscapeCourseCanvas extends StatelessWidget {
                 top: AppSpacing.md,
                 child: remainingTimeBadge!,
               ),
+            if (vehicleLayer != null) Positioned.fill(child: vehicleLayer!),
+            if (motivationVideoLayer != null)
+              Positioned.fill(child: motivationVideoLayer!),
           ],
         ),
       ),
