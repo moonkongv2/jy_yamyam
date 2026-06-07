@@ -168,6 +168,7 @@ class _TimerScreenState extends State<TimerScreen>
   Animation<double>? _finishDriveAnimation;
   MealSessionResult? _pendingFinishDriveResult;
   double _finishDriveStartProgress = 0;
+  bool _handoffOrientation = false;
 
   @override
   void initState() {
@@ -180,7 +181,7 @@ class _TimerScreenState extends State<TimerScreen>
     _finishDriveController = AnimationController(vsync: this)
       ..addStatusListener(_handleFinishDriveStatusChanged);
     _controller.start();
-    unawaited(widget.orientationService.allowTimerOrientations());
+    unawaited(widget.orientationService.allowMealFlowOrientations());
     _applyScreenAwakeSetting();
   }
 
@@ -200,7 +201,9 @@ class _TimerScreenState extends State<TimerScreen>
     _motivationVoiceTimer?.cancel();
     _arrivalPromptTimer?.cancel();
     unawaited(_disposeMotivationAudioService());
-    unawaited(widget.orientationService.lockPortrait());
+    if (!_handoffOrientation) {
+      unawaited(widget.orientationService.lockPortrait());
+    }
     if (_screenAwakeEnabled) {
       unawaited(widget.screenAwakeService.setEnabled(false));
     }
@@ -500,6 +503,7 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _openResult(MealSessionResult result) {
+    _handoffOrientation = true;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => ResultScreen(
@@ -507,6 +511,7 @@ class _TimerScreenState extends State<TimerScreen>
           config: widget.config,
           mealProgressService: widget.mealProgressService,
           onConfigChanged: widget.onConfigChanged,
+          orientationService: widget.orientationService,
         ),
       ),
     );

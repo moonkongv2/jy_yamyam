@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 abstract interface class OrientationService {
   Future<void> lockPortrait();
 
-  Future<void> allowTimerOrientations();
+  Future<void> allowMealFlowOrientations();
 }
 
 class SystemOrientationService implements OrientationService {
@@ -17,7 +17,7 @@ class SystemOrientationService implements OrientationService {
   }
 
   @override
-  Future<void> allowTimerOrientations() {
+  Future<void> allowMealFlowOrientations() {
     return SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.landscapeLeft,

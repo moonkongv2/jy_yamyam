@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -8,6 +10,7 @@ import '../models/meal_timer_config.dart';
 import '../models/reward_goal.dart';
 import '../models/reward_item.dart';
 import '../services/local_meal_progress_service.dart';
+import '../services/orientation_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
@@ -50,6 +53,7 @@ class ResultScreen extends StatefulWidget {
     required this.mealProgressService,
     required this.onConfigChanged,
     this.introControllerFactory,
+    this.orientationService = const SystemOrientationService(),
   });
 
   final MealSessionResult result;
@@ -57,6 +61,7 @@ class ResultScreen extends StatefulWidget {
   final LocalMealProgressService mealProgressService;
   final ValueChanged<MealTimerConfig> onConfigChanged;
   final ResultIntroControllerFactory? introControllerFactory;
+  final OrientationService orientationService;
 
   @override
   State<ResultScreen> createState() => _ResultScreenState();
@@ -69,10 +74,12 @@ class _ResultScreenState extends State<ResultScreen> {
   late final Future<RecordedMealSession> _recordedSession;
   bool _introFinished = false;
   bool _introFallback = false;
+  bool _handoffOrientation = false;
 
   @override
   void initState() {
     super.initState();
+    unawaited(widget.orientationService.allowMealFlowOrientations());
     _recordedSession = widget.mealProgressService.recordMealResult(
       widget.result,
     );
@@ -140,16 +147,21 @@ class _ResultScreenState extends State<ResultScreen> {
       controller.removeListener(_handleIntroChanged);
       controller.dispose();
     }
+    if (!_handoffOrientation) {
+      unawaited(widget.orientationService.lockPortrait());
+    }
     super.dispose();
   }
 
   void _restart(BuildContext context) {
+    _handoffOrientation = true;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => TimerScreen(
           config: widget.config,
           mealProgressService: widget.mealProgressService,
           onConfigChanged: widget.onConfigChanged,
+          orientationService: widget.orientationService,
         ),
       ),
     );
@@ -230,6 +242,8 @@ class _ResultScreenState extends State<ResultScreen> {
                                                   .earnedRewardGoals,
                                               mealProgressService:
                                                   widget.mealProgressService,
+                                              orientationService:
+                                                  widget.orientationService,
                                             ),
                                           ],
                                         ],
@@ -286,11 +300,13 @@ class _RewardGoalResultBox extends StatelessWidget {
     required this.updatedGoals,
     required this.earnedGoals,
     required this.mealProgressService,
+    required this.orientationService,
   });
 
   final List<RewardGoal> updatedGoals;
   final List<RewardGoal> earnedGoals;
   final LocalMealProgressService mealProgressService;
+  final OrientationService orientationService;
 
   @override
   Widget build(BuildContext context) {
@@ -326,14 +342,21 @@ class _RewardGoalResultBox extends StatelessWidget {
             if (justEarned) ...[
               const SizedBox(height: AppSpacing.md),
               FilledButton.icon(
-                onPressed: () {
-                  Navigator.of(context).push(
+                onPressed: () async {
+                  await orientationService.lockPortrait();
+                  if (!context.mounted) {
+                    return;
+                  }
+                  await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => RewardGoalScreen(
                         mealProgressService: mealProgressService,
                       ),
                     ),
                   );
+                  if (context.mounted) {
+                    unawaited(orientationService.allowMealFlowOrientations());
+                  }
                 },
                 icon: const Icon(Icons.card_giftcard_rounded),
                 label: Text(texts.rewards.openRewardGoal),

@@ -464,6 +464,41 @@ void main() {
     );
   });
 
+  testWidgets('Result screen allows landscape until disposed', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final orientationService = _FakeOrientationService();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: ResultScreen(
+          result: _mealResult(mealCompleted: false),
+          config: MealTimerConfig.defaults(),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          orientationService: orientationService,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(orientationService.calls, ['allowMealFlowOrientations']);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+
+    expect(orientationService.calls, [
+      'allowMealFlowOrientations',
+      'lockPortrait',
+    ]);
+  });
+
   test('Result intro video contains in landscape and covers in portrait', () {
     expect(resultIntroMediaFitForSize(const Size(844, 390)), BoxFit.contain);
     expect(resultIntroMediaFitForSize(const Size(390, 844)), BoxFit.cover);
@@ -2589,6 +2624,52 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets('Timer hands orientation control to result screen', (
+    tester,
+  ) async {
+    var now = DateTime(2026);
+    final orientationService = _FakeOrientationService();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(seconds: 1),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          now: () => now,
+          onConfigChanged: (_) {},
+          orientationService: orientationService,
+        ),
+      ),
+    );
+    await tester.pump();
+    now = now.add(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton).last);
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.byType(ResultScreen), findsOneWidget);
+    expect(orientationService.calls, [
+      'allowMealFlowOrientations',
+      'allowMealFlowOrientations',
+    ]);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+
+    expect(orientationService.calls, [
+      'allowMealFlowOrientations',
+      'allowMealFlowOrientations',
+      'lockPortrait',
+    ]);
+  });
+
   testWidgets('Timer screen plays motivation voice after video starts', (
     tester,
   ) async {
@@ -2758,13 +2839,13 @@ void main() {
     );
     await tester.pump();
 
-    expect(orientationService.calls, ['allowTimerOrientations']);
+    expect(orientationService.calls, ['allowMealFlowOrientations']);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
 
     expect(orientationService.calls, [
-      'allowTimerOrientations',
+      'allowMealFlowOrientations',
       'lockPortrait',
     ]);
   });
@@ -3851,8 +3932,8 @@ class _FakeOrientationService implements OrientationService {
   }
 
   @override
-  Future<void> allowTimerOrientations() async {
-    calls.add('allowTimerOrientations');
+  Future<void> allowMealFlowOrientations() async {
+    calls.add('allowMealFlowOrientations');
   }
 }
 
