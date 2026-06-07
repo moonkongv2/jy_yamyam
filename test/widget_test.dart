@@ -2920,6 +2920,28 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('TimerScreen passes configured duration to the road course', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(minutes: 60),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final roadView = tester.widget<RoadView>(find.byType(RoadView));
+    expect(roadView.courseDuration, const Duration(minutes: 60));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('Meal done before arrival does not immediately push result', (
     tester,
   ) async {
@@ -3171,7 +3193,7 @@ void main() {
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(seconds: 100),
+            duration: const Duration(minutes: 60),
           ),
           mealProgressService: LocalMealProgressService(),
           now: () => now,
@@ -3180,7 +3202,7 @@ void main() {
       ),
     );
     await tester.pump();
-    now = now.add(const Duration(seconds: 20));
+    now = now.add(const Duration(minutes: 20));
     await tester.pump(const Duration(milliseconds: 250));
 
     Offset vehicleCenterInRoad() {
@@ -3194,7 +3216,7 @@ void main() {
     await tester.pump();
     final centerAfterPause = vehicleCenterInRoad();
 
-    now = now.add(const Duration(seconds: 10));
+    now = now.add(const Duration(minutes: 10));
     await tester.pump(const Duration(seconds: 1));
     final centerAfterPausedTime = vehicleCenterInRoad();
 
@@ -3221,7 +3243,9 @@ void main() {
       MaterialApp(
         locale: const Locale('ko'),
         home: TimerScreen(
-          config: MealTimerConfig.defaults(),
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(minutes: 5),
+          ),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
         ),
@@ -3308,6 +3332,49 @@ void main() {
     await tester.pump();
 
     expect(tester.getSize(find.byType(RoadView)), roadSize);
+  });
+
+  testWidgets('Timer screen keeps long landscape course viewport fixed', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(minutes: 60),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.getSize(find.byType(RoadView)), const Size(1200, 520));
+    expect(
+      tester.widget<RoadView>(find.byType(RoadView)).courseDuration,
+      const Duration(minutes: 60),
+    );
+    expect(
+      tester
+          .widget<RoadVehicleLayer>(find.byType(RoadVehicleLayer))
+          .courseDuration,
+      const Duration(minutes: 60),
+    );
+    expect(
+      tester
+          .getRect(find.byType(RoadView))
+          .contains(tester.getCenter(find.byType(VehicleWidget))),
+      isTrue,
+    );
   });
 
   testWidgets(

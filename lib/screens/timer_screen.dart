@@ -664,12 +664,14 @@ class _TimerScreenState extends State<TimerScreen>
                     isRoadMotionActive:
                         _isFinishDriving ||
                         _controller.state == MealTimerState.running,
+                    courseDuration: widget.config.duration,
                   );
                   final landscapeVehicleLayer = isLandscape
                       ? RoadVehicleLayer(
                           progress: displayProgress,
                           vehicle: vehicle,
                           avatar: vehicleAvatar,
+                          courseDuration: widget.config.duration,
                         )
                       : null;
                   final landscapeMotivationVideoLayer =
