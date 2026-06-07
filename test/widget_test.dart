@@ -2366,6 +2366,28 @@ void main() {
     expect(videoSize.width, lessThanOrEqualTo(460));
     expect(videoSize.width / videoSize.height, closeTo(16 / 9, 0.01));
 
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 1200,
+            height: 520,
+            child: RoadMotivationVideoLayer(
+              assetPath: MotivationAssetCatalog.fallbackVideoPath,
+              milestone: 10,
+              reservedRightInset: 92,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final insetVideoRect = tester.getRect(
+      find.byKey(const ValueKey('motivationVideoBubble_10')),
+    );
+    expect(insetVideoRect.right, lessThanOrEqualTo(1200 - 16 - 92));
+
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });
@@ -2752,6 +2774,56 @@ void main() {
       motivationAudioService.playedAssets.single,
       startsWith('assets/audio/motivation/ko_'),
     );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Timer screen keeps vehicle fixed when paused', (tester) async {
+    tester.view.physicalSize = const Size(852, 393);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    var now = DateTime(2026);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(seconds: 100),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          now: () => now,
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+    now = now.add(const Duration(seconds: 20));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    Offset vehicleCenterInRoad() {
+      final roadRect = tester.getRect(find.byType(RoadView));
+      final vehicleCenter = tester.getCenter(find.byType(VehicleWidget));
+      return vehicleCenter - roadRect.topLeft;
+    }
+
+    final centerBeforePause = vehicleCenterInRoad();
+    await tester.tap(find.byIcon(Icons.pause_rounded));
+    await tester.pump();
+    final centerAfterPause = vehicleCenterInRoad();
+
+    now = now.add(const Duration(seconds: 10));
+    await tester.pump(const Duration(seconds: 1));
+    final centerAfterPausedTime = vehicleCenterInRoad();
+
+    expect(centerAfterPause.dx, closeTo(centerBeforePause.dx, 0.1));
+    expect(centerAfterPause.dy, closeTo(centerBeforePause.dy, 0.1));
+    expect(centerAfterPausedTime.dx, closeTo(centerBeforePause.dx, 0.1));
+    expect(centerAfterPausedTime.dy, closeTo(centerBeforePause.dy, 0.1));
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();

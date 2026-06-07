@@ -29,7 +29,6 @@ class RoadView extends StatelessWidget {
     this.showMotivationVideo = true,
     this.ingredients = const [],
     this.ingredientClearProgress,
-    this.vehicleMoveDuration = const Duration(milliseconds: 850),
   });
 
   final double progress;
@@ -44,7 +43,6 @@ class RoadView extends StatelessWidget {
   final bool showMotivationVideo;
   final List<MealIngredientDefinition> ingredients;
   final double? ingredientClearProgress;
-  final Duration vehicleMoveDuration;
   static const double _portraitVehicleSize = 164;
   static const double _landscapeVehicleSize = 176;
 
@@ -65,20 +63,6 @@ class RoadView extends StatelessWidget {
               ),
             )
             .toDouble();
-        final clampedProgress = progress.clamp(0.0, 1.0).toDouble();
-        final vehiclePosition = roadPointForProgress(size, clampedProgress);
-        final isVehicleFacingLeft = roadIsFacingLeftForProgress(
-          size,
-          clampedProgress,
-        );
-        final vehicleOffset = _boundedVehicleOffset(
-          size: size,
-          position: vehiclePosition,
-          vehicleSize: vehicleSize,
-        );
-        final clearProgress = (ingredientClearProgress ?? progress)
-            .clamp(0.0, 1.0)
-            .toDouble();
         const videoMargin = 16.0;
         final videoFrameWidth = isLandscape
             ? math
@@ -96,6 +80,20 @@ class RoadView extends StatelessWidget {
             ? size.width - videoFrameWidth - videoMargin
             : videoMargin;
         final videoFrameTop = isLandscape ? size.height * 0.18 : videoMargin;
+        final clampedProgress = progress.clamp(0.0, 1.0).toDouble();
+        final vehiclePosition = roadPointForProgress(size, clampedProgress);
+        final isVehicleFacingLeft = roadIsFacingLeftForProgress(
+          size,
+          clampedProgress,
+        );
+        final vehicleOffset = _boundedVehicleOffset(
+          size: size,
+          position: vehiclePosition,
+          vehicleSize: vehicleSize,
+        );
+        final clearProgress = (ingredientClearProgress ?? clampedProgress)
+            .clamp(0.0, 1.0)
+            .toDouble();
 
         return DecoratedBox(
           decoration: BoxDecoration(
@@ -122,7 +120,9 @@ class RoadView extends StatelessWidget {
             child: Stack(
               children: [
                 Positioned.fill(
-                  child: CustomPaint(painter: RoadPainter(progress: progress)),
+                  child: CustomPaint(
+                    painter: RoadPainter(progress: clampedProgress),
+                  ),
                 ),
                 if (ingredients.isNotEmpty)
                   _RoadIngredientLayer(
@@ -145,7 +145,7 @@ class RoadView extends StatelessWidget {
                 ),
                 if (showVehicle)
                   _PositionedRoadVehicle(
-                    progress: progress,
+                    progress: clampedProgress,
                     vehicle: vehicle,
                     vehicleSize: vehicleSize,
                     vehicleLeft: vehicleOffset.dx,
@@ -153,7 +153,6 @@ class RoadView extends StatelessWidget {
                     isVehicleFacingLeft: isVehicleFacingLeft,
                     avatar: avatar,
                     avatarImageBuilder: avatarImageBuilder,
-                    moveDuration: vehicleMoveDuration,
                   ),
                 if (showMotivationVideo &&
                     motivationVideoAssetPath != null &&
@@ -322,11 +321,13 @@ class RoadMotivationVideoLayer extends StatelessWidget {
     super.key,
     required this.assetPath,
     required this.milestone,
+    this.reservedRightInset = 0,
     this.onFinished,
   });
 
   final String assetPath;
   final int milestone;
+  final double reservedRightInset;
   final VoidCallback? onFinished;
 
   @override
@@ -349,8 +350,11 @@ class RoadMotivationVideoLayer extends StatelessWidget {
                   132.0,
                   math.max(140.0, size.height * 0.44),
                 );
+          final videoFrameRightInset = isLandscape
+              ? videoMargin + reservedRightInset
+              : videoMargin;
           final videoFrameLeft = isLandscape
-              ? size.width - videoFrameWidth - videoMargin
+              ? size.width - videoFrameWidth - videoFrameRightInset
               : videoMargin;
           final videoFrameTop = isLandscape ? size.height * 0.18 : videoMargin;
 
@@ -382,7 +386,6 @@ class RoadVehicleLayer extends StatelessWidget {
     required this.vehicle,
     this.avatar = VehicleAvatarPresentation.defaultImage,
     this.avatarImageBuilder,
-    this.vehicleMoveDuration = const Duration(milliseconds: 850),
   });
 
   final double progress;
@@ -390,7 +393,6 @@ class RoadVehicleLayer extends StatelessWidget {
   final VehicleAvatarPresentation avatar;
   final Widget Function(BuildContext context, String imagePath)?
   avatarImageBuilder;
-  final Duration vehicleMoveDuration;
 
   @override
   Widget build(BuildContext context) {
@@ -425,7 +427,7 @@ class RoadVehicleLayer extends StatelessWidget {
           return Stack(
             children: [
               _PositionedRoadVehicle(
-                progress: progress,
+                progress: clampedProgress,
                 vehicle: vehicle,
                 vehicleSize: vehicleSize,
                 vehicleLeft: vehicleOffset.dx,
@@ -433,7 +435,6 @@ class RoadVehicleLayer extends StatelessWidget {
                 isVehicleFacingLeft: isVehicleFacingLeft,
                 avatar: avatar,
                 avatarImageBuilder: avatarImageBuilder,
-                moveDuration: vehicleMoveDuration,
               ),
             ],
           );
@@ -482,7 +483,6 @@ class _PositionedRoadVehicle extends StatelessWidget {
     required this.isVehicleFacingLeft,
     required this.avatar,
     required this.avatarImageBuilder,
-    required this.moveDuration,
   });
 
   final double progress;
@@ -494,20 +494,17 @@ class _PositionedRoadVehicle extends StatelessWidget {
   final VehicleAvatarPresentation avatar;
   final Widget Function(BuildContext context, String imagePath)?
   avatarImageBuilder;
-  final Duration moveDuration;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedPositioned(
-      duration: moveDuration,
-      curve: Curves.easeInOutCubic,
+    return Positioned(
       left: vehicleLeft,
       top: vehicleTop,
       child: AnimatedOpacity(
-        duration: moveDuration,
+        duration: const Duration(milliseconds: 260),
         opacity: progress >= 1 ? 0.78 : 1,
         child: AnimatedScale(
-          duration: moveDuration,
+          duration: const Duration(milliseconds: 260),
           curve: Curves.easeInOutCubic,
           scale: progress >= 1 ? 0.92 : 1,
           child: VehicleWidget(

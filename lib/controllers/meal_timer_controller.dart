@@ -9,6 +9,8 @@ import '../models/meal_timer_config.dart';
 enum MealTimerState { idle, running, paused, arrived, completed }
 
 class MealTimerController extends ChangeNotifier {
+  static const _tickerInterval = Duration(milliseconds: 16);
+
   MealTimerController({required this.config, DateTime Function()? now})
     : _now = now ?? DateTime.now;
 
@@ -95,7 +97,7 @@ class MealTimerController extends ChangeNotifier {
 
   void _startTicker() {
     _ticker?.cancel();
-    _ticker = Timer.periodic(const Duration(milliseconds: 250), (_) {
+    _ticker = Timer.periodic(_tickerInterval, (_) {
       if (_state == MealTimerState.running ||
           _state == MealTimerState.arrived) {
         _updateElapsed();

@@ -28,6 +28,9 @@ import '../widgets/timer_control_bar.dart';
 import 'result_screen.dart';
 
 const _landscapeCourseCanvasSize = Size(1200, 520);
+const _compactLandscapeControlsWidth = 72.0;
+const _compactLandscapeControlsRightInset =
+    _compactLandscapeControlsWidth + AppSpacing.xl;
 const motivationMinimumVideoInterval = Duration(seconds: 10);
 const motivationVoiceStartDelay = Duration(milliseconds: 350);
 
@@ -616,9 +619,6 @@ class _TimerScreenState extends State<TimerScreen>
         final displayedRemaining = _isFinishDriving
             ? Duration.zero
             : _controller.remaining;
-        final vehicleMoveDuration = _isFinishDriving
-            ? Duration.zero
-            : const Duration(milliseconds: 850);
 
         return PopScope(
           canPop: _allowExit,
@@ -642,6 +642,10 @@ class _TimerScreenState extends State<TimerScreen>
                 builder: (context, constraints) {
                   final isLandscape =
                       constraints.maxWidth > constraints.maxHeight;
+                  final reservesCompactControlsSpace =
+                      isLandscape &&
+                      constraints.maxHeight - AppSpacing.xs - AppSpacing.md <
+                          430;
                   final roadView = RoadView(
                     progress: displayProgress,
                     vehicle: vehicle,
@@ -657,14 +661,12 @@ class _TimerScreenState extends State<TimerScreen>
                     showMotivationVideo: !isLandscape,
                     ingredients: courseIngredients,
                     ingredientClearProgress: displayProgress,
-                    vehicleMoveDuration: vehicleMoveDuration,
                   );
                   final landscapeVehicleLayer = isLandscape
                       ? RoadVehicleLayer(
                           progress: displayProgress,
                           vehicle: vehicle,
                           avatar: vehicleAvatar,
-                          vehicleMoveDuration: vehicleMoveDuration,
                         )
                       : null;
                   final landscapeMotivationVideoLayer =
@@ -675,6 +677,9 @@ class _TimerScreenState extends State<TimerScreen>
                       ? RoadMotivationVideoLayer(
                           assetPath: _activeMotivationVideoPath!,
                           milestone: _activeMotivationMilestone!,
+                          reservedRightInset: reservesCompactControlsSpace
+                              ? _compactLandscapeControlsRightInset
+                              : 0,
                           onFinished: _handleMotivationVideoFinished,
                         )
                       : null;
@@ -1026,7 +1031,10 @@ class _LandscapeCourseCanvas extends StatelessWidget {
                 top: 0,
                 bottom: 0,
                 child: Center(
-                  child: SizedBox(width: 72, child: compactControls!),
+                  child: SizedBox(
+                    width: _compactLandscapeControlsWidth,
+                    child: compactControls!,
+                  ),
                 ),
               ),
           ],
