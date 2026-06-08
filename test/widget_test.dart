@@ -1527,6 +1527,10 @@ void main() {
           )
           .onChanged!(false);
       await tester.pump();
+      await tester.tap(
+        find.byKey(const ValueKey('motivationSettingsApplyButton')),
+      );
+      await tester.pump();
 
       expect(changedConfig?.duration, const Duration(minutes: 35));
       expect(changedConfig?.motivationVideoEnabled, isFalse);
@@ -3724,6 +3728,10 @@ void main() {
         )
         .onChanged!(false);
     await tester.pump();
+    await tester.tap(
+      find.byKey(const ValueKey('motivationSettingsApplyButton')),
+    );
+    await tester.pump();
 
     expect(find.byKey(const ValueKey('motivationVideoBubble_3')), findsNothing);
     expect(changedConfig?.motivationVideoEnabled, isFalse);
@@ -3731,6 +3739,70 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });
+
+  testWidgets(
+    'Timer motivation settings dismiss keeps pending changes unapplied',
+    (tester) async {
+      MealTimerConfig? changedConfig;
+      var now = DateTime(2026);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ko'),
+          supportedLocales: const [Locale('ko'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          home: TimerScreen(
+            config: MealTimerConfig.defaults().copyWith(
+              duration: const Duration(minutes: 60),
+              soundEnabled: false,
+            ),
+            mealProgressService: LocalMealProgressService(),
+            now: () => now,
+            onConfigChanged: (config) => changedConfig = config,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      now = now.add(const Duration(minutes: 3));
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(
+        find.byKey(const ValueKey('motivationVideoBubble_3')),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('motivationSettingsButton')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      tester
+          .widget<SwitchListTile>(
+            find.byKey(const ValueKey('motivationVideoEnabledSwitch')),
+          )
+          .onChanged!(false);
+      await tester.pump();
+      tester
+          .widget<TextButton>(
+            find.byKey(const ValueKey('motivationSettingsCancelButton')),
+          )
+          .onPressed!();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(changedConfig, isNull);
+      expect(
+        find.byKey(const ValueKey('motivationVideoEnabledSwitch')),
+        findsNothing,
+      );
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
 
   testWidgets(
     'Timer screen restarts custom motivation interval from change time',
@@ -3769,6 +3841,10 @@ void main() {
             find.byKey(const ValueKey('motivationVideoCustomIntervalSwitch')),
           )
           .onChanged!(true);
+      await tester.pump();
+      await tester.tap(
+        find.byKey(const ValueKey('motivationSettingsApplyButton')),
+      );
       await tester.pump();
 
       now = now.add(const Duration(minutes: 2, seconds: 59));
@@ -4115,6 +4191,10 @@ void main() {
     expect(tester.takeException(), isNull);
     expect(
       find.byKey(const ValueKey('motivationVideoIntervalSegmentedButton')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('motivationSettingsApplyButton')),
       findsOneWidget,
     );
   });

@@ -6,6 +6,8 @@ class CommonTexts implements CommonTextSet {
   const CommonTexts();
 
   String get appTitle => '냠냠 라이더';
+  String get apply => '적용';
+  String get cancel => '취소';
   String get defaultChildName => '지율';
   String get complete => '완료';
   String get home => '홈으로';

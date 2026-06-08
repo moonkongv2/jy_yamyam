@@ -6,6 +6,8 @@ class EnCommonTexts implements CommonTextSet {
   const EnCommonTexts();
 
   String get appTitle => 'Yamyam Rider';
+  String get apply => 'Apply';
+  String get cancel => 'Cancel';
   String get defaultChildName => 'Jiyul';
   String get complete => 'Done';
   String get home => 'Home';

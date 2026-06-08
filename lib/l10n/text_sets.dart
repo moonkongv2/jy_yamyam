@@ -2,6 +2,8 @@ import '../models/meal_completion_status.dart';
 
 abstract interface class CommonTextSet {
   String get appTitle;
+  String get apply;
+  String get cancel;
   String get defaultChildName;
   String get complete;
   String get home;

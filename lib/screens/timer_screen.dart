@@ -436,23 +436,21 @@ class _TimerScreenState extends State<TimerScreen>
     ];
   }
 
-  Future<void> _openMotivationSettings() {
-    return showModalBottomSheet<void>(
+  Future<void> _openMotivationSettings() async {
+    final result = await showModalBottomSheet<_MotivationVideoSettingsResult>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.transparent,
-      builder: (context) => _MotivationVideoSettingsSheet(
-        config: _timerConfig,
-        onEnabledChanged: (value) {
-          _updateMotivationVideoSettings(enabled: value);
-        },
-        onCustomIntervalChanged: (value) {
-          _updateMotivationVideoSettings(useCustomInterval: value);
-        },
-        onIntervalChanged: (interval) {
-          _updateMotivationVideoSettings(interval: interval);
-        },
-      ),
+      builder: (context) => _MotivationVideoSettingsSheet(config: _timerConfig),
+    );
+    if (result == null || !mounted) {
+      return;
+    }
+
+    _updateMotivationVideoSettings(
+      enabled: result.enabled,
+      useCustomInterval: result.useCustomInterval,
+      interval: result.interval,
     );
   }
 
@@ -1232,18 +1230,22 @@ class _LandscapeIconButton extends StatelessWidget {
   }
 }
 
-class _MotivationVideoSettingsSheet extends StatefulWidget {
-  const _MotivationVideoSettingsSheet({
-    required this.config,
-    required this.onEnabledChanged,
-    required this.onCustomIntervalChanged,
-    required this.onIntervalChanged,
+class _MotivationVideoSettingsResult {
+  const _MotivationVideoSettingsResult({
+    required this.enabled,
+    required this.useCustomInterval,
+    required this.interval,
   });
 
+  final bool enabled;
+  final bool useCustomInterval;
+  final Duration interval;
+}
+
+class _MotivationVideoSettingsSheet extends StatefulWidget {
+  const _MotivationVideoSettingsSheet({required this.config});
+
   final MealTimerConfig config;
-  final ValueChanged<bool> onEnabledChanged;
-  final ValueChanged<bool> onCustomIntervalChanged;
-  final ValueChanged<Duration> onIntervalChanged;
 
   @override
   State<_MotivationVideoSettingsSheet> createState() =>
@@ -1270,10 +1272,20 @@ class _MotivationVideoSettingsSheetState
   Widget build(BuildContext context) {
     final texts = AppTexts.of(context);
     final bottomPadding = MediaQuery.paddingOf(context).bottom;
-    final maxSheetHeight = math.max(
-      240.0,
-      MediaQuery.sizeOf(context).height - bottomPadding - AppSpacing.md * 2,
-    );
+    final screenSize = MediaQuery.sizeOf(context);
+    final isLandscape = screenSize.width > screenSize.height;
+    final maxSheetHeight = isLandscape
+        ? screenSize.height * 0.78
+        : math.max(
+            240.0,
+            screenSize.height - bottomPadding - AppSpacing.md * 2,
+          );
+    final sheetBottomPadding = isLandscape
+        ? math.max(AppSpacing.sm, bottomPadding)
+        : AppSpacing.md + bottomPadding;
+    final contentVerticalPadding = isLandscape ? AppSpacing.xs : AppSpacing.sm;
+    final sectionBottomPadding = isLandscape ? AppSpacing.sm : AppSpacing.lg;
+    final actionBottomPadding = isLandscape ? AppSpacing.sm : AppSpacing.lg;
     final selectedMinutes = _interval.inMinutes;
 
     return SafeArea(
@@ -1283,7 +1295,7 @@ class _MotivationVideoSettingsSheetState
           AppSpacing.md,
           0,
           AppSpacing.md,
-          AppSpacing.md + bottomPadding,
+          sheetBottomPadding,
         ),
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: maxSheetHeight),
@@ -1299,22 +1311,31 @@ class _MotivationVideoSettingsSheetState
               clipBehavior: Clip.antiAlias,
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  padding: EdgeInsets.symmetric(
+                    vertical: contentVerticalPadding,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SwitchListTile(
                         key: const ValueKey('motivationVideoEnabledSwitch'),
+                        dense: isLandscape,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
                         title: Text(texts.settings.motivationVideoEnabled),
                         value: _enabled,
                         onChanged: (value) {
                           setState(() => _enabled = value);
-                          widget.onEnabledChanged(value);
                         },
                       ),
                       SwitchListTile(
                         key: const ValueKey(
                           'motivationVideoCustomIntervalSwitch',
+                        ),
+                        dense: isLandscape,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
                         ),
                         title: Text(
                           texts.settings.motivationVideoCustomInterval,
@@ -1323,17 +1344,16 @@ class _MotivationVideoSettingsSheetState
                         onChanged: _enabled
                             ? (value) {
                                 setState(() => _useCustomInterval = value);
-                                widget.onCustomIntervalChanged(value);
                               }
                             : null,
                       ),
                       if (_enabled && _useCustomInterval)
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(
+                          padding: EdgeInsets.fromLTRB(
                             AppSpacing.lg,
                             AppSpacing.sm,
                             AppSpacing.lg,
-                            AppSpacing.lg,
+                            sectionBottomPadding,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1370,12 +1390,54 @@ class _MotivationVideoSettingsSheetState
                                     minutes: selected.first,
                                   );
                                   setState(() => _interval = interval);
-                                  widget.onIntervalChanged(interval);
                                 },
                               ),
                             ],
                           ),
                         ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          AppSpacing.xs,
+                          AppSpacing.lg,
+                          actionBottomPadding,
+                        ),
+                        child: Wrap(
+                          alignment: WrapAlignment.end,
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.sm,
+                          children: [
+                            TextButton(
+                              key: const ValueKey(
+                                'motivationSettingsCancelButton',
+                              ),
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text(texts.common.cancel),
+                            ),
+                            FilledButton(
+                              key: const ValueKey(
+                                'motivationSettingsApplyButton',
+                              ),
+                              style: FilledButton.styleFrom(
+                                minimumSize: const Size(120, 48),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.xl,
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).pop(
+                                  _MotivationVideoSettingsResult(
+                                    enabled: _enabled,
+                                    useCustomInterval: _useCustomInterval,
+                                    interval: _interval,
+                                  ),
+                                );
+                              },
+                              child: Text(texts.common.apply),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
