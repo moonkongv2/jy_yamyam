@@ -22,6 +22,7 @@ import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
 import '../utils/duration_format.dart';
+import '../utils/motivation_video_schedule.dart' as motivation_schedule;
 import '../widgets/road_painter.dart';
 import '../widgets/road_view.dart';
 import '../widgets/timer_control_bar.dart';
@@ -32,8 +33,6 @@ const _compactLandscapeControlsWidth = 72.0;
 const _compactLandscapeControlsRightInset =
     _compactLandscapeControlsWidth + AppSpacing.xl;
 const motivationMinimumVideoInterval = Duration(seconds: 10);
-const motivationLongCourseThreshold = Duration(minutes: 30);
-const motivationLongCourseVideoInterval = Duration(minutes: 3);
 const motivationVoiceStartDelay = Duration(milliseconds: 350);
 
 Duration finishDriveDurationForProgress(double startProgress) {
@@ -93,44 +92,30 @@ int? nextMotivationMilestoneForProgress(
   double progress,
   Set<int> shownMilestones,
 ) {
-  if (progress <= 0 || progress >= 1) {
-    return null;
-  }
-
-  final reachedPercent = (progress * 100).floor();
-  for (var milestone = 10; milestone <= 90; milestone += 10) {
-    if (reachedPercent >= milestone && !shownMilestones.contains(milestone)) {
-      return milestone;
-    }
-  }
-
-  return null;
+  return motivation_schedule.nextMotivationMilestoneForProgress(
+    progress,
+    shownMilestones,
+  );
 }
 
 bool usesTimedMotivationSchedule(Duration duration) {
-  return duration > motivationLongCourseThreshold;
+  return motivation_schedule.MotivationVideoSchedule.defaults.usesTimedSchedule(
+    duration,
+  );
 }
 
 int? nextTimedMotivationMilestoneForElapsed({
   required Duration elapsed,
   required Duration duration,
   required Set<int> shownMilestones,
-  Duration interval = motivationLongCourseVideoInterval,
+  Duration interval = motivation_schedule.motivationDefaultTimedVideoInterval,
 }) {
-  if (interval <= Duration.zero ||
-      elapsed <= Duration.zero ||
-      elapsed >= duration ||
-      elapsed < interval) {
-    return null;
-  }
-
-  final reachedIntervals = elapsed.inMilliseconds ~/ interval.inMilliseconds;
-  final milestone = reachedIntervals * interval.inMinutes;
-  if (milestone <= 0 || shownMilestones.contains(milestone)) {
-    return null;
-  }
-
-  return milestone;
+  return motivation_schedule.nextTimedMotivationMilestoneForElapsed(
+    elapsed: elapsed,
+    duration: duration,
+    shownMilestones: shownMilestones,
+    interval: interval,
+  );
 }
 
 int? nextMotivationMilestoneForTimer({
@@ -139,15 +124,13 @@ int? nextMotivationMilestoneForTimer({
   required double progress,
   required Set<int> shownMilestones,
 }) {
-  if (usesTimedMotivationSchedule(duration)) {
-    return nextTimedMotivationMilestoneForElapsed(
-      elapsed: elapsed,
-      duration: duration,
-      shownMilestones: shownMilestones,
-    );
-  }
-
-  return nextMotivationMilestoneForProgress(progress, shownMilestones);
+  return motivation_schedule.MotivationVideoSchedule.defaults
+      .nextMilestoneForTimer(
+        duration: duration,
+        elapsed: elapsed,
+        progress: progress,
+        shownMilestones: shownMilestones,
+      );
 }
 
 String timerArrivalDialogMessage({
@@ -316,10 +299,12 @@ class _TimerScreenState extends State<TimerScreen>
       return;
     }
 
-    final usesTimedSchedule = usesTimedMotivationSchedule(
+    final motivationSchedule =
+        motivation_schedule.MotivationVideoSchedule.fromConfig(widget.config);
+    final usesTimedSchedule = motivationSchedule.usesTimedSchedule(
       widget.config.duration,
     );
-    final milestone = nextMotivationMilestoneForTimer(
+    final milestone = motivationSchedule.nextMilestoneForTimer(
       duration: widget.config.duration,
       elapsed: _controller.elapsed,
       progress: _controller.progress,

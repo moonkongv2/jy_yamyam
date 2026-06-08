@@ -35,6 +35,8 @@ import 'package:jy_yamyam/services/local_settings_service.dart';
 import 'package:jy_yamyam/services/motivation_audio_service.dart';
 import 'package:jy_yamyam/services/orientation_service.dart';
 import 'package:jy_yamyam/services/screen_awake_service.dart';
+import 'package:jy_yamyam/utils/motivation_video_schedule.dart'
+    as motivation_schedule;
 import 'package:jy_yamyam/widgets/app/app_bouncy_button.dart';
 import 'package:jy_yamyam/widgets/avatar/avatar_composite_preview.dart';
 import 'package:jy_yamyam/widgets/road_painter.dart';
@@ -899,6 +901,128 @@ void main() {
       );
     },
   );
+
+  test('Motivation schedule can be disabled from config', () {
+    final schedule = motivation_schedule.MotivationVideoSchedule.fromConfig(
+      MealTimerConfig.defaults().copyWith(motivationVideoEnabled: false),
+    );
+
+    expect(schedule.usesTimedSchedule(const Duration(minutes: 60)), isFalse);
+    expect(
+      schedule.nextMilestoneForTimer(
+        duration: const Duration(minutes: 60),
+        elapsed: const Duration(minutes: 3),
+        progress: 0.05,
+        shownMilestones: {},
+      ),
+      isNull,
+    );
+    expect(
+      schedule.nextMilestoneForTimer(
+        duration: const Duration(minutes: 15),
+        elapsed: const Duration(minutes: 2),
+        progress: 0.10,
+        shownMilestones: {},
+      ),
+      isNull,
+    );
+  });
+
+  test('Custom motivation interval ignores percent milestones', () {
+    final schedule = motivation_schedule.MotivationVideoSchedule.fromConfig(
+      MealTimerConfig.defaults().copyWith(
+        motivationVideoUseCustomInterval: true,
+        motivationVideoInterval: const Duration(minutes: 5),
+      ),
+    );
+
+    expect(schedule.usesTimedSchedule(const Duration(minutes: 15)), isTrue);
+    expect(
+      schedule.nextMilestoneForTimer(
+        duration: const Duration(minutes: 15),
+        elapsed: const Duration(minutes: 2),
+        progress: 0.10,
+        shownMilestones: {},
+      ),
+      isNull,
+    );
+    expect(
+      schedule.nextMilestoneForTimer(
+        duration: const Duration(minutes: 15),
+        elapsed: const Duration(minutes: 5),
+        progress: 0.33,
+        shownMilestones: {},
+      ),
+      5,
+    );
+    expect(
+      schedule.nextMilestoneForTimer(
+        duration: const Duration(minutes: 15),
+        elapsed: const Duration(minutes: 10),
+        progress: 0.66,
+        shownMilestones: {5},
+      ),
+      10,
+    );
+  });
+
+  test('Custom motivation interval longer than timer duration never plays', () {
+    final schedule = motivation_schedule.MotivationVideoSchedule.fromConfig(
+      MealTimerConfig.defaults().copyWith(
+        motivationVideoUseCustomInterval: true,
+        motivationVideoInterval: const Duration(minutes: 10),
+      ),
+    );
+
+    expect(
+      schedule.nextMilestoneForTimer(
+        duration: const Duration(minutes: 5),
+        elapsed: const Duration(minutes: 4, seconds: 59),
+        progress: 0.99,
+        shownMilestones: {},
+      ),
+      isNull,
+    );
+    expect(
+      schedule.nextMilestoneForTimer(
+        duration: const Duration(minutes: 5),
+        elapsed: const Duration(minutes: 5),
+        progress: 1,
+        shownMilestones: {},
+      ),
+      isNull,
+    );
+  });
+
+  test('Timed motivation schedule can restart from an elapsed offset', () {
+    final schedule = motivation_schedule.MotivationVideoSchedule.fromConfig(
+      MealTimerConfig.defaults().copyWith(
+        motivationVideoUseCustomInterval: true,
+        motivationVideoInterval: const Duration(minutes: 3),
+      ),
+    );
+
+    expect(
+      schedule.nextMilestoneForTimer(
+        duration: const Duration(minutes: 60),
+        elapsed: const Duration(minutes: 10, seconds: 59),
+        progress: 0.18,
+        shownMilestones: {},
+        scheduleStartedAt: const Duration(minutes: 8),
+      ),
+      isNull,
+    );
+    expect(
+      schedule.nextMilestoneForTimer(
+        duration: const Duration(minutes: 60),
+        elapsed: const Duration(minutes: 11),
+        progress: 0.18,
+        shownMilestones: {},
+        scheduleStartedAt: const Duration(minutes: 8),
+      ),
+      11,
+    );
+  });
 
   test('Motivation video interval requires at least 10 seconds', () {
     expect(
@@ -3434,6 +3558,105 @@ void main() {
       await tester.pump();
     },
   );
+
+  testWidgets(
+    'Timer screen custom motivation interval ignores percent milestones',
+    (tester) async {
+      var now = DateTime(2026);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ko'),
+          supportedLocales: const [Locale('ko'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          home: TimerScreen(
+            config: MealTimerConfig.defaults().copyWith(
+              duration: const Duration(minutes: 15),
+              soundEnabled: false,
+              motivationVideoUseCustomInterval: true,
+              motivationVideoInterval: const Duration(minutes: 5),
+            ),
+            mealProgressService: LocalMealProgressService(),
+            now: () => now,
+            onConfigChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pump();
+
+      now = now.add(const Duration(minutes: 2));
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(
+        find.byKey(const ValueKey('motivationVideoBubble_10')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('motivationVideoBubble_5')),
+        findsNothing,
+      );
+
+      now = now.add(const Duration(minutes: 3));
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(
+        find.byKey(const ValueKey('motivationVideoBubble_5')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('motivationVideoBubble_10')),
+        findsNothing,
+      );
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
+
+  testWidgets('Timer screen skips motivation videos when disabled', (
+    tester,
+  ) async {
+    var now = DateTime(2026);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(minutes: 60),
+            soundEnabled: false,
+            motivationVideoEnabled: false,
+          ),
+          mealProgressService: LocalMealProgressService(),
+          now: () => now,
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    now = now.add(const Duration(minutes: 3));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(find.byKey(const ValueKey('motivationVideoBubble_3')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('motivationVideoBubble_10')),
+      findsNothing,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
 
   testWidgets('Timer screen keeps vehicle fixed when paused', (tester) async {
     tester.view.physicalSize = const Size(852, 393);
