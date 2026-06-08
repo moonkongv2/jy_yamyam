@@ -1472,6 +1472,68 @@ void main() {
     expect(changedConfig, isNull);
   });
 
+  testWidgets(
+    'Timer motivation settings do not overwrite default meal duration',
+    (tester) async {
+      MealTimerConfig? changedConfig;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ko'),
+          supportedLocales: const [Locale('ko'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          home: HomeScreen(
+            config: MealTimerConfig.defaults().copyWith(
+              childName: '지율',
+              duration: const Duration(minutes: 35),
+            ),
+            mealProgressService: LocalMealProgressService(),
+            onConfigChanged: (config) => changedConfig = config,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final quickCourseButton = tester.widget<InkWell>(
+        find
+            .ancestor(of: find.text('25분 코스'), matching: find.byType(InkWell))
+            .first,
+      );
+      quickCourseButton.onTap!();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(
+        find.byKey(const ValueKey('randomStartMealIngredientsButton')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(find.byType(TimerScreen), findsOneWidget);
+      expect(
+        tester.widget<TimerScreen>(find.byType(TimerScreen)).config.duration,
+        const Duration(minutes: 25),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('motivationSettingsButton')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      tester
+          .widget<SwitchListTile>(
+            find.byKey(const ValueKey('motivationVideoEnabledSwitch')),
+          )
+          .onChanged!(false);
+      await tester.pump();
+
+      expect(changedConfig?.duration, const Duration(minutes: 35));
+      expect(changedConfig?.motivationVideoEnabled, isFalse);
+      expect(changedConfig?.courseIngredientIds, isEmpty);
+    },
+  );
+
   testWidgets('Home screen vehicle sections render confirmed custom avatar', (
     tester,
   ) async {
@@ -3617,6 +3679,123 @@ void main() {
     },
   );
 
+  testWidgets('Timer screen closes active motivation video when disabled', (
+    tester,
+  ) async {
+    MealTimerConfig? changedConfig;
+    var now = DateTime(2026);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(minutes: 60),
+            soundEnabled: false,
+          ),
+          mealProgressService: LocalMealProgressService(),
+          now: () => now,
+          onConfigChanged: (config) => changedConfig = config,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    now = now.add(const Duration(minutes: 3));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(
+      find.byKey(const ValueKey('motivationVideoBubble_3')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('motivationSettingsButton')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    tester
+        .widget<SwitchListTile>(
+          find.byKey(const ValueKey('motivationVideoEnabledSwitch')),
+        )
+        .onChanged!(false);
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('motivationVideoBubble_3')), findsNothing);
+    expect(changedConfig?.motivationVideoEnabled, isFalse);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets(
+    'Timer screen restarts custom motivation interval from change time',
+    (tester) async {
+      var now = DateTime(2026);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ko'),
+          supportedLocales: const [Locale('ko'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          home: TimerScreen(
+            config: MealTimerConfig.defaults().copyWith(
+              duration: const Duration(minutes: 60),
+              soundEnabled: false,
+            ),
+            mealProgressService: LocalMealProgressService(),
+            now: () => now,
+            onConfigChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pump();
+
+      now = now.add(const Duration(minutes: 2));
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.tap(find.byKey(const ValueKey('motivationSettingsButton')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      tester
+          .widget<SwitchListTile>(
+            find.byKey(const ValueKey('motivationVideoCustomIntervalSwitch')),
+          )
+          .onChanged!(true);
+      await tester.pump();
+
+      now = now.add(const Duration(minutes: 2, seconds: 59));
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(
+        find.byKey(const ValueKey('motivationVideoBubble_3')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('motivationVideoBubble_5')),
+        findsNothing,
+      );
+
+      now = now.add(const Duration(seconds: 1));
+      await tester.pump(const Duration(milliseconds: 250));
+
+      expect(
+        find.byKey(const ValueKey('motivationVideoBubble_5')),
+        findsOneWidget,
+      );
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
+
   testWidgets('Timer screen skips motivation videos when disabled', (
     tester,
   ) async {
@@ -3904,6 +4083,41 @@ void main() {
       );
     },
   );
+
+  testWidgets('Timer motivation settings sheet scrolls in compact landscape', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(852, 393);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            motivationVideoUseCustomInterval: true,
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byKey(const ValueKey('motivationSettingsButton')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(tester.takeException(), isNull);
+    expect(
+      find.byKey(const ValueKey('motivationVideoIntervalSegmentedButton')),
+      findsOneWidget,
+    );
+  });
 
   testWidgets('Timer screen allows landscape only while mounted', (
     tester,

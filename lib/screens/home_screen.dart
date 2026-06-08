@@ -104,6 +104,17 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     widget.onConfigChanged(config);
   }
 
+  void _updateTimerRuntimeConfig(MealTimerConfig config) {
+    _updateConfig(
+      _config.copyWith(
+        motivationVideoEnabled: config.motivationVideoEnabled,
+        motivationVideoUseCustomInterval:
+            config.motivationVideoUseCustomInterval,
+        motivationVideoInterval: config.motivationVideoInterval,
+      ),
+    );
+  }
+
   Future<void> _startTimer(int minutes) async {
     final ingredientResult =
         await showModalBottomSheet<MealIngredientPickerResult>(
@@ -129,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         builder: (_) => TimerScreen(
           config: config,
           mealProgressService: widget.mealProgressService,
-          onConfigChanged: widget.onConfigChanged,
+          onConfigChanged: _updateTimerRuntimeConfig,
         ),
       ),
     );

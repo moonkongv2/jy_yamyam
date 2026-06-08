@@ -34,6 +34,11 @@ const _compactLandscapeControlsRightInset =
     _compactLandscapeControlsWidth + AppSpacing.xl;
 const motivationMinimumVideoInterval = Duration(seconds: 10);
 const motivationVoiceStartDelay = Duration(milliseconds: 350);
+const _motivationVideoIntervalOptions = [
+  Duration(minutes: 3),
+  Duration(minutes: 5),
+  Duration(minutes: 10),
+];
 
 Duration finishDriveDurationForProgress(double startProgress) {
   final remainingProgress = 1 - startProgress.clamp(0.0, 1.0).toDouble();
@@ -187,6 +192,7 @@ class _TimerScreenState extends State<TimerScreen>
   late final AnimationController _finishDriveController;
   late final MotivationAudioService _motivationAudioService;
   late final bool _ownsMotivationAudioService;
+  late MealTimerConfig _timerConfig;
   final math.Random _motivationRandom = math.Random();
   final Set<int> _shownMotivationMilestones = {};
   bool _arrivalPromptShown = false;
@@ -196,6 +202,7 @@ class _TimerScreenState extends State<TimerScreen>
   int? _activeMotivationMilestone;
   String? _activeMotivationVideoPath;
   Duration? _lastMotivationVideoShownAt;
+  Duration _motivationScheduleStartedAt = Duration.zero;
   Timer? _motivationVoiceTimer;
   Timer? _arrivalPromptTimer;
   bool _isFinishDriving = false;
@@ -207,6 +214,7 @@ class _TimerScreenState extends State<TimerScreen>
   @override
   void initState() {
     super.initState();
+    _timerConfig = widget.config;
     _motivationAudioService =
         widget.motivationAudioService ?? AudioplayersMotivationAudioService();
     _ownsMotivationAudioService = widget.motivationAudioService == null;
@@ -222,6 +230,9 @@ class _TimerScreenState extends State<TimerScreen>
   @override
   void didUpdateWidget(covariant TimerScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.config != widget.config) {
+      _timerConfig = widget.config;
+    }
     if (oldWidget.screenAwakeService != widget.screenAwakeService &&
         _screenAwakeEnabled) {
       unawaited(oldWidget.screenAwakeService.setEnabled(false));
@@ -300,15 +311,16 @@ class _TimerScreenState extends State<TimerScreen>
     }
 
     final motivationSchedule =
-        motivation_schedule.MotivationVideoSchedule.fromConfig(widget.config);
+        motivation_schedule.MotivationVideoSchedule.fromConfig(_timerConfig);
     final usesTimedSchedule = motivationSchedule.usesTimedSchedule(
-      widget.config.duration,
+      _timerConfig.duration,
     );
     final milestone = motivationSchedule.nextMilestoneForTimer(
-      duration: widget.config.duration,
+      duration: _timerConfig.duration,
       elapsed: _controller.elapsed,
       progress: _controller.progress,
       shownMilestones: _shownMotivationMilestones,
+      scheduleStartedAt: _motivationScheduleStartedAt,
     );
     if (milestone == null) {
       return;
@@ -321,7 +333,7 @@ class _TimerScreenState extends State<TimerScreen>
     }
 
     final videoPath = motivationVideoAssetPathForVehicle(
-      vehicleId: widget.config.vehicleId,
+      vehicleId: _timerConfig.vehicleId,
       milestone: milestone,
       nextInt: _motivationRandom.nextInt,
       allowTimedMilestone: usesTimedSchedule,
@@ -350,14 +362,14 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _maybePlayMotivationVoice() {
-    if (!widget.config.soundEnabled) {
+    if (!_timerConfig.soundEnabled) {
       return;
     }
 
     final languageCode = Localizations.localeOf(context).languageCode;
     final voicePath = motivationVoiceAssetPathForVehicle(
-      soundEnabled: widget.config.soundEnabled,
-      vehicleId: widget.config.vehicleId,
+      soundEnabled: _timerConfig.soundEnabled,
+      vehicleId: _timerConfig.vehicleId,
       languageCode: languageCode,
       nextInt: _motivationRandom.nextInt,
     );
@@ -374,6 +386,74 @@ class _TimerScreenState extends State<TimerScreen>
       debugPrint('Unable to play motivation voice $voicePath: $error');
       debugPrintStack(stackTrace: stackTrace);
     }
+  }
+
+  void _updateMotivationVideoSettings({
+    bool? enabled,
+    bool? useCustomInterval,
+    Duration? interval,
+  }) {
+    final nextConfig = _timerConfig.copyWith(
+      motivationVideoEnabled: enabled,
+      motivationVideoUseCustomInterval: useCustomInterval,
+      motivationVideoInterval: interval,
+    );
+    final schedule = motivation_schedule.MotivationVideoSchedule.fromConfig(
+      nextConfig,
+    );
+
+    setState(() {
+      _timerConfig = nextConfig;
+      _motivationScheduleStartedAt = _controller.elapsed;
+      _lastMotivationVideoShownAt = _controller.elapsed;
+      _shownMotivationMilestones
+        ..clear()
+        ..addAll(_shownMilestonesForCurrentSchedule(schedule));
+      if (!nextConfig.motivationVideoEnabled) {
+        _activeMotivationMilestone = null;
+        _activeMotivationVideoPath = null;
+      }
+    });
+
+    if (!nextConfig.motivationVideoEnabled) {
+      _motivationVoiceTimer?.cancel();
+      unawaited(_motivationAudioService.stop());
+    }
+    widget.onConfigChanged(nextConfig);
+  }
+
+  Iterable<int> _shownMilestonesForCurrentSchedule(
+    motivation_schedule.MotivationVideoSchedule schedule,
+  ) {
+    if (schedule.usesTimedSchedule(_timerConfig.duration)) {
+      return const [];
+    }
+
+    final reachedPercent = (_controller.progress * 100).floor();
+    return [
+      for (var milestone = 10; milestone <= 90; milestone += 10)
+        if (reachedPercent >= milestone) milestone,
+    ];
+  }
+
+  Future<void> _openMotivationSettings() {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.transparent,
+      builder: (context) => _MotivationVideoSettingsSheet(
+        config: _timerConfig,
+        onEnabledChanged: (value) {
+          _updateMotivationVideoSettings(enabled: value);
+        },
+        onCustomIntervalChanged: (value) {
+          _updateMotivationVideoSettings(useCustomInterval: value);
+        },
+        onIntervalChanged: (interval) {
+          _updateMotivationVideoSettings(interval: interval);
+        },
+      ),
+    );
   }
 
   void _handleMotivationVideoFinished() {
@@ -451,7 +531,7 @@ class _TimerScreenState extends State<TimerScreen>
     final texts = AppTexts.of(context);
     final arrivalDialogMessage = timerArrivalDialogMessage(
       texts: texts.timer,
-      vehicleId: widget.config.vehicleId,
+      vehicleId: _timerConfig.vehicleId,
       languageCode: Localizations.localeOf(context).languageCode,
     );
     final confirmed = await showDialog<bool>(
@@ -550,7 +630,7 @@ class _TimerScreenState extends State<TimerScreen>
       MaterialPageRoute(
         builder: (_) => ResultScreen(
           result: result,
-          config: widget.config,
+          config: _timerConfig,
           mealProgressService: widget.mealProgressService,
           onConfigChanged: widget.onConfigChanged,
           orientationService: widget.orientationService,
@@ -678,6 +758,14 @@ class _TimerScreenState extends State<TimerScreen>
                     backgroundColor: AppColors.cream,
                     foregroundColor: AppColors.brown900,
                     elevation: 0,
+                    actions: [
+                      IconButton(
+                        key: const ValueKey('motivationSettingsButton'),
+                        tooltip: texts.settings.motivationVideoEnabled,
+                        icon: const Icon(Icons.video_settings_rounded),
+                        onPressed: _openMotivationSettings,
+                      ),
+                    ],
                   ),
             body: SafeArea(
               child: LayoutBuilder(
@@ -769,6 +857,7 @@ class _TimerScreenState extends State<TimerScreen>
                       vehicleLayer: landscapeVehicleLayer,
                       motivationVideoLayer: landscapeMotivationVideoLayer,
                       onBack: _confirmExit,
+                      onMotivationSettings: _openMotivationSettings,
                       controls: TimerControlBar(
                         isPaused: _controller.isPaused,
                         onPauseResume: _isFinishDriving
@@ -836,6 +925,7 @@ class _LandscapeTimerLayout extends StatelessWidget {
     required this.vehicleLayer,
     required this.motivationVideoLayer,
     required this.onBack,
+    required this.onMotivationSettings,
     required this.controls,
     required this.compactControls,
   });
@@ -846,6 +936,7 @@ class _LandscapeTimerLayout extends StatelessWidget {
   final Widget? vehicleLayer;
   final Widget? motivationVideoLayer;
   final VoidCallback onBack;
+  final VoidCallback onMotivationSettings;
   final Widget controls;
   final Widget compactControls;
 
@@ -871,6 +962,7 @@ class _LandscapeTimerLayout extends StatelessWidget {
             vehicleLayer: vehicleLayer,
             motivationVideoLayer: motivationVideoLayer,
             onBack: onBack,
+            onMotivationSettings: onMotivationSettings,
             compactControls: isCompactLandscape ? compactControls : null,
           );
 
@@ -1006,6 +1098,7 @@ class _LandscapeCourseCanvas extends StatelessWidget {
     required this.vehicleLayer,
     required this.motivationVideoLayer,
     required this.onBack,
+    required this.onMotivationSettings,
     this.compactControls,
   });
 
@@ -1015,6 +1108,7 @@ class _LandscapeCourseCanvas extends StatelessWidget {
   final Widget? vehicleLayer;
   final Widget? motivationVideoLayer;
   final VoidCallback onBack;
+  final VoidCallback onMotivationSettings;
   final Widget? compactControls;
 
   @override
@@ -1061,7 +1155,22 @@ class _LandscapeCourseCanvas extends StatelessWidget {
             Positioned(
               left: AppSpacing.md,
               top: AppSpacing.md,
-              child: _LandscapeBackButton(onPressed: onBack),
+              child: Row(
+                children: [
+                  _LandscapeIconButton(
+                    label: MaterialLocalizations.of(context).backButtonTooltip,
+                    icon: Icons.arrow_back_rounded,
+                    onPressed: onBack,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  _LandscapeIconButton(
+                    key: const ValueKey('motivationSettingsButton'),
+                    label: AppTexts.of(context).settings.motivationVideoEnabled,
+                    icon: Icons.video_settings_rounded,
+                    onPressed: onMotivationSettings,
+                  ),
+                ],
+              ),
             ),
             if (remainingTimeBadge != null)
               Positioned(
@@ -1091,9 +1200,16 @@ class _LandscapeCourseCanvas extends StatelessWidget {
   }
 }
 
-class _LandscapeBackButton extends StatelessWidget {
-  const _LandscapeBackButton({required this.onPressed});
+class _LandscapeIconButton extends StatelessWidget {
+  const _LandscapeIconButton({
+    super.key,
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
 
+  final String label;
+  final IconData icon;
   final VoidCallback onPressed;
 
   @override
@@ -1106,11 +1222,167 @@ class _LandscapeBackButton extends StatelessWidget {
         boxShadow: AppShadows.surface,
       ),
       child: IconButton(
-        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-        icon: const Icon(Icons.arrow_back_rounded),
+        tooltip: label,
+        icon: Icon(icon),
         color: AppColors.brown700,
         iconSize: 24,
         onPressed: onPressed,
+      ),
+    );
+  }
+}
+
+class _MotivationVideoSettingsSheet extends StatefulWidget {
+  const _MotivationVideoSettingsSheet({
+    required this.config,
+    required this.onEnabledChanged,
+    required this.onCustomIntervalChanged,
+    required this.onIntervalChanged,
+  });
+
+  final MealTimerConfig config;
+  final ValueChanged<bool> onEnabledChanged;
+  final ValueChanged<bool> onCustomIntervalChanged;
+  final ValueChanged<Duration> onIntervalChanged;
+
+  @override
+  State<_MotivationVideoSettingsSheet> createState() =>
+      _MotivationVideoSettingsSheetState();
+}
+
+class _MotivationVideoSettingsSheetState
+    extends State<_MotivationVideoSettingsSheet> {
+  late bool _enabled = widget.config.motivationVideoEnabled;
+  late bool _useCustomInterval = widget.config.motivationVideoUseCustomInterval;
+  late Duration _interval = _normalizedInterval(
+    widget.config.motivationVideoInterval,
+  );
+
+  static Duration _normalizedInterval(Duration interval) {
+    if (_motivationVideoIntervalOptions.contains(interval)) {
+      return interval;
+    }
+
+    return _motivationVideoIntervalOptions.first;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final texts = AppTexts.of(context);
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final maxSheetHeight = math.max(
+      240.0,
+      MediaQuery.sizeOf(context).height - bottomPadding - AppSpacing.md * 2,
+    );
+    final selectedMinutes = _interval.inMinutes;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          0,
+          AppSpacing.md,
+          AppSpacing.md + bottomPadding,
+        ),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxSheetHeight),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: AppColors.white,
+              borderRadius: AppRadius.card,
+              boxShadow: AppShadows.surface,
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              borderRadius: AppRadius.card,
+              clipBehavior: Clip.antiAlias,
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SwitchListTile(
+                        key: const ValueKey('motivationVideoEnabledSwitch'),
+                        title: Text(texts.settings.motivationVideoEnabled),
+                        value: _enabled,
+                        onChanged: (value) {
+                          setState(() => _enabled = value);
+                          widget.onEnabledChanged(value);
+                        },
+                      ),
+                      SwitchListTile(
+                        key: const ValueKey(
+                          'motivationVideoCustomIntervalSwitch',
+                        ),
+                        title: Text(
+                          texts.settings.motivationVideoCustomInterval,
+                        ),
+                        value: _useCustomInterval,
+                        onChanged: _enabled
+                            ? (value) {
+                                setState(() => _useCustomInterval = value);
+                                widget.onCustomIntervalChanged(value);
+                              }
+                            : null,
+                      ),
+                      if (_enabled && _useCustomInterval)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.lg,
+                            AppSpacing.sm,
+                            AppSpacing.lg,
+                            AppSpacing.lg,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                texts.settings.motivationVideoInterval,
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w800),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              SegmentedButton<int>(
+                                key: const ValueKey(
+                                  'motivationVideoIntervalSegmentedButton',
+                                ),
+                                segments: [
+                                  for (final interval
+                                      in _motivationVideoIntervalOptions)
+                                    ButtonSegment(
+                                      value: interval.inMinutes,
+                                      label: Text(
+                                        texts.settings
+                                            .motivationVideoIntervalSegmentLabel(
+                                              interval.inMinutes,
+                                            ),
+                                      ),
+                                    ),
+                                ],
+                                selected: {selectedMinutes},
+                                onSelectionChanged: (selected) {
+                                  if (selected.isEmpty) {
+                                    return;
+                                  }
+                                  final interval = Duration(
+                                    minutes: selected.first,
+                                  );
+                                  setState(() => _interval = interval);
+                                  widget.onIntervalChanged(interval);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
