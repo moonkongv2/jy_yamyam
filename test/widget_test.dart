@@ -598,6 +598,48 @@ void main() {
     );
   });
 
+  testWidgets('Success result screen uses portrait background after intro', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: ResultScreen(
+          result: _mealResult(completedBeforeArrival: true),
+          config: MealTimerConfig.defaults(),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          introControllerFactory: (_) {
+            return VideoPlayerController.asset(
+              'assets/videos/missing_result_success.mp4',
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('식사 완주 성공!'), findsOneWidget);
+    expect(
+      _assetImage('assets/images/result_success_bg_portrait.png'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('Failed result screen uses selected rider image in landscape', (
     tester,
   ) async {
@@ -685,6 +727,10 @@ void main() {
     final homeButton = find.widgetWithText(OutlinedButton, '홈으로');
 
     expect(find.text('식사 완주 성공!'), findsOneWidget);
+    expect(
+      _assetImage('assets/images/result_success_bg_landscape.png'),
+      findsOneWidget,
+    );
     expect(restartButton, findsOneWidget);
     expect(homeButton, findsOneWidget);
     expect(cardRect.contains(tester.getCenter(restartButton)), isTrue);

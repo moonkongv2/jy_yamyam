@@ -23,6 +23,10 @@ const _failedResultBackgroundLandscapePath =
     'assets/images/result_failed_bg_landscape.png';
 const _failedResultBackgroundPortraitPath =
     'assets/images/result_failed_bg_portrait.png';
+const _successResultBackgroundLandscapePath =
+    'assets/images/result_success_bg_landscape.png';
+const _successResultBackgroundPortraitPath =
+    'assets/images/result_success_bg_portrait.png';
 const _failureRiderImageBasePath = 'assets/images/riders';
 const _resultVideoPathsByVehicle = {
   'motorcycle': 'assets/videos/result_motorcycle_success.mp4',
@@ -200,7 +204,7 @@ class _ResultScreenState extends State<ResultScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          if (!mealCompleted) const _FailedResultBackground(),
+          _ResultBackground(mealCompleted: mealCompleted),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.xl),
@@ -209,6 +213,9 @@ class _ResultScreenState extends State<ResultScreen> {
                   final isCompactLandscape =
                       constraints.maxWidth > constraints.maxHeight &&
                       constraints.maxHeight < 430;
+                  final isPortraitSuccess =
+                      mealCompleted &&
+                      constraints.maxHeight >= constraints.maxWidth;
                   if (isCompactLandscape) {
                     return _CompactLandscapeResultLayout(
                       mealCompleted: mealCompleted,
@@ -233,14 +240,10 @@ class _ResultScreenState extends State<ResultScreen> {
                           children: [
                             const Spacer(),
                             Card(
-                              color: mealCompleted
-                                  ? null
-                                  : AppColors.transparent,
-                              shape: mealCompleted
-                                  ? null
-                                  : RoundedRectangleBorder(
-                                      borderRadius: AppRadius.card,
-                                    ),
+                              color: AppColors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: AppRadius.card,
+                              ),
                               child: Padding(
                                 padding: const EdgeInsets.all(AppSpacing.xxl),
                                 child: Column(
@@ -264,7 +267,11 @@ class _ResultScreenState extends State<ResultScreen> {
                                           ),
                                     ),
                                     if (mealCompleted) ...[
-                                      const SizedBox(height: AppSpacing.xl),
+                                      SizedBox(
+                                        height: isPortraitSuccess
+                                            ? AppSpacing.lg
+                                            : AppSpacing.xl,
+                                      ),
                                       FutureBuilder<RecordedMealSession>(
                                         future: _recordedSession,
                                         builder: (context, snapshot) {
@@ -275,6 +282,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                               _RewardResultBox(
                                                 rewards: recordedSession
                                                     ?.awardedRewards,
+                                                isCondensed: isPortraitSuccess,
                                               ),
                                               if (recordedSession != null &&
                                                   (recordedSession
@@ -301,7 +309,11 @@ class _ResultScreenState extends State<ResultScreen> {
                                           );
                                         },
                                       ),
-                                      const SizedBox(height: AppSpacing.xl),
+                                      SizedBox(
+                                        height: isPortraitSuccess
+                                            ? AppSpacing.lg
+                                            : AppSpacing.xl,
+                                      ),
                                     ] else
                                       const SizedBox(height: AppSpacing.lg),
                                     Text(
@@ -332,7 +344,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                 ),
                               ),
                             ),
-                            const Spacer(),
+                            Spacer(flex: isPortraitSuccess ? 2 : 1),
                             FilledButton.icon(
                               onPressed: () => _restart(context),
                               icon: const Icon(Icons.two_wheeler_rounded),
@@ -341,12 +353,10 @@ class _ResultScreenState extends State<ResultScreen> {
                             const SizedBox(height: AppSpacing.md),
                             OutlinedButton.icon(
                               onPressed: () => _goHome(context),
-                              style: mealCompleted
-                                  ? null
-                                  : OutlinedButton.styleFrom(
-                                      backgroundColor: AppColors.white,
-                                      side: BorderSide.none,
-                                    ),
+                              style: OutlinedButton.styleFrom(
+                                backgroundColor: AppColors.white,
+                                side: BorderSide.none,
+                              ),
                               icon: const Icon(Icons.home_rounded),
                               label: Text(texts.common.home),
                             ),
@@ -365,17 +375,24 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 }
 
-class _FailedResultBackground extends StatelessWidget {
-  const _FailedResultBackground();
+class _ResultBackground extends StatelessWidget {
+  const _ResultBackground({required this.mealCompleted});
+
+  final bool mealCompleted;
 
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final assetPath = constraints.maxWidth > constraints.maxHeight
-              ? _failedResultBackgroundLandscapePath
-              : _failedResultBackgroundPortraitPath;
+          final isLandscape = constraints.maxWidth > constraints.maxHeight;
+          final assetPath = mealCompleted
+              ? (isLandscape
+                    ? _successResultBackgroundLandscapePath
+                    : _successResultBackgroundPortraitPath)
+              : (isLandscape
+                    ? _failedResultBackgroundLandscapePath
+                    : _failedResultBackgroundPortraitPath);
 
           return Opacity(
             opacity: 0.60,
@@ -423,10 +440,8 @@ class _CompactLandscapeResultLayout extends StatelessWidget {
       child: Card(
         key: const ValueKey('compactLandscapeResultCard'),
         margin: EdgeInsets.zero,
-        color: mealCompleted ? null : AppColors.transparent,
-        shape: mealCompleted
-            ? null
-            : RoundedRectangleBorder(borderRadius: AppRadius.card),
+        color: AppColors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xl),
           child: Row(
@@ -542,12 +557,10 @@ class _CompactLandscapeResultLayout extends StatelessWidget {
                                 height: 54,
                                 child: OutlinedButton.icon(
                                   onPressed: onHome,
-                                  style: mealCompleted
-                                      ? null
-                                      : OutlinedButton.styleFrom(
-                                          backgroundColor: AppColors.white,
-                                          side: BorderSide.none,
-                                        ),
+                                  style: OutlinedButton.styleFrom(
+                                    backgroundColor: AppColors.white,
+                                    side: BorderSide.none,
+                                  ),
                                   icon: const Icon(Icons.home_rounded),
                                   label: Text(texts.common.home),
                                 ),
@@ -775,10 +788,15 @@ class _ResultIntroScreen extends StatelessWidget {
 }
 
 class _RewardResultBox extends StatelessWidget {
-  const _RewardResultBox({required this.rewards, this.isCompact = false});
+  const _RewardResultBox({
+    required this.rewards,
+    this.isCompact = false,
+    this.isCondensed = false,
+  });
 
   final List<RewardDefinition>? rewards;
   final bool isCompact;
+  final bool isCondensed;
 
   @override
   Widget build(BuildContext context) {
@@ -795,8 +813,16 @@ class _RewardResultBox extends StatelessWidget {
       ),
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: isCompact ? AppSpacing.lg : AppSpacing.xl,
-          vertical: isCompact ? AppSpacing.md : AppSpacing.lg,
+          horizontal: isCompact
+              ? AppSpacing.lg
+              : isCondensed
+              ? AppSpacing.lg
+              : AppSpacing.xl,
+          vertical: isCompact
+              ? AppSpacing.md
+              : isCondensed
+              ? AppSpacing.md
+              : AppSpacing.lg,
         ),
         child: rewards == null
             ? Text(
@@ -817,11 +843,23 @@ class _RewardResultBox extends StatelessWidget {
             : Wrap(
                 alignment: WrapAlignment.center,
                 runAlignment: WrapAlignment.center,
-                spacing: isCompact ? AppSpacing.md : AppSpacing.lg,
-                runSpacing: isCompact ? AppSpacing.sm : AppSpacing.lg,
+                spacing: isCompact
+                    ? AppSpacing.md
+                    : isCondensed
+                    ? AppSpacing.md
+                    : AppSpacing.lg,
+                runSpacing: isCompact
+                    ? AppSpacing.sm
+                    : isCondensed
+                    ? AppSpacing.md
+                    : AppSpacing.lg,
                 children: [
                   for (final reward in rewards)
-                    _RewardBadge(reward: reward, isCompact: isCompact),
+                    _RewardBadge(
+                      reward: reward,
+                      isCompact: isCompact,
+                      isCondensed: isCondensed,
+                    ),
                 ],
               ),
       ),
@@ -830,10 +868,15 @@ class _RewardResultBox extends StatelessWidget {
 }
 
 class _RewardBadge extends StatelessWidget {
-  const _RewardBadge({required this.reward, this.isCompact = false});
+  const _RewardBadge({
+    required this.reward,
+    this.isCompact = false,
+    this.isCondensed = false,
+  });
 
   final RewardDefinition reward;
   final bool isCompact;
+  final bool isCondensed;
 
   @override
   Widget build(BuildContext context) {
@@ -934,9 +977,9 @@ class _RewardBadge extends StatelessWidget {
       );
     }
 
-    const stickerSize = 64.0;
+    final stickerSize = isCondensed ? 58.0 : 64.0;
     return SizedBox(
-      width: 116,
+      width: isCondensed ? 104 : 116,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
