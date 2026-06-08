@@ -19,6 +19,7 @@ import 'reward_goal_screen.dart';
 import 'timer_screen.dart';
 
 const _fallbackSuccessVideoPath = 'assets/videos/result_motorcycle_success.mp4';
+const _failureRiderImageBasePath = 'assets/images/riders';
 const _resultVideoPathsByVehicle = {
   'motorcycle': 'assets/videos/result_motorcycle_success.mp4',
   'fire_truck': 'assets/videos/result_fire_truck_success.mp4',
@@ -36,6 +37,10 @@ const _resultVideoPathsByVehicle = {
 
 String resultVideoAssetPathForVehicle({required String vehicleId}) {
   return _resultVideoPathsByVehicle[vehicleId] ?? _fallbackSuccessVideoPath;
+}
+
+String failureRiderAssetPathForVehicle({required String vehicleId}) {
+  return '$_failureRiderImageBasePath/rider_$vehicleId.png';
 }
 
 BoxFit resultIntroMediaFitForSize(Size size) {
@@ -175,6 +180,9 @@ class _ResultScreenState extends State<ResultScreen> {
   Widget build(BuildContext context) {
     final mealCompleted = widget.result.mealCompleted;
     final texts = AppTexts.of(context);
+    final failureRiderAssetPath = failureRiderAssetPathForVehicle(
+      vehicleId: widget.config.vehicleId,
+    );
 
     final introController = _introController;
     if (!_introFinished && introController != null) {
@@ -200,6 +208,7 @@ class _ResultScreenState extends State<ResultScreen> {
                   recordedSession: _recordedSession,
                   mealProgressService: widget.mealProgressService,
                   orientationService: widget.orientationService,
+                  failureRiderAssetPath: failureRiderAssetPath,
                   onRestart: () => _restart(context),
                   onHome: () => _goHome(context),
                 );
@@ -218,6 +227,14 @@ class _ResultScreenState extends State<ResultScreen> {
                             padding: const EdgeInsets.all(AppSpacing.xxl),
                             child: Column(
                               children: [
+                                if (!mealCompleted) ...[
+                                  _FailureRiderImage(
+                                    assetPath: failureRiderAssetPath,
+                                    maxSize: 240,
+                                    fallbackIconSize: 96,
+                                  ),
+                                  const SizedBox(height: AppSpacing.lg),
+                                ],
                                 Text(
                                   texts.result.title(mealCompleted),
                                   textAlign: TextAlign.center,
@@ -315,6 +332,7 @@ class _CompactLandscapeResultLayout extends StatelessWidget {
     required this.recordedSession,
     required this.mealProgressService,
     required this.orientationService,
+    required this.failureRiderAssetPath,
     required this.onRestart,
     required this.onHome,
   });
@@ -323,6 +341,7 @@ class _CompactLandscapeResultLayout extends StatelessWidget {
   final Future<RecordedMealSession> recordedSession;
   final LocalMealProgressService mealProgressService;
   final OrientationService orientationService;
+  final String failureRiderAssetPath;
   final VoidCallback onRestart;
   final VoidCallback onHome;
 
@@ -382,10 +401,10 @@ class _CompactLandscapeResultLayout extends StatelessWidget {
                         },
                       )
                     : Center(
-                        child: Icon(
-                          Icons.sentiment_satisfied_alt_rounded,
-                          color: AppColors.primary,
-                          size: 88,
+                        child: _FailureRiderImage(
+                          assetPath: failureRiderAssetPath,
+                          maxSize: 220,
+                          fallbackIconSize: 88,
                         ),
                       ),
               ),
@@ -462,6 +481,36 @@ class _CompactLandscapeResultLayout extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FailureRiderImage extends StatelessWidget {
+  const _FailureRiderImage({
+    required this.assetPath,
+    required this.maxSize,
+    required this.fallbackIconSize,
+  });
+
+  final String assetPath;
+  final double maxSize;
+  final double fallbackIconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxSize, maxHeight: maxSize),
+      child: Image.asset(
+        assetPath,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) {
+          return Icon(
+            Icons.sentiment_satisfied_alt_rounded,
+            color: AppColors.primary,
+            size: fallbackIconSize,
+          );
+        },
       ),
     );
   }

@@ -573,6 +573,10 @@ void main() {
     expect(find.byKey(const ValueKey('resultIntroScreen')), findsNothing);
     expect(find.text('아쉽지만 조금 늦었어'), findsOneWidget);
     expect(find.text('오토바이가 먼저 지나갔어.'), findsOneWidget);
+    expect(
+      _assetImage(failureRiderAssetPathForVehicle(vehicleId: 'motorcycle')),
+      findsOneWidget,
+    );
 
     final snapshot = await service.loadSnapshot();
     expect(snapshot.history, hasLength(1));
@@ -580,6 +584,46 @@ void main() {
     expect(
       snapshot.history.single.completionStatus,
       MealCompletionStatus.notCompleted,
+    );
+  });
+
+  testWidgets('Failed result screen uses selected rider image in landscape', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(852, 393);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: ResultScreen(
+          result: _mealResult(mealCompleted: false),
+          config: MealTimerConfig.defaults().copyWith(vehicleId: 'bus'),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('compactLandscapeResultCard')),
+      findsOneWidget,
+    );
+    expect(
+      _assetImage(failureRiderAssetPathForVehicle(vehicleId: 'bus')),
+      findsOneWidget,
     );
   });
 
