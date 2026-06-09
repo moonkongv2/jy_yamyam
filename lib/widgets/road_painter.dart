@@ -426,6 +426,13 @@ class RoadPainter extends CustomPainter {
   static const skyPathCloudWidth = 38.0;
   static const skyFlowPatternLength = skyPathCloudGap;
   static const skyPathCloudAnimationDuration = Duration(milliseconds: 4800);
+  static const waterRippleVerticalGap = 92.0;
+  static const waterRippleMarkWidth = 42.0;
+  static const waterWaveWidth = 26.0;
+  static const waterWaveGap = 28.0;
+  static const waterWavePatternLength = waterWaveWidth + waterWaveGap;
+  static const waterWaveStrokeWidth = 2.8;
+  static const waterWaveAnimationDuration = Duration(milliseconds: 2600);
 
   final double progress;
   final double laneDashPhase;
@@ -436,9 +443,19 @@ class RoadPainter extends CustomPainter {
   static double flowPatternLengthForCourseKind(VehicleCourseKind courseKind) {
     return switch (courseKind) {
       VehicleCourseKind.sky => skyFlowPatternLength,
+      VehicleCourseKind.water => waterWavePatternLength,
+      VehicleCourseKind.road || VehicleCourseKind.rail => laneDashPatternLength,
+    };
+  }
+
+  static Duration flowAnimationDurationForCourseKind(
+    VehicleCourseKind courseKind,
+  ) {
+    return switch (courseKind) {
+      VehicleCourseKind.water => waterWaveAnimationDuration,
       VehicleCourseKind.road ||
-      VehicleCourseKind.water ||
-      VehicleCourseKind.rail => laneDashPatternLength,
+      VehicleCourseKind.sky ||
+      VehicleCourseKind.rail => laneDashAnimationDuration,
     };
   }
 
@@ -456,6 +473,8 @@ class RoadPainter extends CustomPainter {
 
     if (courseKind == VehicleCourseKind.sky) {
       _drawSkyClouds(canvas, size);
+    } else if (courseKind == VehicleCourseKind.water) {
+      _drawWaterRipples(canvas, size);
     }
 
     final softShadowPaint = Paint()
@@ -507,8 +526,49 @@ class RoadPainter extends CustomPainter {
 
     if (courseKind == VehicleCourseKind.sky) {
       _drawSkyPathClouds(canvas, roadPath, skyPathCloudPhase);
+    } else if (courseKind == VehicleCourseKind.water) {
+      _drawWaterFlow(canvas, roadPath, visualStyle.laneColor, laneDashPhase);
     } else {
       _drawDashedPath(canvas, roadPath, lanePaint, laneDashPhase);
+    }
+  }
+
+  void _drawWaterRipples(Canvas canvas, Size size) {
+    final ripplePaint = Paint()
+      ..color = AppColors.white.withValues(alpha: 0.34)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 2.2;
+    final rowCount = (size.height / waterRippleVerticalGap).ceil() + 1;
+
+    for (var row = 0; row < rowCount; row += 1) {
+      final y = (row * waterRippleVerticalGap) + 42;
+      if (y > size.height + waterRippleVerticalGap) {
+        break;
+      }
+
+      final startRatio = switch (row % 4) {
+        0 => 0.12,
+        1 => 0.58,
+        2 => 0.30,
+        _ => 0.72,
+      };
+      final start = Offset(size.width * startRatio, y);
+      final path = Path()
+        ..moveTo(start.dx, start.dy)
+        ..quadraticBezierTo(
+          start.dx + (waterRippleMarkWidth * 0.25),
+          start.dy - 5,
+          start.dx + (waterRippleMarkWidth * 0.5),
+          start.dy,
+        )
+        ..quadraticBezierTo(
+          start.dx + (waterRippleMarkWidth * 0.75),
+          start.dy + 5,
+          start.dx + waterRippleMarkWidth,
+          start.dy,
+        );
+      canvas.drawPath(path, ripplePaint);
     }
   }
 
@@ -617,6 +677,49 @@ class RoadPainter extends CustomPainter {
         }
 
         distance += skyPathCloudGap;
+      }
+    }
+  }
+
+  void _drawWaterFlow(Canvas canvas, Path path, Color color, double phase) {
+    final wavePaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = waterWaveStrokeWidth;
+    final normalizedPhase = phase % waterWavePatternLength;
+
+    for (final metric in path.computeMetrics()) {
+      final startLimit = laneDashInset;
+      final endLimit = metric.length - laneDashInset;
+      if (endLimit <= startLimit) {
+        continue;
+      }
+
+      var waveIndex = 0;
+      var distance = startLimit - normalizedPhase;
+      while (distance < endLimit) {
+        final centerDistance = distance + (waterWaveWidth / 2);
+        if (centerDistance >= startLimit && centerDistance <= endLimit) {
+          final tangent = metric.getTangentForOffset(centerDistance);
+          if (tangent != null && tangent.vector.distance > 0) {
+            final direction = tangent.vector / tangent.vector.distance;
+            final normal = Offset(-direction.dy, direction.dx);
+            final amplitude = waveIndex.isEven ? 5.0 : -5.0;
+            final center = tangent.position;
+            final start = center - (direction * (waterWaveWidth * 0.5));
+            final end = center + (direction * (waterWaveWidth * 0.5));
+            final control = center + (normal * amplitude);
+            final wavePath = Path()
+              ..moveTo(start.dx, start.dy)
+              ..quadraticBezierTo(control.dx, control.dy, end.dx, end.dy);
+
+            canvas.drawPath(wavePath, wavePaint);
+          }
+        }
+
+        waveIndex += 1;
+        distance += waterWavePatternLength;
       }
     }
   }

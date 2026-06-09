@@ -243,7 +243,9 @@ class _AnimatedRoadPaintState extends State<_AnimatedRoadPaint>
     super.initState();
     _flowController = AnimationController(
       vsync: this,
-      duration: RoadPainter.laneDashAnimationDuration,
+      duration: RoadPainter.flowAnimationDurationForCourseKind(
+        widget.courseKind,
+      ),
     );
     _skyPathCloudController = AnimationController(
       vsync: this,
@@ -260,6 +262,11 @@ class _AnimatedRoadPaintState extends State<_AnimatedRoadPaint>
   @override
   void didUpdateWidget(covariant _AnimatedRoadPaint oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.courseKind != widget.courseKind) {
+      _flowController.duration = RoadPainter.flowAnimationDurationForCourseKind(
+        widget.courseKind,
+      );
+    }
     if (oldWidget.isMotionActive != widget.isMotionActive ||
         oldWidget.courseKind != widget.courseKind) {
       _syncController();

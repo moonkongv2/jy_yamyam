@@ -3083,7 +3083,7 @@ void main() {
     expect(railStyle.pathColor, isNot(roadStyle.pathColor));
   });
 
-  test('RoadPainter uses a dedicated sky path cloud flow', () {
+  test('RoadPainter uses course-specific flow patterns', () {
     expect(
       RoadPainter.flowPatternLengthForCourseKind(VehicleCourseKind.road),
       RoadPainter.laneDashPatternLength,
@@ -3093,7 +3093,15 @@ void main() {
       RoadPainter.skyFlowPatternLength,
     );
     expect(
+      RoadPainter.flowPatternLengthForCourseKind(VehicleCourseKind.water),
+      RoadPainter.waterWavePatternLength,
+    );
+    expect(
       RoadPainter.skyPathCloudAnimationDuration,
+      greaterThan(RoadPainter.laneDashAnimationDuration),
+    );
+    expect(
+      RoadPainter.waterWaveAnimationDuration,
       greaterThan(RoadPainter.laneDashAnimationDuration),
     );
   });
@@ -3108,6 +3116,23 @@ void main() {
           progress: 0.5,
           laneDashPhase: 12,
           courseKind: VehicleCourseKind.sky,
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('RoadPainter renders the water course waves safely', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const CustomPaint(
+        size: Size(420, 640),
+        painter: RoadPainter(
+          progress: 0.5,
+          laneDashPhase: 12,
+          courseKind: VehicleCourseKind.water,
         ),
       ),
     );
