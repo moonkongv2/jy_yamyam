@@ -5547,6 +5547,36 @@ void main() {
     expect(find.text('초과 +05:00'), findsNothing);
     expect(find.text('완료'), findsOneWidget);
     expect(find.text('받은 스티커'), findsOneWidget);
+    expect(find.text('고른 식재료'), findsNothing);
+  });
+
+  testWidgets('Meal history screen shows directly selected ingredients', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final service = LocalMealProgressService();
+    await service.recordMealResult(
+      _mealResult(
+        startedAt: DateTime(2026, 5, 4, 12),
+        targetDuration: const Duration(minutes: 20),
+        actualDuration: const Duration(minutes: 20),
+        selectedIngredientIds: const ['carrot', 'egg'],
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
+        home: MealHistoryScreen(mealProgressService: service),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('고른 식재료'), findsOneWidget);
+    expect(find.text('당근'), findsOneWidget);
+    expect(find.text('달걀'), findsOneWidget);
   });
 
   testWidgets('Meal history screen shows incomplete meal records', (

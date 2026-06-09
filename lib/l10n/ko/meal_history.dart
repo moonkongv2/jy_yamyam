@@ -14,6 +14,7 @@ class MealHistoryTexts implements MealHistoryTextSet {
   String get overrunTimeLabel => '초과';
   String get rewardLabel => '받은 스티커';
   String get noRewardLabel => '스티커 없음';
+  String get selectedIngredientLabel => '고른 식재료';
 
   String completedStatus(MealCompletionStatus completionStatus) {
     return completionStatus == MealCompletionStatus.notCompleted ? '미완료' : '완료';

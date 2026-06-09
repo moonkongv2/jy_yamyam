@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../catalogs/meal_ingredient_catalog.dart';
 import '../l10n/app_texts.dart';
+import '../models/meal_ingredient.dart';
 import '../models/meal_history_entry.dart';
 import '../models/meal_progress_snapshot.dart';
 import '../models/reward_item.dart';
@@ -113,6 +115,10 @@ class _MealHistoryCard extends StatelessWidget {
       entry.targetDuration,
     );
     final overrun = overrunDuration(entry.actualDuration, entry.targetDuration);
+    final selectedIngredients = entry.selectedIngredientIds
+        .map(MealIngredientCatalog.findById)
+        .whereType<MealIngredientDefinition>()
+        .toList(growable: false);
 
     return Card(
       color: AppColors.white,
@@ -163,6 +169,18 @@ class _MealHistoryCard extends StatelessWidget {
               _OverrunChip(
                 label: historyTexts.overrunTime(formatDuration(overrun)),
               ),
+            ],
+            if (selectedIngredients.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                historyTexts.selectedIngredientLabel,
+                style: textTheme.labelLarge?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _SelectedIngredientRow(ingredients: selectedIngredients),
             ],
             const SizedBox(height: AppSpacing.md),
             Text(
@@ -299,6 +317,102 @@ class _DurationTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SelectedIngredientRow extends StatelessWidget {
+  const _SelectedIngredientRow({required this.ingredients});
+
+  final List<MealIngredientDefinition> ingredients;
+
+  @override
+  Widget build(BuildContext context) {
+    final languageCode = Localizations.localeOf(context).languageCode;
+
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        for (final ingredient in ingredients)
+          _SelectedIngredientPill(
+            ingredient: ingredient,
+            label: ingredient.labelForLanguage(languageCode),
+          ),
+      ],
+    );
+  }
+}
+
+class _SelectedIngredientPill extends StatelessWidget {
+  const _SelectedIngredientPill({
+    required this.ingredient,
+    required this.label,
+  });
+
+  final MealIngredientDefinition ingredient;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceSoft,
+        borderRadius: AppRadius.pill,
+        border: Border.all(color: AppColors.borderSoft),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _SelectedIngredientAvatar(
+              ingredient: ingredient,
+              semanticLabel: label,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: AppColors.textStrong,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SelectedIngredientAvatar extends StatelessWidget {
+  const _SelectedIngredientAvatar({
+    required this.ingredient,
+    required this.semanticLabel,
+  });
+
+  final MealIngredientDefinition ingredient;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final assetPath = ingredient.assetPath;
+    if (assetPath == null) {
+      return Text(ingredient.emoji);
+    }
+
+    return Image.asset(
+      assetPath,
+      semanticLabel: semanticLabel,
+      width: 28,
+      height: 28,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return Text(ingredient.emoji);
+      },
     );
   }
 }

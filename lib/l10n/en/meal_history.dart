@@ -14,6 +14,7 @@ class EnMealHistoryTexts implements MealHistoryTextSet {
   String get overrunTimeLabel => 'Over';
   String get rewardLabel => 'Stickers earned';
   String get noRewardLabel => 'No stickers';
+  String get selectedIngredientLabel => 'Chosen ingredients';
 
   String completedStatus(MealCompletionStatus completionStatus) {
     return completionStatus == MealCompletionStatus.notCompleted

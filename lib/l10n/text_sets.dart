@@ -101,6 +101,7 @@ abstract interface class MealHistoryTextSet {
   String get overrunTimeLabel;
   String get rewardLabel;
   String get noRewardLabel;
+  String get selectedIngredientLabel;
 
   String completedStatus(MealCompletionStatus completionStatus);
   String dateLabel(DateTime dateTime);
