@@ -24,6 +24,7 @@ class LocalSettingsService {
   static const _avatarOffsetYKey = 'avatarOffsetY';
   static const _avatarRotationDegreesKey = 'avatarRotationDegrees';
   static const _customAvatarsByVehicleKey = 'customAvatarsByVehicle';
+  static const _courseIngredientModeKey = 'courseIngredientMode';
 
   Future<MealTimerConfig> loadConfig() async {
     final preferences = await SharedPreferences.getInstance();
@@ -104,6 +105,9 @@ class LocalSettingsService {
       avatarRotationDegrees:
           activeAvatarConfig?.rotationDegrees ?? avatarRotationDegrees,
       customAvatarsByVehicle: customAvatarsByVehicle,
+      courseIngredientMode: _courseIngredientModeFromString(
+        preferences.getString(_courseIngredientModeKey),
+      ),
     );
   }
 
@@ -173,6 +177,10 @@ class LocalSettingsService {
         ),
       );
     }
+    await preferences.setString(
+      _courseIngredientModeKey,
+      _courseIngredientModeToString(config.courseIngredientMode),
+    );
   }
 
   AvatarImageMode _avatarModeFromString(String? value) {
@@ -186,6 +194,23 @@ class LocalSettingsService {
     return switch (mode) {
       AvatarImageMode.defaultImage => 'defaultImage',
       AvatarImageMode.custom => 'custom',
+    };
+  }
+
+  CourseIngredientMode _courseIngredientModeFromString(String? value) {
+    return switch (value) {
+      'off' => CourseIngredientMode.off,
+      'random' => CourseIngredientMode.random,
+      'manual' => CourseIngredientMode.manual,
+      _ => CourseIngredientMode.manual,
+    };
+  }
+
+  String _courseIngredientModeToString(CourseIngredientMode mode) {
+    return switch (mode) {
+      CourseIngredientMode.off => 'off',
+      CourseIngredientMode.manual => 'manual',
+      CourseIngredientMode.random => 'random',
     };
   }
 

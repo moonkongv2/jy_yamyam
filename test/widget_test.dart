@@ -57,6 +57,7 @@ void main() {
     expect(config.motivationVideoEnabled, isTrue);
     expect(config.motivationVideoUseCustomInterval, isFalse);
     expect(config.motivationVideoInterval, const Duration(minutes: 3));
+    expect(config.courseIngredientMode, CourseIngredientMode.manual);
     expect(config.avatarScale, 1.0);
     expect(config.avatarOffsetX, 0.0);
     expect(config.avatarOffsetY, 0.0);
@@ -221,6 +222,19 @@ void main() {
     expect(updatedConfig.motivationVideoInterval, const Duration(minutes: 10));
   });
 
+  test('MealTimerConfig copyWith updates course ingredient mode', () {
+    final config = MealTimerConfig.defaults().copyWith(
+      courseIngredientMode: CourseIngredientMode.random,
+    );
+    final preservedConfig = config.copyWith(vehicleId: 'bus');
+    final updatedConfig = config.copyWith(
+      courseIngredientMode: CourseIngredientMode.off,
+    );
+
+    expect(preservedConfig.courseIngredientMode, CourseIngredientMode.random);
+    expect(updatedConfig.courseIngredientMode, CourseIngredientMode.off);
+  });
+
   test('Local settings saves and loads avatar settings', () async {
     SharedPreferences.setMockInitialValues({});
 
@@ -285,6 +299,35 @@ void main() {
     expect(preferences.getBool('motivationVideoUseCustomInterval'), isTrue);
     expect(preferences.getInt('motivationVideoIntervalMinutes'), 5);
   });
+
+  test('Local settings saves and loads course ingredient mode', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final service = LocalSettingsService();
+    await service.saveConfig(
+      MealTimerConfig.defaults().copyWith(
+        courseIngredientMode: CourseIngredientMode.random,
+      ),
+    );
+
+    final loadedConfig = await service.loadConfig();
+    final preferences = await SharedPreferences.getInstance();
+    expect(loadedConfig.courseIngredientMode, CourseIngredientMode.random);
+    expect(preferences.getString('courseIngredientMode'), 'random');
+  });
+
+  test(
+    'Local settings falls back for invalid course ingredient mode',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'courseIngredientMode': 'unknown',
+      });
+
+      final loadedConfig = await LocalSettingsService().loadConfig();
+
+      expect(loadedConfig.courseIngredientMode, CourseIngredientMode.manual);
+    },
+  );
 
   test(
     'Local settings falls back for invalid motivation video interval',
@@ -2294,6 +2337,55 @@ void main() {
     expect(find.text('남은 식사 시간'), findsNothing);
   });
 
+  testWidgets('Settings screen updates course ingredient mode', (tester) async {
+    tester.view.physicalSize = const Size(393, 852);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    var latestConfig = MealTimerConfig.defaults();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: SettingsScreen(
+          config: latestConfig,
+          onConfigChanged: (config) => latestConfig = config,
+        ),
+      ),
+    );
+
+    expect(find.text('도로 위 식재료'), findsOneWidget);
+    final segmentedButtonFinder = find.byKey(
+      const ValueKey('courseIngredientModeSegmentedButton'),
+    );
+    final segmentedButton = tester
+        .widget<SegmentedButton<CourseIngredientMode>>(segmentedButtonFinder);
+    final segmentedButtonRect = tester.getRect(segmentedButtonFinder);
+    final cardRect = tester.getRect(
+      find.ancestor(of: segmentedButtonFinder, matching: find.byType(Card)),
+    );
+    expect(segmentedButton.selected, {CourseIngredientMode.manual});
+    expect(segmentedButton.showSelectedIcon, isFalse);
+    expect(segmentedButtonRect.left, greaterThanOrEqualTo(cardRect.left));
+    expect(segmentedButtonRect.right, lessThanOrEqualTo(cardRect.right));
+    expect(find.text('사용 안 함'), findsOneWidget);
+    expect(find.text('직접 선택'), findsOneWidget);
+    expect(find.text('자동 랜덤'), findsOneWidget);
+
+    segmentedButton.onSelectionChanged!({CourseIngredientMode.random});
+    await tester.pump();
+
+    expect(latestConfig.courseIngredientMode, CourseIngredientMode.random);
+  });
+
   testWidgets('Settings screen updates motivation video settings', (
     tester,
   ) async {
@@ -2319,6 +2411,9 @@ void main() {
       find.byKey(const ValueKey('motivationVideoIntervalSegmentedButton')),
       findsNothing,
     );
+
+    await tester.drag(find.byType(ListView), const Offset(0, -360));
+    await tester.pump();
 
     tester
         .widget<SwitchListTile>(
@@ -2389,6 +2484,9 @@ void main() {
 
     await tester.tap(find.byTooltip('설정'));
     await tester.pumpAndSettle();
+
+    await tester.drag(find.byType(ListView), const Offset(0, -360));
+    await tester.pump();
 
     tester
         .widget<SwitchListTile>(

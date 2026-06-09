@@ -2,6 +2,8 @@ import '../catalogs/meal_course_catalog.dart';
 
 enum AvatarImageMode { defaultImage, custom }
 
+enum CourseIngredientMode { off, manual, random }
+
 const Object _customAvatarImagePathUnset = Object();
 const Object _customAvatarVehicleIdUnset = Object();
 
@@ -63,6 +65,7 @@ class MealTimerConfig {
     required this.avatarOffsetY,
     required this.avatarRotationDegrees,
     required this.customAvatarsByVehicle,
+    required this.courseIngredientMode,
     this.courseIngredientIds = const [],
   });
 
@@ -86,6 +89,7 @@ class MealTimerConfig {
       avatarOffsetY: 0.0,
       avatarRotationDegrees: 0.0,
       customAvatarsByVehicle: {},
+      courseIngredientMode: CourseIngredientMode.manual,
       courseIngredientIds: [],
     );
   }
@@ -108,6 +112,7 @@ class MealTimerConfig {
   final double avatarOffsetY;
   final double avatarRotationDegrees;
   final Map<String, VehicleAvatarConfig> customAvatarsByVehicle;
+  final CourseIngredientMode courseIngredientMode;
   final List<String> courseIngredientIds;
 
   MealTimerConfig copyWith({
@@ -129,6 +134,7 @@ class MealTimerConfig {
     double? avatarOffsetY,
     double? avatarRotationDegrees,
     Map<String, VehicleAvatarConfig>? customAvatarsByVehicle,
+    CourseIngredientMode? courseIngredientMode,
     List<String>? courseIngredientIds,
   }) {
     final nextAvatarMode = avatarMode ?? this.avatarMode;
@@ -186,6 +192,7 @@ class MealTimerConfig {
       avatarOffsetY: nextAvatarOffsetY,
       avatarRotationDegrees: nextAvatarRotationDegrees,
       customAvatarsByVehicle: Map.unmodifiable(nextCustomAvatarsByVehicle),
+      courseIngredientMode: courseIngredientMode ?? this.courseIngredientMode,
       courseIngredientIds: List.unmodifiable(
         courseIngredientIds ?? this.courseIngredientIds,
       ),
