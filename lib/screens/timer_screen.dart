@@ -10,6 +10,7 @@ import '../controllers/meal_timer_controller.dart';
 import '../l10n/app_texts.dart';
 import '../l10n/text_sets.dart';
 import '../models/meal_completion_status.dart';
+import '../models/meal_ingredient.dart';
 import '../models/meal_session_result.dart';
 import '../models/meal_timer_config.dart';
 import '../models/vehicle_avatar_presentation.dart';
@@ -706,12 +707,15 @@ class _TimerScreenState extends State<TimerScreen>
         final vehicleAvatar = widget.config.avatarPresentationForVehicle(
           vehicle.id,
         );
-        final courseIngredients = MealIngredientCatalog.courseSlotsFor(
-          widget.config.courseIngredientIds,
-          slotCount: MealIngredientCatalog.courseSlotCountForDuration(
-            widget.config.duration,
-          ),
-        );
+        final courseIngredients =
+            widget.config.courseIngredientMode == CourseIngredientMode.off
+            ? const <MealIngredientDefinition>[]
+            : MealIngredientCatalog.courseSlotsFor(
+                widget.config.courseIngredientIds,
+                slotCount: MealIngredientCatalog.courseSlotCountForDuration(
+                  widget.config.duration,
+                ),
+              );
         final timerProgress = _controller.progress.clamp(0.0, 1.0).toDouble();
         final displayProgress = _isFinishDriving
             ? (_finishDriveAnimation?.value ?? _finishDriveStartProgress)

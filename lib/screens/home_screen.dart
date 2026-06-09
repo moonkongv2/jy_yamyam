@@ -116,21 +116,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Future<void> _startTimer(int minutes) async {
-    final ingredientResult =
-        await showModalBottomSheet<MealIngredientPickerResult>(
-          context: context,
-          isScrollControlled: true,
-          backgroundColor: AppColors.transparent,
-          builder: (_) => const MealIngredientPickerSheet(),
-        );
-    if (!mounted || ingredientResult == null) {
+    final courseIngredientIds = await _courseIngredientIdsForStart();
+    if (!mounted || courseIngredientIds == null) {
       return;
     }
 
-    final courseIngredientIds = switch (ingredientResult) {
-      RandomMealIngredients() => MealIngredientCatalog.randomSelectionIds(),
-      SelectedMealIngredients(:final ingredientIds) => ingredientIds,
-    };
     final config = _config.copyWith(
       duration: Duration(minutes: minutes),
       courseIngredientIds: courseIngredientIds,
@@ -146,6 +136,30 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     );
     if (mounted) {
       _refreshProgressSnapshot();
+    }
+  }
+
+  Future<List<String>?> _courseIngredientIdsForStart() async {
+    switch (_config.courseIngredientMode) {
+      case CourseIngredientMode.off:
+        return const <String>[];
+      case CourseIngredientMode.random:
+        return MealIngredientCatalog.randomSelectionIds();
+      case CourseIngredientMode.manual:
+        final ingredientResult =
+            await showModalBottomSheet<MealIngredientPickerResult>(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: AppColors.transparent,
+              builder: (_) => const MealIngredientPickerSheet(),
+            );
+        if (ingredientResult == null) {
+          return null;
+        }
+        return switch (ingredientResult) {
+          RandomMealIngredients() => MealIngredientCatalog.randomSelectionIds(),
+          SelectedMealIngredients(:final ingredientIds) => ingredientIds,
+        };
     }
   }
 

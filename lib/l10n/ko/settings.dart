@@ -17,7 +17,7 @@ class SettingsTexts implements SettingsTextSet {
   String get courseIngredientModeTitle => '도로 위 식재료';
   String get courseIngredientModeOff => '사용 안 함';
   String get courseIngredientModeManual => '직접 선택';
-  String get courseIngredientModeRandom => '자동 랜덤';
+  String get courseIngredientModeRandom => '자동 선택';
   String get defaultMealDuration => '기본 식사 시간';
   String get vehicleSelection => '빠방 고르기';
   String get childNameTitle => '아이 이름';

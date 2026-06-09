@@ -1391,6 +1391,92 @@ void main() {
     expect(find.byType(TimerScreen), findsNothing);
   });
 
+  testWidgets('Course ingredient off starts timer without picker', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            childName: '지율',
+            duration: const Duration(minutes: 35),
+            courseIngredientMode: CourseIngredientMode.off,
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.textContaining('35분 보통 코스'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(
+      find.byKey(const ValueKey('mealIngredientPickerSheet')),
+      findsNothing,
+    );
+    expect(find.byType(TimerScreen), findsOneWidget);
+    expect(
+      tester
+          .widget<TimerScreen>(find.byType(TimerScreen))
+          .config
+          .courseIngredientIds,
+      isEmpty,
+    );
+  });
+
+  testWidgets('Course ingredient random starts timer without picker', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            childName: '지율',
+            duration: const Duration(minutes: 35),
+            courseIngredientMode: CourseIngredientMode.random,
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.textContaining('35분 보통 코스'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(
+      find.byKey(const ValueKey('mealIngredientPickerSheet')),
+      findsNothing,
+    );
+    expect(find.byType(TimerScreen), findsOneWidget);
+    expect(
+      tester
+          .widget<TimerScreen>(find.byType(TimerScreen))
+          .config
+          .courseIngredientIds,
+      hasLength(MealIngredientCatalog.maxSelectableIngredientCount),
+    );
+  });
+
   testWidgets('Tapping random start opens timer screen', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -2323,6 +2409,13 @@ void main() {
     await tester.tap(find.byTooltip('설정'));
     await tester.pumpAndSettle();
 
+    await tester.scrollUntilVisible(
+      find.text('남은 시간 보여주기'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
     expect(find.text('남은 시간 보여주기'), findsOneWidget);
     await tester.tap(find.text('남은 시간 보여주기'));
     await tester.pumpAndSettle();
@@ -2378,7 +2471,7 @@ void main() {
     expect(segmentedButtonRect.right, lessThanOrEqualTo(cardRect.right));
     expect(find.text('사용 안 함'), findsOneWidget);
     expect(find.text('직접 선택'), findsOneWidget);
-    expect(find.text('자동 랜덤'), findsOneWidget);
+    expect(find.text('자동 선택'), findsOneWidget);
 
     segmentedButton.onSelectionChanged!({CourseIngredientMode.random});
     await tester.pump();
@@ -3650,6 +3743,29 @@ void main() {
       'carrot',
       'egg',
     });
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('TimerScreen hides road ingredients when course mode is off', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            courseIngredientMode: CourseIngredientMode.off,
+            courseIngredientIds: const [],
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final roadView = tester.widget<RoadView>(find.byType(RoadView));
+    expect(roadView.ingredients, isEmpty);
     expect(tester.takeException(), isNull);
   });
 

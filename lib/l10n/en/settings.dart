@@ -17,8 +17,8 @@ class EnSettingsTexts implements SettingsTextSet {
       'Applies while the meal timer is running.';
   String get courseIngredientModeTitle => 'Road ingredients';
   String get courseIngredientModeOff => 'Off';
-  String get courseIngredientModeManual => 'Choose';
-  String get courseIngredientModeRandom => 'Random';
+  String get courseIngredientModeManual => 'Manual';
+  String get courseIngredientModeRandom => 'Auto';
   String get defaultMealDuration => 'Default meal time';
   String get vehicleSelection => 'Choose vehicle';
   String get childNameTitle => "Child's name";
