@@ -35,7 +35,9 @@ class MealTimerController extends ChangeNotifier {
 
   MealTimerState get state => _state;
   DateTime? get startedAt => _startedAt;
+  DateTime? get pausedAt => _pausedAt;
   Duration get elapsed => _elapsed;
+  Duration get totalPausedDuration => _totalPausedDuration;
 
   Duration get remaining {
     final value = config.duration - _elapsed;

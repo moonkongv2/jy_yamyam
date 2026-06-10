@@ -15,6 +15,7 @@ import 'package:jy_yamyam/catalogs/motivation_asset_catalog.dart';
 import 'package:jy_yamyam/catalogs/vehicle_catalog.dart';
 import 'package:jy_yamyam/l10n/app_texts.dart';
 import 'package:jy_yamyam/main.dart' as app;
+import 'package:jy_yamyam/models/active_meal_timer_session.dart';
 import 'package:jy_yamyam/models/meal_completion_status.dart';
 import 'package:jy_yamyam/models/meal_session_result.dart';
 import 'package:jy_yamyam/models/meal_timer_config.dart';
@@ -28,6 +29,7 @@ import 'package:jy_yamyam/screens/reward_goal_screen.dart';
 import 'package:jy_yamyam/screens/result_screen.dart';
 import 'package:jy_yamyam/screens/settings_screen.dart';
 import 'package:jy_yamyam/screens/timer_screen.dart';
+import 'package:jy_yamyam/services/active_meal_timer_session_store.dart';
 import 'package:jy_yamyam/services/avatar_image_picker.dart';
 import 'package:jy_yamyam/services/local_avatar_image_service.dart';
 import 'package:jy_yamyam/services/local_meal_progress_service.dart';
@@ -4024,6 +4026,127 @@ void main() {
     final roadView = tester.widget<RoadView>(find.byType(RoadView));
     expect(roadView.courseDuration, const Duration(minutes: 60));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('TimerScreen saves an active session when started', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final startedAt = DateTime(2026, 6, 10, 8);
+    final store = ActiveMealTimerSessionStore();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(minutes: 35),
+            childName: '지율',
+            vehicleId: 'bus',
+          ),
+          mealProgressService: LocalMealProgressService(),
+          now: () => startedAt,
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final session = await store.load();
+    expect(session, isNotNull);
+    expect(session!.startedAt, startedAt);
+    expect(session.duration, const Duration(minutes: 35));
+    expect(session.config.childName, '지율');
+    expect(session.config.vehicleId, 'bus');
+    expect(session.state, ActiveMealTimerSessionState.running);
+    expect(session.totalPausedDuration, Duration.zero);
+    expect(session.pausedAt, isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('TimerScreen updates active session when paused and resumed', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    var now = DateTime(2026, 6, 10, 8);
+    final store = ActiveMealTimerSessionStore();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(minutes: 35),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          now: () => now,
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    now = now.add(const Duration(minutes: 5));
+    await tester.pump(const Duration(milliseconds: 250));
+    tester
+        .widget<TimerControlBar>(find.byType(TimerControlBar))
+        .onPauseResume!();
+    await tester.pump();
+
+    final pausedSession = await store.load();
+    expect(pausedSession, isNotNull);
+    expect(pausedSession!.state, ActiveMealTimerSessionState.paused);
+    expect(pausedSession.pausedAt, now);
+    expect(pausedSession.totalPausedDuration, Duration.zero);
+
+    now = now.add(const Duration(minutes: 3));
+    tester
+        .widget<TimerControlBar>(find.byType(TimerControlBar))
+        .onPauseResume!();
+    await tester.pump();
+
+    final resumedSession = await store.load();
+    expect(resumedSession, isNotNull);
+    expect(resumedSession!.state, ActiveMealTimerSessionState.running);
+    expect(resumedSession.pausedAt, isNull);
+    expect(resumedSession.totalPausedDuration, const Duration(minutes: 3));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('TimerScreen clears active session after completion', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final store = ActiveMealTimerSessionStore();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(minutes: 10),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(await store.load(), isNotNull);
+
+    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton).last);
+    await tester.pump();
+
+    expect(await store.load(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
 
   testWidgets('Meal done before arrival does not immediately push result', (

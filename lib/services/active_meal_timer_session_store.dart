@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/active_meal_timer_session.dart';
 
 class ActiveMealTimerSessionStore {
+  const ActiveMealTimerSessionStore();
+
   static const _sessionKey = 'activeMealTimerSession';
 
   Future<void> save(ActiveMealTimerSession session) async {

@@ -9,11 +9,13 @@ import '../catalogs/vehicle_catalog.dart';
 import '../controllers/meal_timer_controller.dart';
 import '../l10n/app_texts.dart';
 import '../l10n/text_sets.dart';
+import '../models/active_meal_timer_session.dart';
 import '../models/meal_completion_status.dart';
 import '../models/meal_ingredient.dart';
 import '../models/meal_session_result.dart';
 import '../models/meal_timer_config.dart';
 import '../models/vehicle_avatar_presentation.dart';
+import '../services/active_meal_timer_session_store.dart';
 import '../services/local_meal_progress_service.dart';
 import '../services/motivation_audio_service.dart';
 import '../services/orientation_service.dart';
@@ -157,6 +159,7 @@ class TimerScreen extends StatefulWidget {
     required this.onConfigChanged,
     this.screenAwakeService = const WakelockScreenAwakeService(),
     this.orientationService = const SystemOrientationService(),
+    this.activeSessionStore = const ActiveMealTimerSessionStore(),
     this.motivationAudioService,
     this.now,
   });
@@ -166,6 +169,7 @@ class TimerScreen extends StatefulWidget {
   final ValueChanged<MealTimerConfig> onConfigChanged;
   final ScreenAwakeService screenAwakeService;
   final OrientationService orientationService;
+  final ActiveMealTimerSessionStore activeSessionStore;
   final MotivationAudioService? motivationAudioService;
   final DateTime Function()? now;
 
@@ -211,6 +215,7 @@ class _TimerScreenState extends State<TimerScreen>
   MealSessionResult? _pendingFinishDriveResult;
   double _finishDriveStartProgress = 0;
   bool _handoffOrientation = false;
+  late final String _activeSessionId;
 
   @override
   void initState() {
@@ -223,9 +228,15 @@ class _TimerScreenState extends State<TimerScreen>
     _controller.addListener(_handleTimerChanged);
     _finishDriveController = AnimationController(vsync: this)
       ..addStatusListener(_handleFinishDriveStatusChanged);
+    _activeSessionId = _createActiveSessionId();
     _controller.start();
+    unawaited(_persistActiveSession());
     unawaited(widget.orientationService.allowMealFlowOrientations());
     _applyScreenAwakeSetting();
+  }
+
+  String _createActiveSessionId() {
+    return (widget.now ?? DateTime.now)().microsecondsSinceEpoch.toString();
   }
 
   @override
@@ -233,6 +244,7 @@ class _TimerScreenState extends State<TimerScreen>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.config != widget.config) {
       _timerConfig = widget.config;
+      unawaited(_persistActiveSession());
     }
     if (oldWidget.screenAwakeService != widget.screenAwakeService &&
         _screenAwakeEnabled) {
@@ -290,6 +302,7 @@ class _TimerScreenState extends State<TimerScreen>
     }
 
     _arrivalPromptShown = true;
+    unawaited(_persistActiveSession());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
@@ -345,6 +358,7 @@ class _TimerScreenState extends State<TimerScreen>
 
     _shownMotivationMilestones.add(milestone);
     _lastMotivationVideoShownAt = _controller.elapsed;
+    unawaited(_persistActiveSession());
     setState(() {
       _activeMotivationMilestone = milestone;
       _activeMotivationVideoPath = videoPath;
@@ -421,6 +435,7 @@ class _TimerScreenState extends State<TimerScreen>
       unawaited(_motivationAudioService.stop());
     }
     widget.onConfigChanged(nextConfig);
+    unawaited(_persistActiveSession());
   }
 
   Iterable<int> _shownMilestonesForCurrentSchedule(
@@ -477,6 +492,7 @@ class _TimerScreenState extends State<TimerScreen>
         _controller.state == MealTimerState.arrived;
     if (shouldResumeAfterPrompt) {
       _controller.pause();
+      unawaited(_persistActiveSession());
     }
 
     final route = ModalRoute.of(context);
@@ -509,6 +525,7 @@ class _TimerScreenState extends State<TimerScreen>
     _exitPromptShown = false;
     if (shouldExit == true) {
       _allowExit = true;
+      unawaited(_clearActiveSession());
       final navigator = Navigator.of(context);
       if (route != null && navigator.canPop()) {
         navigator.removeRoute(route);
@@ -518,6 +535,7 @@ class _TimerScreenState extends State<TimerScreen>
 
     if (shouldResumeAfterPrompt && _controller.isPaused) {
       _controller.resume();
+      unawaited(_persistActiveSession());
     }
   }
 
@@ -568,6 +586,7 @@ class _TimerScreenState extends State<TimerScreen>
           mealCompleted: false,
           completionStatus: MealCompletionStatus.notCompleted,
         );
+        unawaited(_clearActiveSession());
         _openResult(result);
       }
       return;
@@ -578,6 +597,7 @@ class _TimerScreenState extends State<TimerScreen>
           ? MealCompletionStatus.completedAtArrival
           : null,
     );
+    unawaited(_clearActiveSession());
     if (result.completedBeforeArrival) {
       _startFinishDrive(result);
       return;
@@ -646,6 +666,52 @@ class _TimerScreenState extends State<TimerScreen>
     return result.copyWith(
       selectedIngredientIds: _timerConfig.selectedCourseIngredientIds,
     );
+  }
+
+  ActiveMealTimerSession? _activeSessionSnapshot() {
+    final startedAt = _controller.startedAt;
+    if (startedAt == null || _controller.state == MealTimerState.completed) {
+      return null;
+    }
+
+    return ActiveMealTimerSession(
+      sessionId: _activeSessionId,
+      startedAt: startedAt,
+      config: _timerConfig,
+      state: switch (_controller.state) {
+        MealTimerState.paused => ActiveMealTimerSessionState.paused,
+        MealTimerState.arrived => ActiveMealTimerSessionState.arrived,
+        _ => ActiveMealTimerSessionState.running,
+      },
+      totalPausedDuration: _controller.totalPausedDuration,
+      pausedAt: _controller.pausedAt,
+      shownMotivationMilestones: Set.unmodifiable(_shownMotivationMilestones),
+      lastMotivationVideoShownAt: _lastMotivationVideoShownAt,
+      motivationScheduleStartedAt: _motivationScheduleStartedAt,
+    );
+  }
+
+  Future<void> _persistActiveSession() async {
+    final session = _activeSessionSnapshot();
+    if (session == null) {
+      return;
+    }
+
+    try {
+      await widget.activeSessionStore.save(session);
+    } catch (error, stackTrace) {
+      debugPrint('Unable to save active meal timer session: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> _clearActiveSession() async {
+    try {
+      await widget.activeSessionStore.clear();
+    } catch (error, stackTrace) {
+      debugPrint('Unable to clear active meal timer session: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   String _runningProgressMessage(TimerTextSet texts, double progress) {
@@ -746,6 +812,7 @@ class _TimerScreenState extends State<TimerScreen>
           } else {
             _controller.pause();
           }
+          unawaited(_persistActiveSession());
         }
 
         final isScreenLandscape =
