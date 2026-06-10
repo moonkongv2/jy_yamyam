@@ -82,6 +82,7 @@ class MealTimerController extends ChangeNotifier {
     _totalPausedDuration += _now().difference(_pausedAt!);
     _pausedAt = null;
     _state = hasArrived ? MealTimerState.arrived : MealTimerState.running;
+    _startTicker();
     notifyListeners();
   }
 

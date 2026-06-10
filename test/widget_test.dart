@@ -4596,6 +4596,60 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets('TimerScreen resumes ticking from a restored paused session', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(() async {
+      await const ActiveMealTimerSessionStore().clear();
+    });
+    var now = DateTime(2026, 6, 10, 8, 30);
+    final session = ActiveMealTimerSession(
+      sessionId: 'paused-session',
+      startedAt: DateTime(2026, 6, 10, 8),
+      config: MealTimerConfig.defaults().copyWith(
+        duration: const Duration(minutes: 30),
+      ),
+      state: ActiveMealTimerSessionState.paused,
+      pausedAt: DateTime(2026, 6, 10, 8, 10),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults(),
+          restoredSession: session,
+          mealProgressService: LocalMealProgressService(),
+          now: () => now,
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      tester.widget<RoadView>(find.byType(RoadView)).progress,
+      closeTo(1 / 3, 0.01),
+    );
+
+    tester
+        .widget<TimerControlBar>(find.byType(TimerControlBar))
+        .onPauseResume!();
+    await tester.pump();
+
+    now = now.add(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 40));
+
+    expect(
+      tester.widget<RoadView>(find.byType(RoadView)).progress,
+      closeTo(0.4, 0.01),
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
   testWidgets('TimerScreen refreshes elapsed time when app resumes', (
     tester,
   ) async {

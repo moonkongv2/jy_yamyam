@@ -91,6 +91,36 @@ void main() {
   );
 
   test(
+    'MealTimerController restarts ticking after restored paused sessions resume',
+    () async {
+      var now = DateTime.utc(2026, 6, 10, 1, 30);
+      final controller = MealTimerController.fromSession(
+        session: ActiveMealTimerSession(
+          sessionId: 'session-5',
+          startedAt: DateTime.utc(2026, 6, 10, 1, 0),
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(minutes: 30),
+          ),
+          state: ActiveMealTimerSessionState.paused,
+          pausedAt: DateTime.utc(2026, 6, 10, 1, 10),
+        ),
+        now: () => now,
+      );
+
+      expect(controller.elapsed, const Duration(minutes: 10));
+
+      controller.resume();
+      now = DateTime.utc(2026, 6, 10, 1, 31);
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+
+      expect(controller.state, MealTimerState.running);
+      expect(controller.elapsed, const Duration(minutes: 11));
+
+      controller.dispose();
+    },
+  );
+
+  test(
     'MealTimerController refreshes running sessions from wall-clock time',
     () {
       var now = DateTime.utc(2026, 6, 10, 1, 0);
