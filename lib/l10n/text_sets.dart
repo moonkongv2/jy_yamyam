@@ -170,6 +170,20 @@ abstract interface class UserGuideTextSet {
   String get resultRewardsTitle;
   String get historyTitle;
   String get guardianTipsTitle;
+  String get whatIsYamyamTitle;
+  List<String> get whatIsYamyamItems;
+  String get startCourseTitle;
+  List<String> get startCourseItems;
+  String get roadIngredientsTitle;
+  List<String> get roadIngredientsItems;
+  List<String> get motivationItems;
+  String get completionTitle;
+  List<String> get completionItems;
+  String get historyRewardsTitle;
+  List<String> get historyRewardsItems;
+  String get exitResumeTitle;
+  List<String> get exitResumeItems;
+  List<String> get guardianTipsItems;
 }
 
 abstract interface class TimerTextSet {

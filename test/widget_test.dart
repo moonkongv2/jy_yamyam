@@ -2786,6 +2786,71 @@ void main() {
       find.text('Review ingredients, cheer videos, and sticker rules.'),
       findsOneWidget,
     );
+    expect(find.text('What is Yamyam Rider?'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Road ingredients'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Road ingredients'), findsOneWidget);
+    expect(
+      find.textContaining('Only manually chosen ingredients'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('User guide shows key Korean guide copy', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        locale: Locale('ko'),
+        supportedLocales: [Locale('ko'), Locale('en')],
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: UserGuideScreen(),
+      ),
+    );
+
+    await tester.scrollUntilVisible(
+      find.text('도로 위 식재료'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('도로 위 식재료'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.textContaining('직접 고른 식재료').first,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('직접 고른 식재료'), findsWidgets);
+
+    await tester.scrollUntilVisible(
+      find.text('동기부여 영상'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('동기부여 영상'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.textContaining('성공하면 랜덤 성공 스티커'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('스티커'), findsWidgets);
   });
 
   testWidgets('Settings screen updates course ingredient mode', (tester) async {

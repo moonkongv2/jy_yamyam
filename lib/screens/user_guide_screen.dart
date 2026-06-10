@@ -76,28 +76,52 @@ class UserGuideScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           _GuideSectionCard(
+            icon: Icons.directions_car_filled_rounded,
+            title: texts.whatIsYamyamTitle,
+            items: texts.whatIsYamyamItems,
+            accentColor: AppColors.surfaceBlue,
+          ),
+          _GuideSectionCard(
             icon: Icons.route_rounded,
-            title: texts.basicFlowTitle,
+            title: texts.startCourseTitle,
+            items: texts.startCourseItems,
+            accentColor: AppColors.surfaceMint,
           ),
           _GuideSectionCard(
             icon: Icons.restaurant_menu_rounded,
-            title: texts.ingredientsTitle,
+            title: texts.roadIngredientsTitle,
+            items: texts.roadIngredientsItems,
+            accentColor: AppColors.surfaceYellow,
           ),
           _GuideSectionCard(
             icon: Icons.ondemand_video_rounded,
             title: texts.motivationTitle,
+            items: texts.motivationItems,
+            accentColor: AppColors.surfacePink,
           ),
           _GuideSectionCard(
             icon: Icons.emoji_events_rounded,
-            title: texts.resultRewardsTitle,
+            title: texts.completionTitle,
+            items: texts.completionItems,
+            accentColor: AppColors.primarySoft,
           ),
           _GuideSectionCard(
             icon: Icons.history_rounded,
-            title: texts.historyTitle,
+            title: texts.historyRewardsTitle,
+            items: texts.historyRewardsItems,
+            accentColor: AppColors.surfaceBlue,
+          ),
+          _GuideSectionCard(
+            icon: Icons.exit_to_app_rounded,
+            title: texts.exitResumeTitle,
+            items: texts.exitResumeItems,
+            accentColor: AppColors.surfaceMint,
           ),
           _GuideSectionCard(
             icon: Icons.volunteer_activism_rounded,
             title: texts.guardianTipsTitle,
+            items: texts.guardianTipsItems,
+            accentColor: AppColors.surfaceYellow,
           ),
         ],
       ),
@@ -106,32 +130,94 @@ class UserGuideScreen extends StatelessWidget {
 }
 
 class _GuideSectionCard extends StatelessWidget {
-  const _GuideSectionCard({required this.icon, required this.title});
+  const _GuideSectionCard({
+    required this.icon,
+    required this.title,
+    required this.items,
+    required this.accentColor,
+  });
 
   final IconData icon;
   final String title;
+  final List<String> items;
+  final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Card(
         color: AppColors.white,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
-        child: ListTile(
-          leading: CircleAvatar(
-            backgroundColor: AppColors.surfaceYellow,
-            foregroundColor: AppColors.brown700,
-            child: Icon(icon),
-          ),
-          title: Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: AppColors.textStrong,
-              fontWeight: FontWeight.w900,
-            ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    backgroundColor: accentColor,
+                    foregroundColor: AppColors.brown700,
+                    child: Icon(icon),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: textTheme.titleMedium?.copyWith(
+                        color: AppColors.textStrong,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              for (final item in items) _GuideBulletRow(text: item),
+            ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _GuideBulletRow extends StatelessWidget {
+  const _GuideBulletRow({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            margin: const EdgeInsets.only(top: 7),
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textPrimary,
+                height: 1.35,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
