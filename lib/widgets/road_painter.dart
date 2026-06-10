@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../models/vehicle.dart';
 import '../theme/app_colors.dart';
 
 class RoadCourseGeometry {
@@ -309,11 +310,106 @@ double _roadPathLengthForRows({
   return (width * (rowCount + 1)) + (rowHeight * rowCount);
 }
 
+class RoadCourseVisualStyle {
+  const RoadCourseVisualStyle({
+    required this.backgroundColors,
+    required this.backgroundStops,
+    required this.softShadowColor,
+    required this.rimColor,
+    required this.pathColor,
+    required this.progressColor,
+    required this.progressGlowColor,
+    required this.laneColor,
+  });
+
+  final List<Color> backgroundColors;
+  final List<double> backgroundStops;
+  final Color softShadowColor;
+  final Color rimColor;
+  final Color pathColor;
+  final Color progressColor;
+  final Color progressGlowColor;
+  final Color laneColor;
+
+  static RoadCourseVisualStyle forCourseKind(VehicleCourseKind courseKind) {
+    switch (courseKind) {
+      case VehicleCourseKind.sky:
+        return RoadCourseVisualStyle(
+          backgroundColors: [
+            AppColors.white.withValues(alpha: 0.96),
+            const Color(0xFFEAF7FF),
+            AppColors.skyBlue.withValues(alpha: 0.34),
+            const Color(0xFFFFF9E8).withValues(alpha: 0.92),
+          ],
+          backgroundStops: const [0, 0.5, 0.78, 1],
+          softShadowColor: AppColors.blueDeep.withValues(alpha: 0.10),
+          rimColor: AppColors.white.withValues(alpha: 0.88),
+          pathColor: const Color(0xFFD9F0FF),
+          progressColor: const Color(0xFFFFD36E).withValues(alpha: 0.94),
+          progressGlowColor: const Color(0xFFFFC857).withValues(alpha: 0.18),
+          laneColor: AppColors.white.withValues(alpha: 0.82),
+        );
+      case VehicleCourseKind.water:
+        return RoadCourseVisualStyle(
+          backgroundColors: [
+            AppColors.white.withValues(alpha: 0.96),
+            const Color(0xFFE8FBFF),
+            const Color(0xFFC7F2EA).withValues(alpha: 0.55),
+            const Color(0xFFEFFAF7).withValues(alpha: 0.92),
+          ],
+          backgroundStops: const [0, 0.5, 0.78, 1],
+          softShadowColor: AppColors.blueDeep.withValues(alpha: 0.10),
+          rimColor: AppColors.white.withValues(alpha: 0.88),
+          pathColor: const Color(0xFFBFEFEA),
+          progressColor: const Color(0xFF72D8E8).withValues(alpha: 0.92),
+          progressGlowColor: AppColors.blueDeep.withValues(alpha: 0.16),
+          laneColor: AppColors.white.withValues(alpha: 0.75),
+        );
+      case VehicleCourseKind.rail:
+        return RoadCourseVisualStyle(
+          backgroundColors: [
+            AppColors.white.withValues(alpha: 0.96),
+            const Color(0xFFF4FBED),
+            const Color(0xFFDDECC9).withValues(alpha: 0.52),
+            AppColors.cream.withValues(alpha: 0.92),
+          ],
+          backgroundStops: const [0, 0.5, 0.78, 1],
+          softShadowColor: AppColors.brown700.withValues(alpha: 0.08),
+          rimColor: AppColors.surfaceWarm.withValues(alpha: 0.90),
+          pathColor: const Color(0xFFC9D7B8),
+          progressColor: const Color(0xFFE5BC73).withValues(alpha: 0.95),
+          progressGlowColor: const Color(0xFFC58A3B).withValues(alpha: 0.14),
+          laneColor: AppColors.surfaceSoft.withValues(alpha: 0.78),
+        );
+      case VehicleCourseKind.road:
+        return RoadCourseVisualStyle(
+          backgroundColors: [
+            AppColors.white.withValues(alpha: 0.96),
+            AppColors.surfaceWarm,
+            AppColors.surfaceBlue.withValues(alpha: 0.18),
+            AppColors.cream.withValues(alpha: 0.92),
+          ],
+          backgroundStops: const [0, 0.5, 0.78, 1],
+          softShadowColor: AppColors.brown700.withValues(alpha: 0.075),
+          rimColor: AppColors.white.withValues(alpha: 0.90),
+          pathColor: const Color(0xFFBCEFD0),
+          progressColor: const Color(0xFFFFC38B).withValues(alpha: 0.92),
+          progressGlowColor: AppColors.orange.withValues(alpha: 0.14),
+          laneColor: AppColors.white.withValues(
+            alpha: RoadPainter.laneDashOpacity,
+          ),
+        );
+    }
+  }
+}
+
 class RoadPainter extends CustomPainter {
   const RoadPainter({
     required this.progress,
     this.laneDashPhase = 0,
+    this.skyPathCloudPhase = 0,
     this.geometry,
+    this.courseKind = VehicleCourseKind.road,
   });
 
   static const laneDashWidth = 15.0;
@@ -323,13 +419,54 @@ class RoadPainter extends CustomPainter {
   static const laneDashStrokeWidth = 3.4;
   static const laneDashOpacity = 0.72;
   static const laneDashAnimationDuration = Duration(milliseconds: 1200);
+  static const skyCloudVerticalGap = 142.0;
+  static const skyCloudMinWidth = 72.0;
+  static const skyCloudMaxWidth = 118.0;
+  static const skyPathCloudGap = 154.0;
+  static const skyPathCloudWidth = 38.0;
+  static const skyFlowPatternLength = skyPathCloudGap;
+  static const skyPathCloudAnimationDuration = Duration(milliseconds: 4800);
+  static const waterRippleVerticalGap = 92.0;
+  static const waterRippleMarkWidth = 42.0;
+  static const waterWaveWidth = 24.0;
+  static const waterWaveGap = 34.0;
+  static const waterWavePatternLength = waterWaveWidth + waterWaveGap;
+  static const waterWaveStrokeWidth = 2.5;
+  static const waterWaveAnimationDuration = Duration(milliseconds: 3000);
+  static const railSleeperGap = 38.0;
+  static const railSleeperPatternLength = railSleeperGap;
+  static const railSleeperStrokeWidth = 3.8;
+  static const railAnimationDuration = Duration(milliseconds: 2200);
 
   final double progress;
   final double laneDashPhase;
+  final double skyPathCloudPhase;
   final RoadCourseGeometry? geometry;
+  final VehicleCourseKind courseKind;
+
+  static double flowPatternLengthForCourseKind(VehicleCourseKind courseKind) {
+    return switch (courseKind) {
+      VehicleCourseKind.sky => skyFlowPatternLength,
+      VehicleCourseKind.water => waterWavePatternLength,
+      VehicleCourseKind.rail => railSleeperPatternLength,
+      VehicleCourseKind.road => laneDashPatternLength,
+    };
+  }
+
+  static Duration flowAnimationDurationForCourseKind(
+    VehicleCourseKind courseKind,
+  ) {
+    return switch (courseKind) {
+      VehicleCourseKind.water => waterWaveAnimationDuration,
+      VehicleCourseKind.rail => railAnimationDuration,
+      VehicleCourseKind.road ||
+      VehicleCourseKind.sky => laneDashAnimationDuration,
+    };
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
+    final visualStyle = RoadCourseVisualStyle.forCourseKind(courseKind);
     final roadPath = geometry == null
         ? createRoadPath(size)
         : createRoadPathForGeometry(geometry!);
@@ -339,33 +476,39 @@ class RoadPainter extends CustomPainter {
         roadMetric.length * progress.clamp(0.0, 1.0).toDouble();
     final progressPath = roadMetric.extractPath(0, progressDistance);
 
+    if (courseKind == VehicleCourseKind.sky) {
+      _drawSkyClouds(canvas, size);
+    } else if (courseKind == VehicleCourseKind.water) {
+      _drawWaterRipples(canvas, size);
+    }
+
     final softShadowPaint = Paint()
-      ..color = AppColors.brown700.withValues(alpha: 0.075)
+      ..color = visualStyle.softShadowColor
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..strokeWidth = roadWidth + 8
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
     final rimPaint = Paint()
-      ..color = AppColors.white.withValues(alpha: 0.9)
+      ..color = visualStyle.rimColor
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..strokeWidth = roadWidth + 5;
     final roadPaint = Paint()
-      ..color = const Color(0xFFBCEFD0)
+      ..color = visualStyle.pathColor
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..strokeWidth = roadWidth;
     final progressPaint = Paint()
-      ..color = const Color(0xFFFFC38B).withValues(alpha: 0.92)
+      ..color = visualStyle.progressColor
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
       ..strokeWidth = roadWidth;
     final progressGlowPaint = Paint()
-      ..color = AppColors.orange.withValues(alpha: 0.14)
+      ..color = visualStyle.progressGlowColor
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
@@ -381,12 +524,263 @@ class RoadPainter extends CustomPainter {
     }
 
     final lanePaint = Paint()
-      ..color = AppColors.white.withValues(alpha: laneDashOpacity)
+      ..color = visualStyle.laneColor
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = laneDashStrokeWidth;
 
-    _drawDashedPath(canvas, roadPath, lanePaint, laneDashPhase);
+    if (courseKind == VehicleCourseKind.sky) {
+      _drawSkyPathClouds(canvas, roadPath, skyPathCloudPhase);
+    } else if (courseKind == VehicleCourseKind.water) {
+      _drawWaterFlow(canvas, roadPath, visualStyle.laneColor, laneDashPhase);
+    } else if (courseKind == VehicleCourseKind.rail) {
+      _drawRailTrack(canvas, roadPath, visualStyle.laneColor, laneDashPhase);
+    } else {
+      _drawDashedPath(canvas, roadPath, lanePaint, laneDashPhase);
+    }
+  }
+
+  void _drawWaterRipples(Canvas canvas, Size size) {
+    final ripplePaint = Paint()
+      ..color = AppColors.white.withValues(alpha: 0.34)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 2.2;
+    final rowCount = (size.height / waterRippleVerticalGap).ceil() + 1;
+
+    for (var row = 0; row < rowCount; row += 1) {
+      final y = (row * waterRippleVerticalGap) + 42;
+      if (y > size.height + waterRippleVerticalGap) {
+        break;
+      }
+
+      final startRatio = switch (row % 4) {
+        0 => 0.12,
+        1 => 0.58,
+        2 => 0.30,
+        _ => 0.72,
+      };
+      final start = Offset(size.width * startRatio, y);
+      final path = Path()
+        ..moveTo(start.dx, start.dy)
+        ..quadraticBezierTo(
+          start.dx + (waterRippleMarkWidth * 0.25),
+          start.dy - 5,
+          start.dx + (waterRippleMarkWidth * 0.5),
+          start.dy,
+        )
+        ..quadraticBezierTo(
+          start.dx + (waterRippleMarkWidth * 0.75),
+          start.dy + 5,
+          start.dx + waterRippleMarkWidth,
+          start.dy,
+        );
+      canvas.drawPath(path, ripplePaint);
+    }
+  }
+
+  void _drawSkyClouds(Canvas canvas, Size size) {
+    final cloudPaint = Paint()
+      ..color = AppColors.white.withValues(alpha: 0.78)
+      ..style = PaintingStyle.fill;
+    final shadePaint = Paint()
+      ..color = AppColors.skyBlue.withValues(alpha: 0.22)
+      ..style = PaintingStyle.fill;
+    final rowCount = (size.height / skyCloudVerticalGap).ceil() + 1;
+
+    for (var row = 0; row < rowCount; row += 1) {
+      final y = (row * skyCloudVerticalGap) + 38;
+      if (y > size.height + skyCloudMaxWidth) {
+        break;
+      }
+
+      final xRatio = switch (row % 4) {
+        0 => 0.18,
+        1 => 0.78,
+        2 => 0.34,
+        _ => 0.66,
+      };
+      final cloudWidth =
+          skyCloudMinWidth +
+          ((row % 3) * ((skyCloudMaxWidth - skyCloudMinWidth) / 2));
+      final cloudHeight = cloudWidth * 0.42;
+      final center = Offset(size.width * xRatio, y);
+      _drawSkyCloud(
+        canvas: canvas,
+        center: center,
+        width: cloudWidth,
+        height: cloudHeight,
+        cloudPaint: cloudPaint,
+        shadePaint: shadePaint,
+      );
+    }
+  }
+
+  void _drawSkyCloud({
+    required Canvas canvas,
+    required Offset center,
+    required double width,
+    required double height,
+    required Paint cloudPaint,
+    required Paint shadePaint,
+  }) {
+    final baseRect = Rect.fromCenter(
+      center: center + Offset(width * 0.04, height * 0.14),
+      width: width,
+      height: height * 0.58,
+    );
+    canvas.drawOval(baseRect.shift(Offset(0, height * 0.08)), shadePaint);
+    canvas.drawOval(baseRect, cloudPaint);
+    canvas.drawCircle(
+      center + Offset(width * -0.28, height * -0.02),
+      height * 0.28,
+      cloudPaint,
+    );
+    canvas.drawCircle(
+      center + Offset(width * -0.05, height * -0.22),
+      height * 0.38,
+      cloudPaint,
+    );
+    canvas.drawCircle(
+      center + Offset(width * 0.25, height * -0.08),
+      height * 0.32,
+      cloudPaint,
+    );
+  }
+
+  void _drawSkyPathClouds(Canvas canvas, Path path, double phase) {
+    final cloudPaint = Paint()
+      ..color = AppColors.white.withValues(alpha: 0.42)
+      ..style = PaintingStyle.fill;
+    final shadePaint = Paint()
+      ..color = AppColors.skyBlue.withValues(alpha: 0.18)
+      ..style = PaintingStyle.fill;
+    final normalizedPhase = phase % skyPathCloudGap;
+
+    for (final metric in path.computeMetrics()) {
+      final startLimit = laneDashInset;
+      final endLimit = metric.length - laneDashInset;
+      if (endLimit <= startLimit) {
+        continue;
+      }
+
+      var distance = startLimit - normalizedPhase;
+      while (distance < endLimit) {
+        if (distance >= startLimit && distance <= endLimit) {
+          final tangent = metric.getTangentForOffset(distance);
+          if (tangent != null && tangent.vector.distance > 0) {
+            final direction = tangent.vector / tangent.vector.distance;
+            final center =
+                tangent.position - (direction * (skyPathCloudWidth * 0.16));
+            _drawSkyCloud(
+              canvas: canvas,
+              center: center,
+              width: skyPathCloudWidth,
+              height: skyPathCloudWidth * 0.38,
+              cloudPaint: cloudPaint,
+              shadePaint: shadePaint,
+            );
+          }
+        }
+
+        distance += skyPathCloudGap;
+      }
+    }
+  }
+
+  void _drawWaterFlow(Canvas canvas, Path path, Color color, double phase) {
+    final wavePaint = Paint()
+      ..color = color.withValues(alpha: 0.68)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = waterWaveStrokeWidth;
+    final normalizedPhase = phase % waterWavePatternLength;
+
+    for (final metric in path.computeMetrics()) {
+      final startLimit = laneDashInset;
+      final endLimit = metric.length - laneDashInset;
+      if (endLimit <= startLimit) {
+        continue;
+      }
+
+      var distance = startLimit - normalizedPhase;
+      while (distance < endLimit) {
+        final centerDistance = distance + (waterWaveWidth / 2);
+        if (centerDistance >= startLimit && centerDistance <= endLimit) {
+          final tangent = metric.getTangentForOffset(centerDistance);
+          if (tangent != null && tangent.vector.distance > 0) {
+            final direction = tangent.vector / tangent.vector.distance;
+            final normal = Offset(-direction.dy, direction.dx);
+            const amplitude = 4.8;
+            final center = tangent.position;
+            final start = center - (direction * (waterWaveWidth * 0.5));
+            final end = center + (direction * (waterWaveWidth * 0.5));
+            final firstControl =
+                center -
+                (direction * (waterWaveWidth * 0.24)) +
+                (normal * amplitude);
+            final secondControl =
+                center +
+                (direction * (waterWaveWidth * 0.24)) -
+                (normal * amplitude);
+            final wavePath = Path()
+              ..moveTo(start.dx, start.dy)
+              ..quadraticBezierTo(
+                firstControl.dx,
+                firstControl.dy,
+                center.dx,
+                center.dy,
+              )
+              ..quadraticBezierTo(
+                secondControl.dx,
+                secondControl.dy,
+                end.dx,
+                end.dy,
+              );
+
+            canvas.drawPath(wavePath, wavePaint);
+          }
+        }
+
+        distance += waterWavePatternLength;
+      }
+    }
+  }
+
+  void _drawRailTrack(Canvas canvas, Path path, Color color, double phase) {
+    final sleeperPaint = Paint()
+      ..color = AppColors.brown700.withValues(alpha: 0.20)
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = railSleeperStrokeWidth;
+    final normalizedPhase = phase % railSleeperPatternLength;
+
+    for (final metric in path.computeMetrics()) {
+      final startLimit = laneDashInset;
+      final endLimit = metric.length - laneDashInset;
+      if (endLimit <= startLimit) {
+        continue;
+      }
+
+      var distance = startLimit - normalizedPhase;
+      while (distance < endLimit) {
+        if (distance >= startLimit && distance <= endLimit) {
+          final tangent = metric.getTangentForOffset(distance);
+          if (tangent != null && tangent.vector.distance > 0) {
+            final direction = tangent.vector / tangent.vector.distance;
+            final normal = Offset(-direction.dy, direction.dx);
+            final center = tangent.position;
+            canvas.drawLine(
+              center - (normal * 13),
+              center + (normal * 13),
+              sleeperPaint,
+            );
+          }
+        }
+
+        distance += railSleeperPatternLength;
+      }
+    }
   }
 
   void _drawDashedPath(Canvas canvas, Path path, Paint paint, double phase) {
@@ -417,6 +811,8 @@ class RoadPainter extends CustomPainter {
   bool shouldRepaint(covariant RoadPainter oldDelegate) {
     return oldDelegate.progress != progress ||
         oldDelegate.laneDashPhase != laneDashPhase ||
-        oldDelegate.geometry != geometry;
+        oldDelegate.skyPathCloudPhase != skyPathCloudPhase ||
+        oldDelegate.geometry != geometry ||
+        oldDelegate.courseKind != courseKind;
   }
 }

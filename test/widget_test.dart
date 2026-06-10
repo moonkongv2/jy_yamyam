@@ -481,6 +481,23 @@ void main() {
     }
   });
 
+  test('Catalog vehicles define the expected course kind', () {
+    const expectedCourseKinds = {
+      'airplane': VehicleCourseKind.sky,
+      'pteranodon': VehicleCourseKind.sky,
+      'shark': VehicleCourseKind.water,
+      'train': VehicleCourseKind.rail,
+    };
+
+    for (final vehicle in VehicleCatalog.all) {
+      expect(
+        vehicle.courseKind,
+        expectedCourseKinds[vehicle.id] ?? VehicleCourseKind.road,
+        reason: vehicle.id,
+      );
+    }
+  });
+
   test(
     'Catalog vehicles use success result videos or the motorcycle fallback',
     () {
@@ -3035,6 +3052,47 @@ void main() {
     );
   });
 
+  testWidgets('Road view passes each vehicle course kind to the road painter', (
+    tester,
+  ) async {
+    Future<RoadPainter> pumpRoadPainterForVehicle(
+      VehicleDefinition vehicle,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 420,
+              height: 640,
+              child: RoadView(progress: 0.5, vehicle: vehicle),
+            ),
+          ),
+        ),
+      );
+
+      final painters = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((widget) => widget.painter)
+          .whereType<RoadPainter>();
+      expect(painters, isNotEmpty, reason: vehicle.id);
+      return painters.single;
+    }
+
+    final roadPainter = await pumpRoadPainterForVehicle(
+      VehicleCatalog.fireTruck,
+    );
+    expect(roadPainter.courseKind, VehicleCourseKind.road);
+
+    final skyPainter = await pumpRoadPainterForVehicle(VehicleCatalog.airplane);
+    expect(skyPainter.courseKind, VehicleCourseKind.sky);
+
+    final waterPainter = await pumpRoadPainterForVehicle(VehicleCatalog.shark);
+    expect(waterPainter.courseKind, VehicleCourseKind.water);
+
+    final railPainter = await pumpRoadPainterForVehicle(VehicleCatalog.train);
+    expect(railPainter.courseKind, VehicleCourseKind.rail);
+  });
+
   testWidgets('Road view keeps vehicle inside portrait bounds at route ends', (
     tester,
   ) async {
@@ -3267,6 +3325,108 @@ void main() {
     expect(roadStrokeWidthForSize(const Size(420, 640)), closeTo(24.36, 0.01));
   });
 
+  test('RoadCourseVisualStyle maps course kinds to distinct palettes', () {
+    final roadStyle = RoadCourseVisualStyle.forCourseKind(
+      VehicleCourseKind.road,
+    );
+    final skyStyle = RoadCourseVisualStyle.forCourseKind(VehicleCourseKind.sky);
+    final waterStyle = RoadCourseVisualStyle.forCourseKind(
+      VehicleCourseKind.water,
+    );
+    final railStyle = RoadCourseVisualStyle.forCourseKind(
+      VehicleCourseKind.rail,
+    );
+
+    expect(roadStyle.pathColor, const Color(0xFFBCEFD0));
+    expect(roadStyle.backgroundColors, hasLength(4));
+    expect(roadStyle.backgroundStops, const [0, 0.5, 0.78, 1]);
+    expect(skyStyle.pathColor, isNot(roadStyle.pathColor));
+    expect(waterStyle.pathColor, isNot(roadStyle.pathColor));
+    expect(railStyle.pathColor, isNot(roadStyle.pathColor));
+  });
+
+  test('RoadPainter uses course-specific flow patterns', () {
+    expect(
+      RoadPainter.flowPatternLengthForCourseKind(VehicleCourseKind.road),
+      RoadPainter.laneDashPatternLength,
+    );
+    expect(
+      RoadPainter.flowPatternLengthForCourseKind(VehicleCourseKind.sky),
+      RoadPainter.skyFlowPatternLength,
+    );
+    expect(
+      RoadPainter.flowPatternLengthForCourseKind(VehicleCourseKind.water),
+      RoadPainter.waterWavePatternLength,
+    );
+    expect(
+      RoadPainter.flowPatternLengthForCourseKind(VehicleCourseKind.rail),
+      RoadPainter.railSleeperPatternLength,
+    );
+    expect(
+      RoadPainter.skyPathCloudAnimationDuration,
+      greaterThan(RoadPainter.laneDashAnimationDuration),
+    );
+    expect(
+      RoadPainter.waterWaveAnimationDuration,
+      greaterThan(RoadPainter.laneDashAnimationDuration),
+    );
+    expect(
+      RoadPainter.railAnimationDuration,
+      greaterThan(RoadPainter.laneDashAnimationDuration),
+    );
+  });
+
+  testWidgets('RoadPainter renders the sky course clouds safely', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const CustomPaint(
+        size: Size(420, 640),
+        painter: RoadPainter(
+          progress: 0.5,
+          laneDashPhase: 12,
+          courseKind: VehicleCourseKind.sky,
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('RoadPainter renders the water course waves safely', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const CustomPaint(
+        size: Size(420, 640),
+        painter: RoadPainter(
+          progress: 0.5,
+          laneDashPhase: 12,
+          courseKind: VehicleCourseKind.water,
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('RoadPainter renders the rail course track safely', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const CustomPaint(
+        size: Size(420, 640),
+        painter: RoadPainter(
+          progress: 0.5,
+          laneDashPhase: 12,
+          courseKind: VehicleCourseKind.rail,
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+  });
+
   test('RoadCourseGeometry keeps five minutes as the current route', () {
     const viewportSize = Size(420, 640);
     final baselinePathLength = createRoadPath(
@@ -3402,6 +3562,51 @@ void main() {
     expect(
       basePainter.shouldRepaint(
         RoadPainter(progress: 0.3, laneDashPhase: 0, geometry: geometry),
+      ),
+      isTrue,
+    );
+    expect(
+      basePainter.shouldRepaint(
+        const RoadPainter(
+          progress: 0.3,
+          laneDashPhase: 0,
+          courseKind: VehicleCourseKind.sky,
+        ),
+      ),
+      isTrue,
+    );
+    expect(
+      basePainter.shouldRepaint(
+        const RoadPainter(
+          progress: 0.3,
+          laneDashPhase: 0,
+          courseKind: VehicleCourseKind.water,
+        ),
+      ),
+      isTrue,
+    );
+    expect(
+      basePainter.shouldRepaint(
+        const RoadPainter(
+          progress: 0.3,
+          laneDashPhase: 0,
+          courseKind: VehicleCourseKind.rail,
+        ),
+      ),
+      isTrue,
+    );
+    expect(
+      const RoadPainter(
+        progress: 0.3,
+        laneDashPhase: 0,
+        courseKind: VehicleCourseKind.sky,
+      ).shouldRepaint(
+        const RoadPainter(
+          progress: 0.3,
+          laneDashPhase: 0,
+          skyPathCloudPhase: 8,
+          courseKind: VehicleCourseKind.sky,
+        ),
       ),
       isTrue,
     );
