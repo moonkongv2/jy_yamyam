@@ -137,6 +137,10 @@ abstract interface class SettingsTextSet {
   String get motivationVideoEnabled;
   String get motivationVideoCustomInterval;
   String get motivationVideoInterval;
+  String get motivationVideoHelpTitle;
+  String get motivationVideoHelpSummary;
+  List<String> get motivationVideoHelpBodyParagraphs;
+  List<String> get motivationVideoHelpBulletItems;
   String get keepScreenAwake;
   String get savedOnlySubtitle;
   String get keepScreenAwakeSubtitle;

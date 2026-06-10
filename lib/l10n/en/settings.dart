@@ -11,6 +11,20 @@ class EnSettingsTexts implements SettingsTextSet {
   String get motivationVideoEnabled => 'Motivation videos';
   String get motivationVideoCustomInterval => 'Use custom video interval';
   String get motivationVideoInterval => 'Motivation video interval';
+  String get motivationVideoHelpTitle => 'Motivation video guide';
+  String get motivationVideoHelpSummary =>
+      'Motivation videos are short cheers during meals and do not affect rewards.';
+  List<String> get motivationVideoHelpBodyParagraphs => const [
+    'Motivation videos are short cheers that can appear during a meal to support the child’s pacing.',
+    'They do not decide success, incomplete results, or sticker rewards.',
+  ];
+  List<String> get motivationVideoHelpBulletItems => const [
+    'By default, videos may appear based on meal progress.',
+    'Courses longer than 30 minutes or custom interval mode may use time-based scheduling.',
+    'Custom intervals can be set to 3, 5, or 10 minutes.',
+    'Sound effects and video display settings can behave separately.',
+    'The app spaces videos out so they do not overlap too frequently.',
+  ];
   String get keepScreenAwake => 'Keep screen awake';
   String get savedOnlySubtitle => 'Turns sounds during the timer on or off.';
   String get keepScreenAwakeSubtitle =>

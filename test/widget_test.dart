@@ -3070,6 +3070,45 @@ void main() {
     );
   });
 
+  testWidgets('Settings screen opens motivation video help sheet', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: SettingsScreen(
+          config: MealTimerConfig.defaults(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('motivationVideoHelpButton')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('motivationVideoHelpButton')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('motivationVideoHelpButton')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('appHelpSheet')), findsOneWidget);
+    expect(find.text('동기부여 영상 안내'), findsWidgets);
+    expect(find.textContaining('3분, 5분, 10분'), findsOneWidget);
+  });
+
   testWidgets('Home settings apply motivation video settings to new timers', (
     tester,
   ) async {
@@ -5104,6 +5143,13 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('motivationSettingsButton')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
+
+    expect(
+      find.byKey(const ValueKey('timerMotivationVideoHelpButton')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('보상'), findsOneWidget);
+
     tester
         .widget<SwitchListTile>(
           find.byKey(const ValueKey('motivationVideoEnabledSwitch')),

@@ -11,6 +11,20 @@ class SettingsTexts implements SettingsTextSet {
   String get motivationVideoEnabled => '동기부여 영상 사용';
   String get motivationVideoCustomInterval => '영상 간격 직접 설정';
   String get motivationVideoInterval => '동기부여 영상 간격';
+  String get motivationVideoHelpTitle => '동기부여 영상 안내';
+  String get motivationVideoHelpSummary =>
+      '동기부여 영상은 보상 판정과 관계없는 식사 중간의 짧은 응원이에요.';
+  List<String> get motivationVideoHelpBodyParagraphs => const [
+    '동기부여 영상은 식사 중간에 아이의 흐름을 돕기 위해 나오는 짧은 응원이에요.',
+    '성공, 미완료, 스티커 판정과는 관계가 없어요.',
+  ];
+  List<String> get motivationVideoHelpBulletItems => const [
+    '기본적으로 식사 진행 상황에 따라 나올 수 있어요.',
+    '30분을 초과하는 긴 코스나 영상 간격 직접 설정을 쓰면 시간 간격 기준으로 나올 수 있어요.',
+    '직접 설정 간격은 3분, 5분, 10분 중에서 고를 수 있어요.',
+    '효과음 설정과 영상 사용 설정은 따로 동작할 수 있어요.',
+    '영상이 너무 자주 겹치지 않도록 앱이 표시 간격을 조절해요.',
+  ];
   String get keepScreenAwake => '화면 계속 켜두기';
   String get savedOnlySubtitle => '타이머 진행 중 나오는 소리를 켜고 꺼요';
   String get keepScreenAwakeSubtitle => '식사 타이머 중에 적용돼요';

@@ -98,6 +98,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _showMotivationVideoHelp() {
+    final texts = AppTexts.of(context).settings;
+    showAppHelpSheet(
+      context: context,
+      title: texts.motivationVideoHelpTitle,
+      bodyParagraphs: texts.motivationVideoHelpBodyParagraphs,
+      bulletItems: texts.motivationVideoHelpBulletItems,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final texts = AppTexts.of(context);
@@ -330,6 +340,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Card(
             child: Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          texts.settings.motivationVideoHelpTitle,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                      IconButton(
+                        key: const ValueKey('motivationVideoHelpButton'),
+                        tooltip: texts.settings.motivationVideoHelpTitle,
+                        onPressed: _showMotivationVideoHelp,
+                        icon: const Icon(Icons.help_outline_rounded),
+                        color: AppColors.brown700,
+                      ),
+                    ],
+                  ),
+                ),
                 SwitchListTile(
                   key: const ValueKey('motivationVideoEnabledSwitch'),
                   title: Text(texts.settings.motivationVideoEnabled),
