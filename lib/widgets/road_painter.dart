@@ -428,14 +428,14 @@ class RoadPainter extends CustomPainter {
   static const skyPathCloudAnimationDuration = Duration(milliseconds: 4800);
   static const waterRippleVerticalGap = 92.0;
   static const waterRippleMarkWidth = 42.0;
-  static const waterWaveWidth = 32.0;
+  static const waterWaveWidth = 24.0;
   static const waterWaveGap = 34.0;
   static const waterWavePatternLength = waterWaveWidth + waterWaveGap;
   static const waterWaveStrokeWidth = 2.5;
   static const waterWaveAnimationDuration = Duration(milliseconds: 3000);
-  static const railSleeperGap = 60.0;
+  static const railSleeperGap = 38.0;
   static const railSleeperPatternLength = railSleeperGap;
-  static const railSleeperStrokeWidth = 2.8;
+  static const railSleeperStrokeWidth = 3.8;
   static const railAnimationDuration = Duration(milliseconds: 2200);
 
   final double progress;
@@ -749,7 +749,7 @@ class RoadPainter extends CustomPainter {
 
   void _drawRailTrack(Canvas canvas, Path path, Color color, double phase) {
     final sleeperPaint = Paint()
-      ..color = AppColors.brown700.withValues(alpha: 0.10)
+      ..color = AppColors.brown700.withValues(alpha: 0.20)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = railSleeperStrokeWidth;
@@ -771,8 +771,8 @@ class RoadPainter extends CustomPainter {
             final normal = Offset(-direction.dy, direction.dx);
             final center = tangent.position;
             canvas.drawLine(
-              center - (normal * 10),
-              center + (normal * 10),
+              center - (normal * 13),
+              center + (normal * 13),
               sleeperPaint,
             );
           }
