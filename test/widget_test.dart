@@ -2831,6 +2831,47 @@ void main() {
     );
   });
 
+  testWidgets('Road view passes each vehicle course kind to the road painter', (
+    tester,
+  ) async {
+    Future<RoadPainter> pumpRoadPainterForVehicle(
+      VehicleDefinition vehicle,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 420,
+              height: 640,
+              child: RoadView(progress: 0.5, vehicle: vehicle),
+            ),
+          ),
+        ),
+      );
+
+      final painters = tester
+          .widgetList<CustomPaint>(find.byType(CustomPaint))
+          .map((widget) => widget.painter)
+          .whereType<RoadPainter>();
+      expect(painters, isNotEmpty, reason: vehicle.id);
+      return painters.single;
+    }
+
+    final roadPainter = await pumpRoadPainterForVehicle(
+      VehicleCatalog.fireTruck,
+    );
+    expect(roadPainter.courseKind, VehicleCourseKind.road);
+
+    final skyPainter = await pumpRoadPainterForVehicle(VehicleCatalog.airplane);
+    expect(skyPainter.courseKind, VehicleCourseKind.sky);
+
+    final waterPainter = await pumpRoadPainterForVehicle(VehicleCatalog.shark);
+    expect(waterPainter.courseKind, VehicleCourseKind.water);
+
+    final railPainter = await pumpRoadPainterForVehicle(VehicleCatalog.train);
+    expect(railPainter.courseKind, VehicleCourseKind.rail);
+  });
+
   testWidgets('Road view keeps vehicle inside portrait bounds at route ends', (
     tester,
   ) async {
@@ -3309,6 +3350,26 @@ void main() {
           progress: 0.3,
           laneDashPhase: 0,
           courseKind: VehicleCourseKind.sky,
+        ),
+      ),
+      isTrue,
+    );
+    expect(
+      basePainter.shouldRepaint(
+        const RoadPainter(
+          progress: 0.3,
+          laneDashPhase: 0,
+          courseKind: VehicleCourseKind.water,
+        ),
+      ),
+      isTrue,
+    );
+    expect(
+      basePainter.shouldRepaint(
+        const RoadPainter(
+          progress: 0.3,
+          laneDashPhase: 0,
+          courseKind: VehicleCourseKind.rail,
         ),
       ),
       isTrue,
