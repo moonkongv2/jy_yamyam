@@ -19,6 +19,8 @@ class EnSettingsTexts implements SettingsTextSet {
   String get courseIngredientModeOff => 'Off';
   String get courseIngredientModeManual => 'Manual';
   String get courseIngredientModeRandom => 'Auto';
+  String get courseIngredientModeDescription =>
+      'Only manually chosen ingredients are saved to meal records. Auto selections appear on the road only.';
   String get defaultMealDuration => 'Default meal time';
   String get vehicleSelection => 'Choose vehicle';
   String get childNameTitle => "Child's name";

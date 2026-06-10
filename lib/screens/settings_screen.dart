@@ -4,6 +4,7 @@ import '../catalogs/meal_course_catalog.dart';
 import '../l10n/app_texts.dart';
 import '../l10n/text_sets.dart';
 import '../models/meal_timer_config.dart';
+import '../theme/app_colors.dart';
 
 const _motivationVideoIntervalOptions = [
   Duration(minutes: 3),
@@ -236,6 +237,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       );
                     },
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    texts.settings.courseIngredientModeDescription,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                    ),
                   ),
                 ],
               ),

@@ -67,8 +67,8 @@ class MealTimerConfig {
     required this.customAvatarsByVehicle,
     required this.courseIngredientMode,
     this.courseIngredientIds = const [],
-    this.selectedCourseIngredientIds = const [],
-  });
+    List<String> selectedCourseIngredientIds = const [],
+  }) : _selectedCourseIngredientIds = selectedCourseIngredientIds;
 
   factory MealTimerConfig.defaults() {
     return const MealTimerConfig(
@@ -116,7 +116,9 @@ class MealTimerConfig {
   final Map<String, VehicleAvatarConfig> customAvatarsByVehicle;
   final CourseIngredientMode courseIngredientMode;
   final List<String> courseIngredientIds;
-  final List<String> selectedCourseIngredientIds;
+  final List<String>? _selectedCourseIngredientIds;
+  List<String> get selectedCourseIngredientIds =>
+      _selectedCourseIngredientIds ?? const [];
 
   MealTimerConfig copyWith({
     Duration? duration,

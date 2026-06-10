@@ -2498,6 +2498,10 @@ void main() {
     expect(find.text('사용 안 함'), findsOneWidget);
     expect(find.text('직접 선택'), findsOneWidget);
     expect(find.text('자동 선택'), findsOneWidget);
+    expect(
+      find.text('직접 선택한 식재료만 식사 기록에 남아요. 자동 선택은 도로에만 표시돼요.'),
+      findsOneWidget,
+    );
 
     segmentedButton.onSelectionChanged!({CourseIngredientMode.random});
     await tester.pump();

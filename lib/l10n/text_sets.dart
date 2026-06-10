@@ -131,6 +131,7 @@ abstract interface class SettingsTextSet {
   String get courseIngredientModeOff;
   String get courseIngredientModeManual;
   String get courseIngredientModeRandom;
+  String get courseIngredientModeDescription;
   String get defaultMealDuration;
   String get vehicleSelection;
   String get childNameTitle;
