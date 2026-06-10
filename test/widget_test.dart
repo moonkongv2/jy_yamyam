@@ -1365,6 +1365,7 @@ void main() {
       await const ActiveMealTimerSessionStore().clear();
     });
     final startedAt = DateTime(2026, 6, 10, 8);
+    final now = startedAt.add(const Duration(minutes: 10));
     final session = ActiveMealTimerSession(
       sessionId: 'active-session',
       startedAt: startedAt,
@@ -1390,6 +1391,7 @@ void main() {
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
+          now: () => now,
         ),
       ),
     );
@@ -1414,6 +1416,7 @@ void main() {
     addTearDown(() async {
       await const ActiveMealTimerSessionStore().clear();
     });
+    final now = DateTime(2026, 6, 10, 8, 10);
     await const ActiveMealTimerSessionStore().save(
       ActiveMealTimerSession(
         sessionId: 'active-session',
@@ -1436,6 +1439,7 @@ void main() {
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
+          now: () => now,
         ),
       ),
     );
@@ -1516,6 +1520,134 @@ void main() {
     expect(remainingText(), isNot(initialRemainingText));
   });
 
+  testWidgets('Home screen shows finished copy for arrived active sessions', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(() async {
+      await const ActiveMealTimerSessionStore().clear();
+    });
+    final now = DateTime(2026, 6, 10, 8);
+    await const ActiveMealTimerSessionStore().save(
+      ActiveMealTimerSession(
+        sessionId: 'active-session',
+        startedAt: now.subtract(const Duration(minutes: 30)),
+        config: MealTimerConfig.defaults().copyWith(
+          childName: '지율',
+          duration: const Duration(minutes: 25),
+        ),
+        state: ActiveMealTimerSessionState.running,
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(childName: '지율'),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          now: () => now,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('activeTimerResumeCard')), findsOneWidget);
+    expect(find.text('식사 시간이 끝났어요'), findsOneWidget);
+    expect(find.textContaining('남은 시간'), findsNothing);
+  });
+
+  testWidgets('Home screen clears stale active timer sessions', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(() async {
+      await const ActiveMealTimerSessionStore().clear();
+    });
+    final now = DateTime(2026, 6, 10, 8);
+    await const ActiveMealTimerSessionStore().save(
+      ActiveMealTimerSession(
+        sessionId: 'stale-session',
+        startedAt: now.subtract(const Duration(hours: 25)),
+        config: MealTimerConfig.defaults().copyWith(childName: '지율'),
+        state: ActiveMealTimerSessionState.running,
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(childName: '지율'),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          now: () => now,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(await const ActiveMealTimerSessionStore().load(), isNull);
+    expect(find.byKey(const ValueKey('activeTimerResumeCard')), findsNothing);
+  });
+
+  testWidgets('Home screen resumes finished active sessions at the finish', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(() async {
+      await const ActiveMealTimerSessionStore().clear();
+    });
+    final now = DateTime(2026, 6, 10, 8);
+    await const ActiveMealTimerSessionStore().save(
+      ActiveMealTimerSession(
+        sessionId: 'finished-session',
+        startedAt: now.subtract(const Duration(minutes: 30)),
+        config: MealTimerConfig.defaults().copyWith(
+          childName: '지율',
+          duration: const Duration(minutes: 25),
+        ),
+        state: ActiveMealTimerSessionState.running,
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(childName: '지율'),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          now: () => now,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.text('이어가기'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(tester.widget<RoadView>(find.byType(RoadView)).progress, 1);
+  });
+
   testWidgets('Starting a new timer with an active session asks first', (
     tester,
   ) async {
@@ -1523,6 +1655,7 @@ void main() {
     addTearDown(() async {
       await const ActiveMealTimerSessionStore().clear();
     });
+    final now = DateTime(2026, 6, 10, 8, 10);
     await const ActiveMealTimerSessionStore().save(
       ActiveMealTimerSession(
         sessionId: 'active-session',
@@ -1551,6 +1684,7 @@ void main() {
           ),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
+          now: () => now,
         ),
       ),
     );

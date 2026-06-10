@@ -38,6 +38,7 @@ import 'timer_screen.dart';
 
 const _homeLogoAssetPath = 'assets/images/logo_eng.png';
 const _settingsIconAssetPath = 'assets/images/icon_setting_rgba.png';
+const _activeSessionMaxAge = Duration(hours: 24);
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -98,7 +99,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   DateTime _now() => widget.now?.call() ?? DateTime.now();
 
   Future<ActiveMealTimerSession?> _loadActiveSession() async {
-    final session = await widget.activeSessionStore.load();
+    var session = await widget.activeSessionStore.load();
+    if (session != null && _isStaleActiveSession(session, now: _now())) {
+      await widget.activeSessionStore.clear();
+      session = null;
+    }
     if (mounted) {
       _activeSession = session;
       _updateActiveSessionTicker(session);
@@ -223,11 +228,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Future<bool> _resolveActiveSessionBeforeNewTimer() async {
-    final activeSession = await widget.activeSessionStore.load();
+    final activeSession = await _loadActiveSession();
     if (!mounted) {
       return false;
     }
     if (activeSession == null) {
+      _refreshProgressSnapshot();
       return true;
     }
 
@@ -662,6 +668,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                               activeSession,
                               now: _now(),
                             ),
+                            hasArrived: _hasActiveSessionArrived(
+                              activeSession,
+                              now: _now(),
+                            ),
                             onPressed: () => _resumeActiveTimer(activeSession),
                             onCancel: _cancelActiveTimer,
                           ),
@@ -761,6 +771,16 @@ class _CourseIngredientSelection {
 
 enum _ActiveTimerStartChoice { cancel, startNew }
 
+bool _isStaleActiveSession(ActiveMealTimerSession session, {DateTime? now}) {
+  final currentTime = now ?? DateTime.now();
+  return currentTime.difference(session.startedAt) > _activeSessionMaxAge;
+}
+
+bool _hasActiveSessionArrived(ActiveMealTimerSession session, {DateTime? now}) {
+  return session.state == ActiveMealTimerSessionState.arrived ||
+      _remainingForActiveSession(session, now: now) <= Duration.zero;
+}
+
 Duration _remainingForActiveSession(
   ActiveMealTimerSession session, {
   DateTime? now,
@@ -792,11 +812,13 @@ String? _quickCourseEmoji(int minutes) {
 class _ActiveTimerResumeCard extends StatelessWidget {
   const _ActiveTimerResumeCard({
     required this.remaining,
+    required this.hasArrived,
     required this.onPressed,
     required this.onCancel,
   });
 
   final Duration remaining;
+  final bool hasArrived;
   final VoidCallback onPressed;
   final VoidCallback onCancel;
 
@@ -853,7 +875,11 @@ class _ActiveTimerResumeCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        texts.home.activeTimerSubtitle(formattedRemaining),
+                        hasArrived
+                            ? texts.home.activeTimerArrivedSubtitle
+                            : texts.home.activeTimerSubtitle(
+                                formattedRemaining,
+                              ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: textTheme.bodySmall?.copyWith(

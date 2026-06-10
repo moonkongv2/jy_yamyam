@@ -37,6 +37,7 @@ class HomeTexts implements HomeTextSet {
   String get activeTimerNewTimerDialogTitle => '진행 중인 타이머가 있어요';
   String get activeTimerNewTimerDialogMessage => '새 타이머를 시작하면 진행 중인 타이머는 취소돼요.';
   String get activeTimerStartNewButton => '새로 시작';
+  String get activeTimerArrivedSubtitle => '식사 시간이 끝났어요';
 
   String recentCustomMinutes(int minutes) => '최근 $minutes분';
   String minuteLabel(int minutes) => '$minutes분';

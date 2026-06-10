@@ -39,6 +39,7 @@ class EnHomeTexts implements HomeTextSet {
   String get activeTimerNewTimerDialogMessage =>
       'Starting a new timer will cancel the current one.';
   String get activeTimerStartNewButton => 'Start new';
+  String get activeTimerArrivedSubtitle => 'Mealtime is done';
 
   String recentCustomMinutes(int minutes) => 'Recent $minutes min';
   String minuteLabel(int minutes) => '$minutes min';

@@ -45,6 +45,7 @@ abstract interface class HomeTextSet {
   String get activeTimerNewTimerDialogTitle;
   String get activeTimerNewTimerDialogMessage;
   String get activeTimerStartNewButton;
+  String get activeTimerArrivedSubtitle;
 
   String recentCustomMinutes(int minutes);
   String minuteLabel(int minutes);
