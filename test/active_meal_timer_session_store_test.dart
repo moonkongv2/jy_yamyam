@@ -1,0 +1,160 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:jy_yamyam/models/active_meal_timer_session.dart';
+import 'package:jy_yamyam/models/meal_timer_config.dart';
+import 'package:jy_yamyam/services/active_meal_timer_session_store.dart';
+
+void main() {
+  test(
+    'Active meal timer session store saves and loads a running session',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = ActiveMealTimerSessionStore();
+      final startedAt = DateTime.utc(2026, 6, 10, 1, 30);
+      final config = MealTimerConfig.defaults().copyWith(
+        duration: const Duration(minutes: 35),
+        childName: '지율',
+        vehicleId: 'bus',
+        motivationVideoUseCustomInterval: true,
+        motivationVideoInterval: const Duration(minutes: 3),
+        courseIngredientMode: CourseIngredientMode.manual,
+        courseIngredientIds: const ['egg', 'tofu'],
+        selectedCourseIngredientIds: const ['egg', 'tofu'],
+        customAvatarsByVehicle: const {
+          'bus': VehicleAvatarConfig(
+            imagePath: '/local/bus.png',
+            scale: 1.1,
+            offsetX: 0.05,
+            offsetY: -0.02,
+            rotationDegrees: 3.0,
+          ),
+        },
+      );
+
+      await store.save(
+        ActiveMealTimerSession(
+          sessionId: 'session-1',
+          startedAt: startedAt,
+          config: config,
+          state: ActiveMealTimerSessionState.running,
+          totalPausedDuration: const Duration(minutes: 2),
+          shownMotivationMilestones: const {10, 20},
+          lastMotivationVideoShownAt: const Duration(minutes: 6),
+          motivationScheduleStartedAt: const Duration(minutes: 1),
+        ),
+      );
+
+      final loadedSession = await store.load();
+
+      expect(loadedSession, isNotNull);
+      expect(loadedSession!.sessionId, 'session-1');
+      expect(loadedSession.startedAt, startedAt);
+      expect(loadedSession.duration, const Duration(minutes: 35));
+      expect(loadedSession.config.childName, '지율');
+      expect(loadedSession.config.vehicleId, 'bus');
+      expect(loadedSession.config.motivationVideoUseCustomInterval, isTrue);
+      expect(
+        loadedSession.config.motivationVideoInterval,
+        const Duration(minutes: 3),
+      );
+      expect(
+        loadedSession.config.courseIngredientMode,
+        CourseIngredientMode.manual,
+      );
+      expect(loadedSession.config.courseIngredientIds, ['egg', 'tofu']);
+      expect(loadedSession.config.selectedCourseIngredientIds, ['egg', 'tofu']);
+      expect(
+        loadedSession.config.customAvatarConfigForVehicle('bus')?.imagePath,
+        '/local/bus.png',
+      );
+      expect(loadedSession.state, ActiveMealTimerSessionState.running);
+      expect(loadedSession.totalPausedDuration, const Duration(minutes: 2));
+      expect(loadedSession.pausedAt, isNull);
+      expect(loadedSession.shownMotivationMilestones, {10, 20});
+      expect(
+        loadedSession.lastMotivationVideoShownAt,
+        const Duration(minutes: 6),
+      );
+      expect(
+        loadedSession.motivationScheduleStartedAt,
+        const Duration(minutes: 1),
+      );
+    },
+  );
+
+  test(
+    'Active meal timer session store saves and loads a paused session',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final store = ActiveMealTimerSessionStore();
+      final pausedAt = DateTime.utc(2026, 6, 10, 1, 40);
+
+      await store.save(
+        ActiveMealTimerSession(
+          sessionId: 'session-2',
+          startedAt: DateTime.utc(2026, 6, 10, 1, 30),
+          config: MealTimerConfig.defaults(),
+          state: ActiveMealTimerSessionState.paused,
+          totalPausedDuration: const Duration(minutes: 1),
+          pausedAt: pausedAt,
+        ),
+      );
+
+      final loadedSession = await store.load();
+
+      expect(loadedSession, isNotNull);
+      expect(loadedSession!.state, ActiveMealTimerSessionState.paused);
+      expect(loadedSession.pausedAt, pausedAt);
+      expect(loadedSession.totalPausedDuration, const Duration(minutes: 1));
+    },
+  );
+
+  test('Active meal timer session copyWith can clear nullable fields', () {
+    final session = ActiveMealTimerSession(
+      sessionId: 'session-3',
+      startedAt: DateTime.utc(2026, 6, 10, 1, 30),
+      config: MealTimerConfig.defaults(),
+      state: ActiveMealTimerSessionState.paused,
+      pausedAt: DateTime.utc(2026, 6, 10, 1, 35),
+      lastMotivationVideoShownAt: const Duration(minutes: 3),
+    );
+
+    final resumedSession = session.copyWith(
+      state: ActiveMealTimerSessionState.running,
+      pausedAt: null,
+      lastMotivationVideoShownAt: null,
+    );
+
+    expect(resumedSession.state, ActiveMealTimerSessionState.running);
+    expect(resumedSession.pausedAt, isNull);
+    expect(resumedSession.lastMotivationVideoShownAt, isNull);
+  });
+
+  test('Active meal timer session store ignores malformed data', () async {
+    SharedPreferences.setMockInitialValues({
+      'activeMealTimerSession': '{not-json',
+    });
+
+    final loadedSession = await ActiveMealTimerSessionStore().load();
+
+    expect(loadedSession, isNull);
+  });
+
+  test('Active meal timer session store clears saved data', () async {
+    SharedPreferences.setMockInitialValues({});
+    final store = ActiveMealTimerSessionStore();
+    await store.save(
+      ActiveMealTimerSession(
+        sessionId: 'session-4',
+        startedAt: DateTime.utc(2026, 6, 10, 1, 30),
+        config: MealTimerConfig.defaults(),
+        state: ActiveMealTimerSessionState.running,
+      ),
+    );
+
+    await store.clear();
+
+    expect(await store.load(), isNull);
+  });
+}
