@@ -375,7 +375,7 @@ class RoadCourseVisualStyle {
           ],
           backgroundStops: const [0, 0.5, 0.78, 1],
           softShadowColor: AppColors.brown700.withValues(alpha: 0.08),
-          rimColor: AppColors.surfaceWarm.withValues(alpha: 0.90),
+          rimColor: AppColors.brown700.withValues(alpha: 0.30),
           pathColor: const Color(0xFFC9D7B8),
           progressColor: const Color(0xFFE5BC73).withValues(alpha: 0.95),
           progressGlowColor: const Color(0xFFC58A3B).withValues(alpha: 0.14),
@@ -464,13 +464,31 @@ class RoadPainter extends CustomPainter {
     };
   }
 
+  static double effectiveRoadStrokeWidthForCourseKind(
+    VehicleCourseKind courseKind,
+    double roadWidth,
+  ) {
+    return switch (courseKind) {
+      VehicleCourseKind.rail => (roadWidth * 0.52).clamp(14.0, 26.0).toDouble(),
+      VehicleCourseKind.road ||
+      VehicleCourseKind.sky ||
+      VehicleCourseKind.water => roadWidth,
+    };
+  }
+
   @override
   void paint(Canvas canvas, Size size) {
     final visualStyle = RoadCourseVisualStyle.forCourseKind(courseKind);
     final roadPath = geometry == null
         ? createRoadPath(size)
         : createRoadPathForGeometry(geometry!);
-    final roadWidth = roadStrokeWidthForSize(geometry?.viewportSize ?? size);
+    final baseRoadWidth = roadStrokeWidthForSize(
+      geometry?.viewportSize ?? size,
+    );
+    final roadWidth = effectiveRoadStrokeWidthForCourseKind(
+      courseKind,
+      baseRoadWidth,
+    );
     final roadMetric = roadPath.computeMetrics().first;
     final progressDistance =
         roadMetric.length * progress.clamp(0.0, 1.0).toDouble();
@@ -482,6 +500,12 @@ class RoadPainter extends CustomPainter {
       _drawWaterRipples(canvas, size);
     }
 
+    final rimStrokeWidth = switch (courseKind) {
+      VehicleCourseKind.rail => roadWidth + 8,
+      VehicleCourseKind.road ||
+      VehicleCourseKind.sky ||
+      VehicleCourseKind.water => roadWidth + 5,
+    };
     final softShadowPaint = Paint()
       ..color = visualStyle.softShadowColor
       ..style = PaintingStyle.stroke
@@ -494,7 +518,7 @@ class RoadPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..strokeWidth = roadWidth + 5;
+      ..strokeWidth = rimStrokeWidth;
     final roadPaint = Paint()
       ..color = visualStyle.pathColor
       ..style = PaintingStyle.stroke
@@ -534,13 +558,7 @@ class RoadPainter extends CustomPainter {
     } else if (courseKind == VehicleCourseKind.water) {
       _drawWaterFlow(canvas, roadPath, visualStyle.laneColor, laneDashPhase);
     } else if (courseKind == VehicleCourseKind.rail) {
-      _drawRailTrack(
-        canvas,
-        roadPath,
-        visualStyle.laneColor,
-        laneDashPhase,
-        roadWidth,
-      );
+      _drawRailTrack(canvas, roadPath, laneDashPhase, roadWidth);
     } else {
       _drawDashedPath(canvas, roadPath, lanePaint, laneDashPhase);
     }
@@ -754,19 +772,18 @@ class RoadPainter extends CustomPainter {
   }
 
   static double railSleeperHalfLengthForRoadWidth(double roadWidth) {
-    return (roadWidth * 0.44).clamp(13.0, 22.0).toDouble();
+    return (roadWidth * 0.85).clamp(11.0, 18.0).toDouble();
   }
 
   void _drawRailTrack(
     Canvas canvas,
     Path path,
-    Color color,
     double phase,
     double roadWidth,
   ) {
     final sleeperHalfLength = railSleeperHalfLengthForRoadWidth(roadWidth);
     final sleeperPaint = Paint()
-      ..color = AppColors.brown700.withValues(alpha: 0.26)
+      ..color = AppColors.brown700.withValues(alpha: 0.38)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = railSleeperStrokeWidth;

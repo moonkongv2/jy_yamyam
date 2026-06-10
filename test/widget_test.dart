@@ -3779,21 +3779,35 @@ void main() {
     );
   });
 
-  test('RoadPainter rail sleepers scale with road width', () {
-    final portraitRoadWidth = roadStrokeWidthForSize(const Size(420, 640));
-    final landscapeRoadWidth = roadStrokeWidthForSize(const Size(1200, 520));
+  test('RoadPainter rail track scales with road width', () {
+    final portraitBaseRoadWidth = roadStrokeWidthForSize(const Size(420, 640));
+    final landscapeBaseRoadWidth = roadStrokeWidthForSize(
+      const Size(1200, 520),
+    );
+    final portraitRailWidth = RoadPainter.effectiveRoadStrokeWidthForCourseKind(
+      VehicleCourseKind.rail,
+      portraitBaseRoadWidth,
+    );
+    final landscapeRailWidth =
+        RoadPainter.effectiveRoadStrokeWidthForCourseKind(
+          VehicleCourseKind.rail,
+          landscapeBaseRoadWidth,
+        );
 
+    expect(portraitRailWidth, lessThan(portraitBaseRoadWidth));
+    expect(landscapeRailWidth, lessThan(landscapeBaseRoadWidth));
+    expect(portraitRailWidth, 14);
+    expect(landscapeRailWidth, closeTo(landscapeBaseRoadWidth * 0.52, 0.01));
     expect(
-      RoadPainter.railSleeperHalfLengthForRoadWidth(portraitRoadWidth),
-      13,
+      RoadPainter.effectiveRoadStrokeWidthForCourseKind(
+        VehicleCourseKind.road,
+        landscapeBaseRoadWidth,
+      ),
+      landscapeBaseRoadWidth,
     );
     expect(
-      RoadPainter.railSleeperHalfLengthForRoadWidth(landscapeRoadWidth),
-      closeTo(landscapeRoadWidth * 0.44, 0.01),
-    );
-    expect(
-      RoadPainter.railSleeperHalfLengthForRoadWidth(landscapeRoadWidth) * 2,
-      greaterThan(36),
+      RoadPainter.railSleeperHalfLengthForRoadWidth(landscapeRailWidth) * 2,
+      greaterThan(landscapeRailWidth),
     );
   });
 
