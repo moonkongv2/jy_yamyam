@@ -534,7 +534,13 @@ class RoadPainter extends CustomPainter {
     } else if (courseKind == VehicleCourseKind.water) {
       _drawWaterFlow(canvas, roadPath, visualStyle.laneColor, laneDashPhase);
     } else if (courseKind == VehicleCourseKind.rail) {
-      _drawRailTrack(canvas, roadPath, visualStyle.laneColor, laneDashPhase);
+      _drawRailTrack(
+        canvas,
+        roadPath,
+        visualStyle.laneColor,
+        laneDashPhase,
+        roadWidth,
+      );
     } else {
       _drawDashedPath(canvas, roadPath, lanePaint, laneDashPhase);
     }
@@ -747,9 +753,20 @@ class RoadPainter extends CustomPainter {
     }
   }
 
-  void _drawRailTrack(Canvas canvas, Path path, Color color, double phase) {
+  static double railSleeperHalfLengthForRoadWidth(double roadWidth) {
+    return (roadWidth * 0.44).clamp(13.0, 22.0).toDouble();
+  }
+
+  void _drawRailTrack(
+    Canvas canvas,
+    Path path,
+    Color color,
+    double phase,
+    double roadWidth,
+  ) {
+    final sleeperHalfLength = railSleeperHalfLengthForRoadWidth(roadWidth);
     final sleeperPaint = Paint()
-      ..color = AppColors.brown700.withValues(alpha: 0.20)
+      ..color = AppColors.brown700.withValues(alpha: 0.26)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = railSleeperStrokeWidth;
@@ -771,8 +788,8 @@ class RoadPainter extends CustomPainter {
             final normal = Offset(-direction.dy, direction.dx);
             final center = tangent.position;
             canvas.drawLine(
-              center - (normal * 13),
-              center + (normal * 13),
+              center - (normal * sleeperHalfLength),
+              center + (normal * sleeperHalfLength),
               sleeperPaint,
             );
           }

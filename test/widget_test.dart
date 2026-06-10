@@ -3779,6 +3779,24 @@ void main() {
     );
   });
 
+  test('RoadPainter rail sleepers scale with road width', () {
+    final portraitRoadWidth = roadStrokeWidthForSize(const Size(420, 640));
+    final landscapeRoadWidth = roadStrokeWidthForSize(const Size(1200, 520));
+
+    expect(
+      RoadPainter.railSleeperHalfLengthForRoadWidth(portraitRoadWidth),
+      13,
+    );
+    expect(
+      RoadPainter.railSleeperHalfLengthForRoadWidth(landscapeRoadWidth),
+      closeTo(landscapeRoadWidth * 0.44, 0.01),
+    );
+    expect(
+      RoadPainter.railSleeperHalfLengthForRoadWidth(landscapeRoadWidth) * 2,
+      greaterThan(36),
+    );
+  });
+
   testWidgets('RoadPainter renders the sky course clouds safely', (
     tester,
   ) async {
