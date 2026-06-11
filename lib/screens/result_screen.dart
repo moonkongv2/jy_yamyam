@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../l10n/app_texts.dart';
+import '../l10n/text_sets.dart';
 import '../models/meal_progress_snapshot.dart';
 import '../models/meal_session_result.dart';
 import '../models/meal_timer_config.dart';
@@ -43,6 +44,42 @@ const _resultVideoPathsByVehicle = {
   'brachio': 'assets/videos/result_brachio_success.mp4',
   'pteranodon': 'assets/videos/result_pteranodon_success.mp4',
 };
+
+List<AppHelpSection> _resultHelpSections(
+  ResultTextSet texts,
+  bool mealCompleted,
+) {
+  return [
+    AppHelpSection(
+      title: texts.resultHelpMeaningTitle(mealCompleted),
+      bulletItems: texts.resultHelpMeaningItems(mealCompleted),
+    ),
+    AppHelpSection(
+      title: texts.resultHelpSayTitle(mealCompleted),
+      bulletItems: texts.resultHelpSayItems(mealCompleted),
+    ),
+    AppHelpSection(
+      title: texts.resultHelpAvoidTitle(mealCompleted),
+      bulletItems: texts.resultHelpAvoidItems(mealCompleted),
+    ),
+    AppHelpSection(
+      title: texts.resultHelpNextCourseTitle(mealCompleted),
+      bulletItems: texts.resultHelpNextCourseItems(mealCompleted),
+    ),
+  ];
+}
+
+Future<void> _showResultHelpSheet(
+  BuildContext context, {
+  required bool mealCompleted,
+}) {
+  final texts = AppTexts.of(context).result;
+  return showAppHelpSheet(
+    context: context,
+    title: texts.helpTitle(mealCompleted),
+    sections: _resultHelpSections(texts, mealCompleted),
+  );
+}
 
 String resultVideoAssetPathForVehicle({required String vehicleId}) {
   return _resultVideoPathsByVehicle[vehicleId] ?? _fallbackSuccessVideoPath;
@@ -186,13 +223,7 @@ class _ResultScreenState extends State<ResultScreen> {
   }
 
   void _showResultHelp(bool mealCompleted) {
-    final texts = AppTexts.of(context).result;
-    showAppHelpSheet(
-      context: context,
-      title: texts.helpTitle(mealCompleted),
-      bodyParagraphs: texts.helpBodyParagraphs(mealCompleted),
-      bulletItems: texts.helpBulletItems(mealCompleted),
-    );
+    _showResultHelpSheet(context, mealCompleted: mealCompleted);
   }
 
   @override
@@ -355,6 +386,11 @@ class _ResultScreenState extends State<ResultScreen> {
                                 ),
                               ),
                             ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _ResultGuardianTipCard(
+                              mealCompleted: mealCompleted,
+                              onPressed: () => _showResultHelp(mealCompleted),
+                            ),
                             Spacer(flex: isPortraitSuccess ? 2 : 1),
                             FilledButton.icon(
                               onPressed: () => _restart(context),
@@ -380,83 +416,177 @@ class _ResultScreenState extends State<ResultScreen> {
               ),
             ),
           ),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth > constraints.maxHeight) {
-                return const SizedBox.shrink();
-              }
-
-              return SafeArea(
-                child: Align(
-                  alignment: Alignment.topRight,
-                  child: Padding(
-                    padding: const EdgeInsets.only(
-                      top: AppSpacing.sm,
-                      right: AppSpacing.sm,
-                    ),
-                    child: _ResultHelpButton(
-                      mealCompleted: mealCompleted,
-                      isPlain: true,
-                      onPressed: () => _showResultHelp(mealCompleted),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
         ],
       ),
     );
   }
 }
 
-class _ResultHelpButton extends StatelessWidget {
-  const _ResultHelpButton({
+class _ResultGuardianTipCard extends StatelessWidget {
+  const _ResultGuardianTipCard({
     required this.mealCompleted,
     required this.onPressed,
-    this.isCompact = false,
-    this.isPlain = false,
   });
 
   final bool mealCompleted;
   final VoidCallback onPressed;
-  final bool isCompact;
-  final bool isPlain;
 
   @override
   Widget build(BuildContext context) {
     final texts = AppTexts.of(context).result;
-
+    final textTheme = Theme.of(context).textTheme;
+    final icon = mealCompleted ? Icons.favorite_rounded : Icons.spa_rounded;
     final key = ValueKey(
       mealCompleted
-          ? 'completedResultHelpButton'
-          : 'incompleteResultHelpButton',
+          ? 'completedResultGuardianTipCard'
+          : 'incompleteResultGuardianTipCard',
     );
 
-    if (isPlain || isCompact) {
-      return IconButton(
-        key: key,
-        tooltip: texts.helpButtonLabel(mealCompleted),
-        onPressed: onPressed,
-        icon: const Icon(Icons.help_outline_rounded),
-        color: AppColors.brown700,
-        style: IconButton.styleFrom(
-          fixedSize: isCompact ? const Size(40, 40) : const Size(48, 48),
-          shape: const CircleBorder(),
+    return Semantics(
+      button: true,
+      label: texts.parentTipSemanticLabel(mealCompleted),
+      child: ExcludeSemantics(
+        child: Material(
+          key: key,
+          color: AppColors.surfaceWarm.withValues(alpha: 0.92),
+          borderRadius: AppRadius.compactCard,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: AppRadius.compactCard,
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 88),
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                borderRadius: AppRadius.compactCard,
+                border: Border.all(color: AppColors.borderWarm),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primarySoft,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, color: AppColors.primary),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          texts.parentTipLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.labelLarge?.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          texts.parentTipTitle(mealCompleted),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.titleSmall?.copyWith(
+                            color: AppColors.textStrong,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          texts.parentTipSubtitle(mealCompleted),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: AppColors.textSecondary,
+                            height: 1.25,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.brown500,
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-      );
-    }
+      ),
+    );
+  }
+}
 
-    return IconButton.filledTonal(
-      key: key,
-      tooltip: texts.helpButtonLabel(mealCompleted),
-      onPressed: onPressed,
-      icon: const Icon(Icons.help_outline_rounded),
-      style: IconButton.styleFrom(
-        backgroundColor: AppColors.white.withValues(alpha: 0.82),
-        foregroundColor: AppColors.brown700,
-        fixedSize: isCompact ? const Size(40, 40) : const Size(44, 44),
-        shape: const CircleBorder(),
+class _ResultGuardianTipButton extends StatelessWidget {
+  const _ResultGuardianTipButton({
+    required this.mealCompleted,
+    required this.onPressed,
+  });
+
+  final bool mealCompleted;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final texts = AppTexts.of(context).result;
+    final key = ValueKey(
+      mealCompleted
+          ? 'completedResultGuardianTipButton'
+          : 'incompleteResultGuardianTipButton',
+    );
+
+    return Semantics(
+      button: true,
+      label: texts.parentTipSemanticLabel(mealCompleted),
+      child: ExcludeSemantics(
+        child: Tooltip(
+          message: texts.parentTipSemanticLabel(mealCompleted),
+          child: Material(
+            key: key,
+            color: AppColors.white.withValues(alpha: 0.78),
+            borderRadius: AppRadius.pill,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: AppRadius.pill,
+              child: Container(
+                height: 40,
+                constraints: const BoxConstraints(maxWidth: 142),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      mealCompleted
+                          ? Icons.favorite_rounded
+                          : Icons.spa_rounded,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Flexible(
+                      child: Text(
+                        texts.parentTipLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: AppColors.brown700,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -607,21 +737,12 @@ class _CompactLandscapeResultLayout extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            _ResultHelpButton(
+                            _ResultGuardianTipButton(
                               mealCompleted: mealCompleted,
-                              isCompact: true,
-                              onPressed: () {
-                                final resultTexts = AppTexts.of(context).result;
-                                showAppHelpSheet(
-                                  context: context,
-                                  title: resultTexts.helpTitle(mealCompleted),
-                                  bodyParagraphs: resultTexts
-                                      .helpBodyParagraphs(mealCompleted),
-                                  bulletItems: resultTexts.helpBulletItems(
-                                    mealCompleted,
-                                  ),
-                                );
-                              },
+                              onPressed: () => _showResultHelpSheet(
+                                context,
+                                mealCompleted: mealCompleted,
+                              ),
                             ),
                           ],
                         ),

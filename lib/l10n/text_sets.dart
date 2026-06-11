@@ -234,10 +234,22 @@ abstract interface class ResultTextSet {
   String title(bool mealCompleted);
   String primaryMessage(bool mealCompleted, {String? vehicleId});
   String secondaryMessage(bool mealCompleted);
+  String get parentTipLabel;
+  String parentTipTitle(bool mealCompleted);
+  String parentTipSubtitle(bool mealCompleted);
+  String parentTipSemanticLabel(bool mealCompleted);
   String helpButtonLabel(bool mealCompleted);
   String helpTitle(bool mealCompleted);
   List<String> helpBodyParagraphs(bool mealCompleted);
   List<String> helpBulletItems(bool mealCompleted);
+  String resultHelpMeaningTitle(bool mealCompleted);
+  List<String> resultHelpMeaningItems(bool mealCompleted);
+  String resultHelpSayTitle(bool mealCompleted);
+  List<String> resultHelpSayItems(bool mealCompleted);
+  String resultHelpAvoidTitle(bool mealCompleted);
+  List<String> resultHelpAvoidItems(bool mealCompleted);
+  String resultHelpNextCourseTitle(bool mealCompleted);
+  List<String> resultHelpNextCourseItems(bool mealCompleted);
 }
 
 abstract interface class RewardTextSet {

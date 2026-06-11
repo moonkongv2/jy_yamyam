@@ -5,11 +5,24 @@ import '../../theme/app_radius.dart';
 import '../../theme/app_shadows.dart';
 import '../../theme/app_spacing.dart';
 
+class AppHelpSection {
+  const AppHelpSection({
+    required this.title,
+    this.bodyParagraphs = const [],
+    this.bulletItems = const [],
+  });
+
+  final String title;
+  final List<String> bodyParagraphs;
+  final List<String> bulletItems;
+}
+
 Future<void> showAppHelpSheet({
   required BuildContext context,
   required String title,
   List<String> bodyParagraphs = const [],
   List<String> bulletItems = const [],
+  List<AppHelpSection> sections = const [],
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -19,6 +32,7 @@ Future<void> showAppHelpSheet({
       title: title,
       bodyParagraphs: bodyParagraphs,
       bulletItems: bulletItems,
+      sections: sections,
     ),
   );
 }
@@ -29,11 +43,13 @@ class AppHelpSheet extends StatelessWidget {
     required this.title,
     this.bodyParagraphs = const [],
     this.bulletItems = const [],
+    this.sections = const [],
   });
 
   final String title;
   final List<String> bodyParagraphs;
   final List<String> bulletItems;
+  final List<AppHelpSection> sections;
 
   @override
   Widget build(BuildContext context) {
@@ -128,12 +144,62 @@ class AppHelpSheet extends StatelessWidget {
                       for (final item in bulletItems)
                         _AppHelpBulletRow(text: item),
                     ],
+                    if (sections.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      for (final section in sections)
+                        _AppHelpSectionBlock(section: section),
+                    ],
                   ],
                 ),
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AppHelpSectionBlock extends StatelessWidget {
+  const _AppHelpSectionBlock({required this.section});
+
+  final AppHelpSection section;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            section.title,
+            style: textTheme.titleSmall?.copyWith(
+              color: AppColors.textStrong,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          if (section.bodyParagraphs.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            for (final paragraph in section.bodyParagraphs) ...[
+              Text(
+                paragraph,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  height: 1.38,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+            ],
+          ],
+          if (section.bulletItems.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
+            for (final item in section.bulletItems)
+              _AppHelpBulletRow(text: item),
+          ],
+        ],
       ),
     );
   }

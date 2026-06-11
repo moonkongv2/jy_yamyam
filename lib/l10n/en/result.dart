@@ -21,11 +21,26 @@ class EnResultTexts implements ResultTextSet {
       ? 'You finished before the rider passed by and earned a reward!'
       : "Let's try again on the next ride.";
 
-  String helpButtonLabel(bool mealCompleted) =>
-      mealCompleted ? 'Success and sticker guide' : 'Incomplete record guide';
+  String get parentTipLabel => 'Guardian tip';
 
-  String helpTitle(bool mealCompleted) =>
-      mealCompleted ? 'Success and stickers' : 'Incomplete records';
+  String parentTipTitle(bool mealCompleted) =>
+      mealCompleted ? 'Try saying this' : 'Encourage the next try';
+
+  String parentTipSubtitle(bool mealCompleted) => mealCompleted
+      ? 'Praise the mealtime effort before the sticker.'
+      : 'An incomplete result can guide the next ride.';
+
+  String parentTipSemanticLabel(bool mealCompleted) => mealCompleted
+      ? 'View guardian tips for a completed meal'
+      : 'View guardian tips for an incomplete meal';
+
+  String helpButtonLabel(bool mealCompleted) => mealCompleted
+      ? 'Success and encouragement tips'
+      : 'Incomplete result and next-try tips';
+
+  String helpTitle(bool mealCompleted) => mealCompleted
+      ? 'Success and encouragement tips'
+      : 'Incomplete result and next-try tips';
 
   List<String> helpBodyParagraphs(bool mealCompleted) => mealCompleted
       ? const [
@@ -43,6 +58,63 @@ class EnResultTexts implements ResultTextSet {
       : const [
           'Incomplete meals stay in meal history, but no sticker is awarded.',
           'An incomplete result is a record for the next try, not a punishment.',
+        ];
+
+  String resultHelpMeaningTitle(bool mealCompleted) =>
+      'What does this result mean?';
+
+  List<String> resultHelpMeaningItems(bool mealCompleted) => mealCompleted
+      ? const [
+          'When the guardian confirms the meal is finished, it is saved as a success.',
+          'A successful meal earns 1 random success sticker.',
+          'If reward goals are active, the success sticker can fill a goal slot.',
+        ]
+      : const [
+          'The rider arrived first, and the meal was saved as incomplete.',
+          'Incomplete meals stay in meal history, but no sticker is awarded.',
+          'An incomplete result is a record for the next try, not a punishment.',
+        ];
+
+  String resultHelpSayTitle(bool mealCompleted) => 'Try saying';
+
+  List<String> resultHelpSayItems(bool mealCompleted) => mealCompleted
+      ? const [
+          'I liked how you kept trying until the end.',
+          'You followed today’s ride all the way through.',
+          'The sticker is fun, but finishing your meal is the biggest win.',
+        ]
+      : const [
+          'The rider arrived first today. That’s okay, we can try again next time.',
+          'Let’s look at how far you got.',
+          'Today felt a little hard. I can give you more time next time.',
+        ];
+
+  String resultHelpAvoidTitle(bool mealCompleted) => 'Try to avoid';
+
+  List<String> resultHelpAvoidItems(bool mealCompleted) => mealCompleted
+      ? const [
+          'Good job eating fast.',
+          'You have to succeed every time.',
+          'You need to do better if you want a sticker.',
+        ]
+      : const [
+          'You failed.',
+          'Why did you only eat this much?',
+          'You must be upset because you didn’t get a sticker.',
+        ];
+
+  String resultHelpNextCourseTitle(bool mealCompleted) => 'For the next ride';
+
+  List<String> resultHelpNextCourseItems(bool mealCompleted) => mealCompleted
+      ? const [
+          'If the meal felt rushed, try a slightly longer timer next time.',
+          'If the child felt comfortable, repeat the same duration to build confidence.',
+          'Praise the mealtime rhythm and effort before the sticker.',
+        ]
+      : const [
+          'If incomplete results happen often, try a longer default meal duration.',
+          'If the child gets stuck on certain foods, use manual ingredient selection to make the course feel familiar.',
+          'Use the record to understand mealtime patterns, not to grade the child.',
         ];
 }
 

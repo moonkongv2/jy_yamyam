@@ -741,16 +741,23 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('부모님 응원 팁'), findsOneWidget);
+    expect(find.text('아이에게 이렇게 말해보세요'), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('completedResultHelpButton')),
+      find.byKey(const ValueKey('completedResultGuardianTipCard')),
       findsOneWidget,
     );
 
-    await tester.tap(find.byKey(const ValueKey('completedResultHelpButton')));
+    await tester.tap(
+      find.byKey(const ValueKey('completedResultGuardianTipCard')),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('appHelpSheet')), findsOneWidget);
-    expect(find.textContaining('랜덤 성공 스티커'), findsOneWidget);
+    expect(find.text('아이에게 이렇게 말해보세요'), findsWidgets);
+    expect(find.text('끝까지 먹어보려고 한 게 정말 좋았어.'), findsOneWidget);
+    expect(find.text('빨리 먹어서 잘했어.'), findsOneWidget);
+    expect(find.textContaining('스티커 1개'), findsOneWidget);
   });
 
   testWidgets('Incomplete result help explains record without sticker', (
@@ -783,17 +790,71 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(find.text('부모님 응원 팁'), findsOneWidget);
+    expect(find.text('다음 도전을 부드럽게 응원해요'), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('incompleteResultHelpButton')),
+      find.byKey(const ValueKey('incompleteResultGuardianTipCard')),
       findsOneWidget,
     );
 
-    await tester.tap(find.byKey(const ValueKey('incompleteResultHelpButton')));
+    await tester.tap(
+      find.byKey(const ValueKey('incompleteResultGuardianTipCard')),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('appHelpSheet')), findsOneWidget);
-    expect(find.textContaining('미완료 기록'), findsWidgets);
-    expect(find.textContaining('스티커는 지급되지'), findsOneWidget);
+    expect(find.text('아이에게 이렇게 말해보세요'), findsOneWidget);
+    expect(find.textContaining('오늘은 빠방이 먼저 도착했네'), findsOneWidget);
+    expect(find.textContaining('미완료는 벌이 아니라 다음 도전을 위한 기록'), findsOneWidget);
+    expect(find.text('실패했네.'), findsOneWidget);
+  });
+
+  testWidgets('English completed result help shows coaching sections', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: ResultScreen(
+          result: _mealResult(completedBeforeArrival: true),
+          config: MealTimerConfig.defaults(),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          introControllerFactory: (_) {
+            return VideoPlayerController.asset(
+              'assets/videos/missing_result_success.mp4',
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Guardian tip'), findsOneWidget);
+    expect(find.text('Try saying this'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('completedResultGuardianTipCard')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('appHelpSheet')), findsOneWidget);
+    expect(find.text('Try saying'), findsOneWidget);
+    expect(find.text('Try to avoid'), findsOneWidget);
   });
 
   testWidgets('Failed result screen uses selected rider image in landscape', (
@@ -828,6 +889,10 @@ void main() {
 
     expect(
       find.byKey(const ValueKey('compactLandscapeResultCard')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('incompleteResultGuardianTipButton')),
       findsOneWidget,
     );
     expect(find.text('버스가 먼저 출발했어.'), findsOneWidget);
@@ -883,6 +948,10 @@ void main() {
     final homeButton = find.widgetWithText(OutlinedButton, '홈으로');
 
     expect(find.text('식사 완주 성공!'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('completedResultGuardianTipButton')),
+      findsOneWidget,
+    );
     expect(
       _assetImage('assets/images/result_success_bg_landscape.png'),
       findsOneWidget,
