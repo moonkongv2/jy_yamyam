@@ -85,6 +85,7 @@ void main() {
       MealIngredientCatalog.egg,
       MealIngredientCatalog.seaweed,
       MealIngredientCatalog.tofu,
+      MealIngredientCatalog.radish,
     ];
 
     expect(MealIngredientCatalog.egg.emoji, '🍳');
@@ -1925,6 +1926,12 @@ void main() {
       find.byKey(const ValueKey('mealIngredientChipImage_tofu')),
       findsOneWidget,
     );
+    expect(find.text('배추'), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('mealIngredientChipImage_radish')),
+      findsOneWidget,
+    );
+    expect(find.text('콩'), findsOneWidget);
     expect(find.byType(TimerScreen), findsNothing);
   });
 

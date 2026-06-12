@@ -116,6 +116,28 @@ abstract final class MealIngredientCatalog {
     emoji: '🍎',
   );
 
+  static const cabbage = MealIngredientDefinition(
+    id: 'cabbage',
+    labelKo: '배추',
+    labelEn: 'Cabbage',
+    emoji: '🥬',
+  );
+
+  static const radish = MealIngredientDefinition(
+    id: 'radish',
+    labelKo: '무',
+    labelEn: 'Radish',
+    emoji: '⚪',
+    assetPath: 'assets/images/ingredients/radish.png',
+  );
+
+  static const bean = MealIngredientDefinition(
+    id: 'bean',
+    labelKo: '콩',
+    labelEn: 'Beans',
+    emoji: '🫘',
+  );
+
   static const all = [
     carrot,
     egg,
@@ -132,6 +154,9 @@ abstract final class MealIngredientCatalog {
     mushroom,
     cheese,
     apple,
+    cabbage,
+    radish,
+    bean,
   ];
 
   static const defaultSelectionIds = [
