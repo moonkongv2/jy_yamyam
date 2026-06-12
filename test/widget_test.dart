@@ -4160,6 +4160,9 @@ void main() {
     final railStyle = RoadCourseVisualStyle.forCourseKind(
       VehicleCourseKind.rail,
     );
+    final fieldStyle = RoadCourseVisualStyle.forCourseKind(
+      VehicleCourseKind.field,
+    );
 
     expect(roadStyle.pathColor, const Color(0xFFBCEFD0));
     expect(roadStyle.backgroundColors, hasLength(4));
@@ -4167,6 +4170,9 @@ void main() {
     expect(skyStyle.pathColor, isNot(roadStyle.pathColor));
     expect(waterStyle.pathColor, isNot(roadStyle.pathColor));
     expect(railStyle.pathColor, isNot(roadStyle.pathColor));
+    expect(fieldStyle.pathColor, isNot(roadStyle.pathColor));
+    expect(fieldStyle.backgroundColors, hasLength(4));
+    expect(fieldStyle.backgroundStops, const [0, 0.48, 0.80, 1]);
   });
 
   test('RoadPainter uses course-specific flow patterns', () {
@@ -4280,6 +4286,23 @@ void main() {
           progress: 0.5,
           laneDashPhase: 12,
           courseKind: VehicleCourseKind.rail,
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('RoadPainter renders the field course palette safely', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const CustomPaint(
+        size: Size(420, 640),
+        painter: RoadPainter(
+          progress: 0.5,
+          laneDashPhase: 12,
+          courseKind: VehicleCourseKind.field,
         ),
       ),
     );

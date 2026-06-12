@@ -381,8 +381,25 @@ class RoadCourseVisualStyle {
           progressGlowColor: const Color(0xFFC58A3B).withValues(alpha: 0.14),
           laneColor: AppColors.surfaceSoft.withValues(alpha: 0.78),
         );
-      case VehicleCourseKind.road:
       case VehicleCourseKind.field:
+        return RoadCourseVisualStyle(
+          backgroundColors: [
+            AppColors.white.withValues(alpha: 0.96),
+            const Color(0xFFF1FBE9),
+            const Color(0xFFD9F1C4).withValues(alpha: 0.48),
+            const Color(0xFFFFF4D7).withValues(alpha: 0.90),
+          ],
+          backgroundStops: const [0, 0.48, 0.80, 1],
+          softShadowColor: const Color(0xFF668A45).withValues(alpha: 0.10),
+          rimColor: AppColors.white.withValues(alpha: 0.88),
+          pathColor: const Color(0xFFD8BA7D),
+          progressColor: const Color(0xFFA9D86F).withValues(alpha: 0.94),
+          progressGlowColor: const Color(0xFF8BCB4F).withValues(alpha: 0.16),
+          laneColor: AppColors.white.withValues(
+            alpha: RoadPainter.laneDashOpacity,
+          ),
+        );
+      case VehicleCourseKind.road:
         return RoadCourseVisualStyle(
           backgroundColors: [
             AppColors.white.withValues(alpha: 0.96),
