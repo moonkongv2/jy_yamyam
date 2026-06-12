@@ -8,7 +8,8 @@ class UserGuideTexts implements UserGuideTextSet {
   String get title => '사용 안내';
   String get subtitle => '식재료, 응원 영상, 스티커 규칙을 확인해요.';
   String get introTitle => '보호자 가이드';
-  String get introBody => '냠냠 라이더를 시작하기 전에 식사 흐름과 앱 규칙을 한눈에 확인할 수 있어요.';
+  String get introBody =>
+      '냠냠 라이더를 시작하기 전에 식사 흐름과 앱 규칙을 한눈에 확인할 수 있어요. 부모님뿐 아니라 아이의 식사를 함께 돕는 보호자도 참고할 수 있어요.';
   String get basicFlowTitle => startCourseTitle;
   String get ingredientsTitle => roadIngredientsTitle;
   String get motivationTitle => '동기부여 영상';

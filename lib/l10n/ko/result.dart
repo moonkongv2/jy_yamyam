@@ -66,7 +66,7 @@ class ResultTexts implements ResultTextSet {
   List<String> resultHelpSayItems(bool mealCompleted) => mealCompleted
       ? const [
           '끝까지 먹어보려고 한 게 정말 좋았어.',
-          '오늘은 네가 코스를 끝까지 잘 따라갔네.',
+          '오늘 냠냠코스를 끝까지 해낸 게 정말 멋져.',
           '스티커도 좋지만, 식사를 마친 게 제일 멋져.',
         ]
       : const [

@@ -847,7 +847,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Guardian tip'), findsOneWidget);
+    expect(find.text('Parent tips'), findsOneWidget);
     expect(find.text('Try saying this'), findsOneWidget);
 
     await tester.tap(
@@ -856,8 +856,53 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('appHelpSheet')), findsOneWidget);
-    expect(find.text('Try saying'), findsOneWidget);
+    expect(
+      find.textContaining('When you confirm the meal is finished'),
+      findsOneWidget,
+    );
+    expect(find.text('Try saying this'), findsWidgets);
     expect(find.text('Try to avoid'), findsOneWidget);
+  });
+
+  testWidgets('English incomplete result help frames incomplete as guidance', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('en'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: ResultScreen(
+          result: _mealResult(mealCompleted: false),
+          config: MealTimerConfig.defaults(),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Parent tips'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('incompleteResultGuardianTipCard')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('appHelpSheet')), findsOneWidget);
+    expect(find.textContaining('not a punishment'), findsWidgets);
   });
 
   testWidgets('Failed result screen uses selected rider image in landscape', (
@@ -3112,6 +3157,10 @@ void main() {
     expect(find.byType(UserGuideScreen), findsOneWidget);
     expect(find.text('사용 안내'), findsOneWidget);
     expect(find.text('보호자 가이드'), findsOneWidget);
+    expect(
+      find.textContaining('부모님뿐 아니라 아이의 식사를 함께 돕는 보호자도 참고할 수 있어요.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('User guide uses English localization', (tester) async {
@@ -3128,7 +3177,8 @@ void main() {
       ),
     );
 
-    expect(find.text('Parent Guide'), findsOneWidget);
+    expect(find.text('Parent Guide'), findsWidgets);
+    expect(find.textContaining('parents and other caregivers'), findsOneWidget);
     expect(
       find.text('Review ingredients, cheer videos, and sticker rules.'),
       findsOneWidget,

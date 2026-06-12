@@ -7,21 +7,21 @@ class EnUserGuideTexts implements UserGuideTextSet {
 
   String get title => 'Parent Guide';
   String get subtitle => 'Review ingredients, cheer videos, and sticker rules.';
-  String get introTitle => 'Guardian guide';
+  String get introTitle => 'Parent Guide';
   String get introBody =>
-      'Use this guide to understand the meal flow and app rules before starting a Yamyam ride.';
+      'Use this guide to understand the meal flow and app rules before starting a Yamyam ride. This guide is for parents and other caregivers helping with mealtime.';
   String get basicFlowTitle => startCourseTitle;
   String get ingredientsTitle => roadIngredientsTitle;
   String get motivationTitle => 'Motivation videos';
   String get resultRewardsTitle => completionTitle;
   String get historyTitle => historyRewardsTitle;
-  String get guardianTipsTitle => 'Guardian tips';
+  String get guardianTipsTitle => 'Parent tips';
 
   String get whatIsYamyamTitle => 'What is Yamyam Rider?';
   List<String> get whatIsYamyamItems => const [
     'Yamyam Rider turns mealtime from a plain countdown into a small course ride.',
     'Children choose a vehicle and follow the course for the set meal time to pace the meal.',
-    'At the end, the guardian confirms whether the meal was completed.',
+    'At the end, you confirm whether the meal was completed.',
   ];
 
   String get startCourseTitle => 'Starting a meal course';
@@ -54,7 +54,7 @@ class EnUserGuideTexts implements UserGuideTextSet {
 
   String get completionTitle => 'Complete, incomplete, and stickers';
   List<String> get completionItems => const [
-    'When the guardian confirms the meal is finished, it is recorded as complete.',
+    'When you confirm the meal is finished, it is recorded as complete.',
     'A completed meal earns 1 random success sticker.',
     'If the timer arrives first and the meal is not finished, tap “Not yet.” The meal is recorded as incomplete.',
     'Incomplete meals are saved in history but do not earn stickers.',
