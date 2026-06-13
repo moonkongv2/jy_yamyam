@@ -1,0 +1,1 @@
+const childNameMaxLength = 16;

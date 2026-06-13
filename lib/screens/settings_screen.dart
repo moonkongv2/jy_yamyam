@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../catalogs/meal_course_catalog.dart';
+import '../constants/child_name_limits.dart';
 import '../l10n/app_texts.dart';
 import '../l10n/text_sets.dart';
 import '../models/meal_timer_config.dart';
@@ -155,6 +156,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _childNameController,
+                    maxLength: childNameMaxLength,
                     textInputAction: TextInputAction.done,
                     decoration: InputDecoration(
                       labelText: texts.settings.childNameFieldLabel,

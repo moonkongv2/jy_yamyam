@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../constants/child_name_limits.dart';
 import '../l10n/app_texts.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
@@ -70,6 +71,7 @@ class _ChildNameSetupScreenState extends State<ChildNameSetupScreen> {
                     TextField(
                       controller: _controller,
                       autofocus: true,
+                      maxLength: childNameMaxLength,
                       textInputAction: TextInputAction.done,
                       decoration: InputDecoration(
                         labelText: texts.settings.childNameFieldLabel,

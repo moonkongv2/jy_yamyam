@@ -15,6 +15,7 @@ import 'package:jy_yamyam/catalogs/avatar_prompt_catalog.dart';
 import 'package:jy_yamyam/catalogs/meal_ingredient_catalog.dart';
 import 'package:jy_yamyam/catalogs/motivation_asset_catalog.dart';
 import 'package:jy_yamyam/catalogs/vehicle_catalog.dart';
+import 'package:jy_yamyam/constants/child_name_limits.dart';
 import 'package:jy_yamyam/l10n/app_texts.dart';
 import 'package:jy_yamyam/main.dart' as app;
 import 'package:jy_yamyam/models/active_meal_timer_session.dart';
@@ -1683,6 +1684,27 @@ void main() {
     expect(find.byKey(const ValueKey('homeLogo')), findsOneWidget);
     final preferences = await SharedPreferences.getInstance();
     expect(preferences.getString('childName'), '민준');
+  });
+
+  testWidgets('Child name setup limits input length', (tester) async {
+    SharedPreferences.setMockInitialValues({'hasSeenFirstRunOnboarding': true});
+
+    await _startApp(tester, const Locale('en'), completeChildNameSetup: false);
+
+    final longName = 'a' * (childNameMaxLength + 4);
+    await tester.enterText(find.byType(TextField), longName);
+    await tester.pump();
+
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller?.text,
+      'a' * childNameMaxLength,
+    );
+
+    await tester.tap(find.text('Save name'));
+    await tester.pumpAndSettle();
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getString('childName'), 'a' * childNameMaxLength);
   });
 
   testWidgets('First-run onboarding appears before child name setup', (
@@ -4035,6 +4057,30 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('서아의 냠냠 기록'), findsOneWidget);
+  });
+
+  testWidgets('Child name settings limits input length', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await _startApp(tester, const Locale('ko'));
+
+    await tester.tap(find.byTooltip('설정'));
+    await tester.pumpAndSettle();
+
+    final longName = '가' * (childNameMaxLength + 3);
+    await tester.enterText(find.byType(TextField), longName);
+    await tester.pump();
+
+    expect(
+      tester.widget<TextField>(find.byType(TextField)).controller?.text,
+      '가' * childNameMaxLength,
+    );
+
+    await tester.tap(find.text('이름 저장'));
+    await tester.pump();
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getString('childName'), '가' * childNameMaxLength);
   });
 
   testWidgets('Empty child name in settings shows validation message', (
@@ -7439,9 +7485,12 @@ Future<void> _startApp(
           .evaluate()
           .isNotEmpty &&
       completeChildNameSetup) {
-    await tester.tap(
-      find.byKey(const ValueKey('firstRunOnboardingSkipButton')),
+    final skipButton = find.byKey(
+      const ValueKey('firstRunOnboardingSkipButton'),
     );
+    await tester.ensureVisible(skipButton);
+    await tester.pumpAndSettle();
+    await tester.tap(skipButton);
     await tester.pumpAndSettle();
   }
   if (!completeChildNameSetup || find.byType(TextField).evaluate().isEmpty) {
