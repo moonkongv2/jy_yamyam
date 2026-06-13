@@ -1,7 +1,6 @@
 // ignore_for_file: annotate_overrides
 
 import '../text_sets.dart';
-import '../../models/meal_completion_status.dart';
 
 class HomeTexts implements HomeTextSet {
   const HomeTexts();
@@ -20,7 +19,6 @@ class HomeTexts implements HomeTextSet {
   String get mealSummaryLabel => '식사';
   String get stickerKindSummaryLabel => '종류';
   String get stickerSummaryLabel => '스티커';
-  String get noMealHistory => '아직 저장된 식사 이력이 없어.';
   String get openStickerCollection => '스티커 보관함 보기';
   String get avatarCtaSubtitle => '아이 얼굴을 빠방에 태워보세요.';
   String get avatarCtaButton => '만들기';
@@ -58,15 +56,6 @@ class HomeTexts implements HomeTextSet {
   String mealCount(int count) => '$count번';
   String stickerKindCount(int count) => '$count개';
   String stickerCount(int count) => '$count장';
-  String recentMealSummary(
-    String actualDuration,
-    MealCompletionStatus completionStatus,
-  ) {
-    final status = completionStatus == MealCompletionStatus.notCompleted
-        ? '미완료'
-        : '완료';
-    return '최근 식사 $actualDuration · $status';
-  }
 }
 
 String _casualKoreanName(String name) {

@@ -18,7 +18,6 @@ class EnMealHistoryTexts implements MealHistoryTextSet {
   ];
   String get targetTimeLabel => 'Target';
   String get actualTimeLabel => 'Actual';
-  String get overrunTimeLabel => 'Over';
   String get rewardLabel => 'Stickers earned';
   String get noRewardLabel => 'No stickers';
   String get selectedIngredientLabel => 'Chosen ingredients';
@@ -40,6 +39,4 @@ class EnMealHistoryTexts implements MealHistoryTextSet {
     final minute = dateTime.minute.toString().padLeft(2, '0');
     return '${dateTime.month}/${dateTime.day} $hour:$minute';
   }
-
-  String overrunTime(String duration) => 'Over +$duration';
 }

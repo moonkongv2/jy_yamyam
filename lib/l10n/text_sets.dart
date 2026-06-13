@@ -28,7 +28,6 @@ abstract interface class HomeTextSet {
   String get mealSummaryLabel;
   String get stickerKindSummaryLabel;
   String get stickerSummaryLabel;
-  String get noMealHistory;
   String get openStickerCollection;
   String get avatarCtaSubtitle;
   String get avatarCtaButton;
@@ -57,10 +56,6 @@ abstract interface class HomeTextSet {
   String mealCount(int count);
   String stickerKindCount(int count);
   String stickerCount(int count);
-  String recentMealSummary(
-    String actualDuration,
-    MealCompletionStatus completionStatus,
-  );
 }
 
 abstract interface class AvatarSetupTextSet {
@@ -110,7 +105,6 @@ abstract interface class MealHistoryTextSet {
   List<String> get helpBulletItems;
   String get targetTimeLabel;
   String get actualTimeLabel;
-  String get overrunTimeLabel;
   String get rewardLabel;
   String get noRewardLabel;
   String get selectedIngredientLabel;
@@ -122,7 +116,6 @@ abstract interface class MealHistoryTextSet {
 
   String completedStatus(MealCompletionStatus completionStatus);
   String dateLabel(DateTime dateTime);
-  String overrunTime(String duration);
 }
 
 abstract interface class MealIngredientTextSet {

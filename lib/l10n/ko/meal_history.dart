@@ -18,7 +18,6 @@ class MealHistoryTexts implements MealHistoryTextSet {
   ];
   String get targetTimeLabel => '목표';
   String get actualTimeLabel => '실제';
-  String get overrunTimeLabel => '초과';
   String get rewardLabel => '받은 스티커';
   String get noRewardLabel => '스티커 없음';
   String get selectedIngredientLabel => '고른 식재료';
@@ -37,6 +36,4 @@ class MealHistoryTexts implements MealHistoryTextSet {
     final minute = dateTime.minute.toString().padLeft(2, '0');
     return '${dateTime.month}월 ${dateTime.day}일 $hour:$minute';
   }
-
-  String overrunTime(String duration) => '초과 +$duration';
 }
