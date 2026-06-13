@@ -58,6 +58,32 @@ abstract interface class HomeTextSet {
   String stickerCount(int count);
 }
 
+class FirstRunOnboardingSlideText {
+  const FirstRunOnboardingSlideText({
+    required this.emoji,
+    required this.title,
+    required this.body,
+    required this.bullets,
+  });
+
+  final String emoji;
+  final String title;
+  final String body;
+  final List<String> bullets;
+}
+
+abstract interface class FirstRunOnboardingTextSet {
+  String get title;
+  String get subtitle;
+  String get previousButtonLabel;
+  String get nextButtonLabel;
+  String get startButtonLabel;
+  String get skipButtonLabel;
+  List<FirstRunOnboardingSlideText> get slides;
+
+  String pageSemanticLabel({required int currentPage, required int totalPages});
+}
+
 abstract interface class AvatarSetupTextSet {
   String get title;
   String get intro;

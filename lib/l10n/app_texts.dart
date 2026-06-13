@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import 'en/common.dart';
 import 'en/avatar_setup.dart';
+import 'en/first_run_onboarding.dart';
 import 'en/home.dart';
 import 'en/meal_ingredient.dart';
 import 'en/meal_history.dart';
@@ -12,6 +13,7 @@ import 'en/timer.dart';
 import 'en/user_guide.dart';
 import 'ko/common.dart';
 import 'ko/avatar_setup.dart';
+import 'ko/first_run_onboarding.dart';
 import 'ko/home.dart';
 import 'ko/meal_ingredient.dart';
 import 'ko/meal_history.dart';
@@ -26,6 +28,7 @@ class AppTextBundle {
   const AppTextBundle({
     required this.avatarSetup,
     required this.common,
+    required this.firstRunOnboarding,
     required this.home,
     required this.mealIngredient,
     required this.mealHistory,
@@ -38,6 +41,7 @@ class AppTextBundle {
 
   final AvatarSetupTextSet avatarSetup;
   final CommonTextSet common;
+  final FirstRunOnboardingTextSet firstRunOnboarding;
   final HomeTextSet home;
   final MealIngredientTextSet mealIngredient;
   final MealHistoryTextSet mealHistory;
@@ -54,6 +58,7 @@ abstract final class AppTexts {
   static const ko = AppTextBundle(
     avatarSetup: AvatarSetupTexts(),
     common: CommonTexts(),
+    firstRunOnboarding: FirstRunOnboardingTexts(),
     home: HomeTexts(),
     mealIngredient: MealIngredientTexts(),
     mealHistory: MealHistoryTexts(),
@@ -67,6 +72,7 @@ abstract final class AppTexts {
   static const en = AppTextBundle(
     avatarSetup: EnAvatarSetupTexts(),
     common: EnCommonTexts(),
+    firstRunOnboarding: EnFirstRunOnboardingTexts(),
     home: EnHomeTexts(),
     mealIngredient: EnMealIngredientTexts(),
     mealHistory: EnMealHistoryTexts(),

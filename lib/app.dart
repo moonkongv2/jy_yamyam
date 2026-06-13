@@ -5,6 +5,7 @@ import 'l10n/app_texts.dart';
 import 'models/meal_timer_config.dart';
 import 'navigation/app_route_observer.dart';
 import 'screens/child_name_setup_screen.dart';
+import 'screens/first_run_onboarding_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/active_meal_timer_session_store.dart';
@@ -18,13 +19,17 @@ class YamyamRiderApp extends StatefulWidget {
     required this.settingsService,
     required this.mealProgressService,
     required this.initialConfig,
+    required this.initialHasSeenFirstRunOnboarding,
     this.activeSessionStore = const ActiveMealTimerSessionStore(),
+    this.showSplashOnStart = true,
   });
 
   final LocalSettingsService settingsService;
   final LocalMealProgressService mealProgressService;
   final MealTimerConfig initialConfig;
+  final bool initialHasSeenFirstRunOnboarding;
   final ActiveMealTimerSessionStore activeSessionStore;
+  final bool showSplashOnStart;
 
   @override
   State<YamyamRiderApp> createState() => _YamyamRiderAppState();
@@ -32,7 +37,9 @@ class YamyamRiderApp extends StatefulWidget {
 
 class _YamyamRiderAppState extends State<YamyamRiderApp> {
   late MealTimerConfig _config = widget.initialConfig;
-  bool _showSplash = true;
+  late bool _showSplash = widget.showSplashOnStart;
+  late bool _hasSeenFirstRunOnboarding =
+      widget.initialHasSeenFirstRunOnboarding;
 
   Future<void> _saveConfig(MealTimerConfig config) async {
     setState(() => _config = config);
@@ -47,9 +54,16 @@ class _YamyamRiderAppState extends State<YamyamRiderApp> {
   }
 
   bool get _hasChildName => _config.childName.trim().isNotEmpty;
+  bool get _shouldShowFirstRunOnboarding =>
+      !_hasSeenFirstRunOnboarding && !_hasChildName;
 
   Future<void> _saveChildName(String name) {
     return _saveConfig(_config.copyWith(childName: name.trim()));
+  }
+
+  Future<void> _completeFirstRunOnboarding() async {
+    setState(() => _hasSeenFirstRunOnboarding = true);
+    await widget.settingsService.saveHasSeenFirstRunOnboarding(true);
   }
 
   @override
@@ -67,6 +81,8 @@ class _YamyamRiderAppState extends State<YamyamRiderApp> {
       theme: AppTheme.light(),
       home: _showSplash
           ? SplashScreen(onFinished: _finishSplash)
+          : _shouldShowFirstRunOnboarding
+          ? FirstRunOnboardingScreen(onCompleted: _completeFirstRunOnboarding)
           : _hasChildName
           ? HomeScreen(
               config: _config,

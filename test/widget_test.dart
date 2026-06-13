@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
+import 'package:jy_yamyam/app.dart';
 import 'package:jy_yamyam/catalogs/avatar_prompt_catalog.dart';
 import 'package:jy_yamyam/catalogs/meal_ingredient_catalog.dart';
 import 'package:jy_yamyam/catalogs/motivation_asset_catalog.dart';
@@ -24,6 +25,7 @@ import 'package:jy_yamyam/models/reward_goal.dart';
 import 'package:jy_yamyam/models/vehicle.dart';
 import 'package:jy_yamyam/models/vehicle_avatar_presentation.dart';
 import 'package:jy_yamyam/screens/avatar_setup_screen.dart';
+import 'package:jy_yamyam/screens/first_run_onboarding_screen.dart';
 import 'package:jy_yamyam/screens/home_screen.dart';
 import 'package:jy_yamyam/screens/meal_history_screen.dart';
 import 'package:jy_yamyam/screens/reward_goal_screen.dart';
@@ -79,6 +81,115 @@ void main() {
     expect(ids, isNotEmpty);
     expect(ids.every((id) => id.trim().isNotEmpty), isTrue);
     expect(ids.toSet(), hasLength(ids.length));
+  });
+
+  test('First-run onboarding text bundles include four slides', () {
+    expect(AppTexts.ko.firstRunOnboarding.slides, hasLength(4));
+    expect(AppTexts.en.firstRunOnboarding.slides, hasLength(4));
+  });
+
+  test('First-run onboarding text bundles include expected first titles', () {
+    expect(
+      AppTexts.ko.firstRunOnboarding.slides.first.title,
+      '밥 한 끼 먹이는 일도 참 큰일이에요',
+    );
+    expect(
+      AppTexts.en.firstRunOnboarding.slides.first.title,
+      'Mealtime can be hard for parents too',
+    );
+  });
+
+  testWidgets('First-run onboarding screen shows and advances Korean slides', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
+        home: FirstRunOnboardingScreen(onCompleted: () async {}),
+      ),
+    );
+
+    expect(
+      find.byKey(const ValueKey('firstRunOnboardingScreen')),
+      findsOneWidget,
+    );
+    expect(find.text('밥 한 끼 먹이는 일도 참 큰일이에요'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('firstRunOnboardingNextButton')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('식사 시간을 작은 라이딩으로'), findsOneWidget);
+  });
+
+  testWidgets('First-run onboarding complete button completes once', (
+    tester,
+  ) async {
+    var completedCount = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
+        home: FirstRunOnboardingScreen(
+          onCompleted: () async {
+            completedCount += 1;
+          },
+        ),
+      ),
+    );
+
+    for (var index = 0; index < 3; index += 1) {
+      await tester.tap(
+        find.byKey(const ValueKey('firstRunOnboardingNextButton')),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    expect(find.text('완벽하지 않아도 괜찮아요'), findsOneWidget);
+
+    final completeButton = find.byKey(
+      const ValueKey('firstRunOnboardingCompleteButton'),
+    );
+    await tester.tap(completeButton);
+    await tester.pump();
+    await tester.tap(completeButton);
+    await tester.pump();
+
+    expect(completedCount, 1);
+  });
+
+  testWidgets('First-run onboarding skip button completes once', (
+    tester,
+  ) async {
+    var completedCount = 0;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
+        home: FirstRunOnboardingScreen(
+          onCompleted: () async {
+            completedCount += 1;
+          },
+        ),
+      ),
+    );
+
+    final skipButton = find.byKey(
+      const ValueKey('firstRunOnboardingSkipButton'),
+    );
+    await tester.tap(skipButton);
+    await tester.pump();
+    await tester.tap(skipButton);
+    await tester.pump();
+
+    expect(completedCount, 1);
   });
 
   test('Meal ingredient image asset paths point to existing files', () {
@@ -1557,7 +1668,7 @@ void main() {
   });
 
   testWidgets('First launch asks for child name before home', (tester) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({'hasSeenFirstRunOnboarding': true});
 
     await _startApp(tester, const Locale('ko'), completeChildNameSetup: false);
 
@@ -1572,6 +1683,89 @@ void main() {
     expect(find.byKey(const ValueKey('homeLogo')), findsOneWidget);
     final preferences = await SharedPreferences.getInstance();
     expect(preferences.getString('childName'), '민준');
+  });
+
+  testWidgets('First-run onboarding appears before child name setup', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await _pumpYamyamApp(
+      tester,
+      initialConfig: MealTimerConfig.defaults(),
+      initialHasSeenFirstRunOnboarding: false,
+    );
+
+    expect(
+      find.byKey(const ValueKey('firstRunOnboardingScreen')),
+      findsOneWidget,
+    );
+    expect(find.text('밥 한 끼 먹이는 일도 참 큰일이에요'), findsOneWidget);
+  });
+
+  testWidgets('Completing first-run onboarding opens child name setup', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await _pumpYamyamApp(
+      tester,
+      initialConfig: MealTimerConfig.defaults(),
+      initialHasSeenFirstRunOnboarding: false,
+    );
+
+    for (var index = 0; index < 3; index += 1) {
+      await tester.tap(
+        find.byKey(const ValueKey('firstRunOnboardingNextButton')),
+      );
+      await tester.pumpAndSettle();
+    }
+    await tester.tap(
+      find.byKey(const ValueKey('firstRunOnboardingCompleteButton')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('누가 냠냠 라이더를 탈까?'), findsOneWidget);
+    expect(
+      (await SharedPreferences.getInstance()).getBool(
+        'hasSeenFirstRunOnboarding',
+      ),
+      isTrue,
+    );
+  });
+
+  testWidgets('Saved child name skips first-run onboarding', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await _pumpYamyamApp(
+      tester,
+      initialConfig: MealTimerConfig.defaults().copyWith(childName: '지율'),
+      initialHasSeenFirstRunOnboarding: false,
+    );
+
+    expect(
+      find.byKey(const ValueKey('firstRunOnboardingScreen')),
+      findsNothing,
+    );
+    expect(find.byKey(const ValueKey('homeLogo')), findsOneWidget);
+  });
+
+  testWidgets('Seen first-run onboarding opens child name setup', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await _pumpYamyamApp(
+      tester,
+      initialConfig: MealTimerConfig.defaults(),
+      initialHasSeenFirstRunOnboarding: true,
+    );
+
+    expect(
+      find.byKey(const ValueKey('firstRunOnboardingScreen')),
+      findsNothing,
+    );
+    expect(find.text('누가 냠냠 라이더를 탈까?'), findsOneWidget);
   });
 
   testWidgets('Home screen shows meal timer actions', (tester) async {
@@ -7240,6 +7434,16 @@ Future<void> _startApp(
   await app.main();
   await tester.pump(const Duration(milliseconds: 3500));
   await tester.pumpAndSettle();
+  if (find
+          .byKey(const ValueKey('firstRunOnboardingScreen'))
+          .evaluate()
+          .isNotEmpty &&
+      completeChildNameSetup) {
+    await tester.tap(
+      find.byKey(const ValueKey('firstRunOnboardingSkipButton')),
+    );
+    await tester.pumpAndSettle();
+  }
   if (!completeChildNameSetup || find.byType(TextField).evaluate().isEmpty) {
     return;
   }
@@ -7247,6 +7451,30 @@ Future<void> _startApp(
   await tester.enterText(find.byType(TextField), '지율');
   await tester.pump();
   await tester.tap(find.byType(FilledButton).first);
+  await tester.pumpAndSettle();
+}
+
+Future<void> _pumpYamyamApp(
+  WidgetTester tester, {
+  required MealTimerConfig initialConfig,
+  required bool initialHasSeenFirstRunOnboarding,
+  Locale locale = const Locale('ko'),
+}) async {
+  tester.binding.platformDispatcher.localeTestValue = locale;
+  tester.binding.platformDispatcher.localesTestValue = [locale];
+  addTearDown(tester.binding.platformDispatcher.clearLocaleTestValue);
+  addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
+
+  await tester.pumpWidget(
+    YamyamRiderApp(
+      settingsService: LocalSettingsService(),
+      mealProgressService: LocalMealProgressService(),
+      activeSessionStore: const ActiveMealTimerSessionStore(),
+      initialConfig: initialConfig,
+      initialHasSeenFirstRunOnboarding: initialHasSeenFirstRunOnboarding,
+      showSplashOnStart: false,
+    ),
+  );
   await tester.pumpAndSettle();
 }
 

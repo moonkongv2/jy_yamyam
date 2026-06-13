@@ -16,6 +16,8 @@ Future<void> main() async {
   final mealProgressService = LocalMealProgressService();
   const activeSessionStore = ActiveMealTimerSessionStore();
   final initialConfig = await settingsService.loadConfig();
+  final initialHasSeenFirstRunOnboarding = await settingsService
+      .loadHasSeenFirstRunOnboarding();
 
   runApp(
     YamyamRiderApp(
@@ -23,6 +25,7 @@ Future<void> main() async {
       mealProgressService: mealProgressService,
       activeSessionStore: activeSessionStore,
       initialConfig: initialConfig,
+      initialHasSeenFirstRunOnboarding: initialHasSeenFirstRunOnboarding,
     ),
   );
 }
