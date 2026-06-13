@@ -25,6 +25,7 @@ class LocalSettingsService {
   static const _avatarRotationDegreesKey = 'avatarRotationDegrees';
   static const _customAvatarsByVehicleKey = 'customAvatarsByVehicle';
   static const _courseIngredientModeKey = 'courseIngredientMode';
+  static const _hasSeenFirstRunOnboardingKey = 'hasSeenFirstRunOnboarding';
 
   Future<MealTimerConfig> loadConfig() async {
     final preferences = await SharedPreferences.getInstance();
@@ -181,6 +182,16 @@ class LocalSettingsService {
       _courseIngredientModeKey,
       _courseIngredientModeToString(config.courseIngredientMode),
     );
+  }
+
+  Future<bool> loadHasSeenFirstRunOnboarding() async {
+    final preferences = await SharedPreferences.getInstance();
+    return preferences.getBool(_hasSeenFirstRunOnboardingKey) ?? false;
+  }
+
+  Future<void> saveHasSeenFirstRunOnboarding(bool value) async {
+    final preferences = await SharedPreferences.getInstance();
+    await preferences.setBool(_hasSeenFirstRunOnboardingKey, value);
   }
 
   AvatarImageMode _avatarModeFromString(String? value) {

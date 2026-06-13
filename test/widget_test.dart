@@ -326,6 +326,25 @@ void main() {
     expect(preferences.getString('courseIngredientMode'), 'random');
   });
 
+  test('Local settings defaults first-run onboarding to unseen', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final service = LocalSettingsService();
+
+    expect(await service.loadHasSeenFirstRunOnboarding(), isFalse);
+  });
+
+  test('Local settings saves and loads first-run onboarding state', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final service = LocalSettingsService();
+    await service.saveHasSeenFirstRunOnboarding(true);
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(await service.loadHasSeenFirstRunOnboarding(), isTrue);
+    expect(preferences.getBool('hasSeenFirstRunOnboarding'), isTrue);
+  });
+
   test(
     'Local settings falls back for invalid course ingredient mode',
     () async {
