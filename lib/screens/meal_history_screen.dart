@@ -262,7 +262,6 @@ class _MealHistoryCard extends StatelessWidget {
       entry.actualDuration,
       entry.targetDuration,
     );
-    final overrun = overrunDuration(entry.actualDuration, entry.targetDuration);
     final selectedIngredients = entry.selectedIngredientIds
         .map(MealIngredientCatalog.findById)
         .whereType<MealIngredientDefinition>()
@@ -326,12 +325,6 @@ class _MealHistoryCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (!entry.mealCompleted && overrun > Duration.zero) ...[
-              const SizedBox(height: AppSpacing.sm),
-              _OverrunChip(
-                label: historyTexts.overrunTime(formatDuration(overrun)),
-              ),
-            ],
             if (selectedIngredients.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.md),
               Text(
@@ -354,47 +347,6 @@ class _MealHistoryCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             _RewardRow(rewardIds: entry.rewardIds),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _OverrunChip extends StatelessWidget {
-  const _OverrunChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceWarm,
-        borderRadius: AppRadius.pill,
-        border: Border.all(color: AppColors.borderWarm),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.xs,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.timer_outlined,
-              color: AppColors.textSecondary,
-              size: 18,
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
           ],
         ),
       ),

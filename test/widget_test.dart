@@ -7162,7 +7162,7 @@ void main() {
 
     expect(find.text('미완료'), findsOneWidget);
     expect(find.text('스티커 없음'), findsOneWidget);
-    expect(find.text('초과 +05:00'), findsOneWidget);
+    expect(find.text('초과 +05:00'), findsNothing);
   });
 }
 
