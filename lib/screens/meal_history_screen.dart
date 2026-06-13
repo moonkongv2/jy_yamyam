@@ -276,7 +276,7 @@ class _MealHistoryCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
                   child: Text(
@@ -298,7 +298,13 @@ class _MealHistoryCard extends StatelessWidget {
                   tooltip: historyTexts.deleteRecordLabel,
                   onPressed: onDelete,
                   icon: const Icon(Icons.delete_outline_rounded),
+                  iconSize: 26,
                   color: AppColors.textSecondary,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 42,
+                    height: 42,
+                  ),
+                  padding: EdgeInsets.zero,
                 ),
               ],
             ),
