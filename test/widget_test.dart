@@ -6864,7 +6864,8 @@ void main() {
     await tester.drag(find.byType(ListView), const Offset(0, -700));
     await tester.pumpAndSettle();
 
-    expect(find.text('Recent meal 20:00 · complete'), findsOneWidget);
+    expect(find.text("Jiyul's meal records"), findsOneWidget);
+    expect(find.text('Recent meal 20:00 · complete'), findsNothing);
 
     await tester.tap(find.text("Jiyul's meal records"));
     await tester.pumpAndSettle();
@@ -6903,7 +6904,9 @@ void main() {
     await tester.drag(find.byType(ListView), const Offset(0, -700));
     await tester.pumpAndSettle();
 
-    expect(find.text('최근 식사 20:00 · 미완료 · 스티커 없음 · 초과 +05:00'), findsOneWidget);
+    expect(find.text('강우의 냠냠 기록'), findsOneWidget);
+    expect(find.text('최근 식사 20:00 · 미완료 · 스티커 없음 · 초과 +05:00'), findsNothing);
+    expect(find.textContaining('최근 식사'), findsNothing);
   });
 
   testWidgets('Reward goal creation form saves a goal', (tester) async {

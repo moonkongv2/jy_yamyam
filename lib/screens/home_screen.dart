@@ -1581,13 +1581,6 @@ class _ProgressSummary extends StatelessWidget {
     final inventory = snapshot?.inventory ?? const [];
     final activeRewardGoals = snapshot?.activeRewardGoals ?? const [];
     final earnedRewardCount = snapshot?.earnedRewardGoals.length ?? 0;
-    final recent = history.isEmpty ? null : history.first;
-    final recentDisplayDuration = recent == null
-        ? Duration.zero
-        : capDuration(recent.actualDuration, recent.targetDuration);
-    final recentOverrun = recent == null
-        ? Duration.zero
-        : overrunDuration(recent.actualDuration, recent.targetDuration);
     final knownStickers = inventory.where(
       (item) =>
           RewardCatalog.findById(item.rewardId)?.type == RewardType.sticker,
@@ -1606,19 +1599,6 @@ class _ProgressSummary extends StatelessWidget {
           mealValue: texts.home.mealCount(history.length),
           stickerKindValue: texts.home.stickerKindCount(stickerKindCount),
           stickerValue: texts.home.stickerCount(stickerCount),
-          recentSummary: recent == null
-              ? texts.home.noMealHistory
-              : [
-                  texts.home.recentMealSummary(
-                    formatDuration(recentDisplayDuration),
-                    recent.completionStatus,
-                  ),
-                  if (!recent.mealCompleted) texts.mealHistory.noRewardLabel,
-                  if (!recent.mealCompleted && recentOverrun > Duration.zero)
-                    texts.mealHistory.overrunTime(
-                      formatDuration(recentOverrun),
-                    ),
-                ].join(' · '),
           onPressed: onOpenMealHistory,
         ),
         const SizedBox(height: AppSpacing.md),
@@ -1643,7 +1623,6 @@ class _MealHistorySummaryButton extends StatelessWidget {
     required this.mealValue,
     required this.stickerKindValue,
     required this.stickerValue,
-    required this.recentSummary,
     required this.onPressed,
   });
 
@@ -1651,7 +1630,6 @@ class _MealHistorySummaryButton extends StatelessWidget {
   final String mealValue;
   final String stickerKindValue;
   final String stickerValue;
-  final String recentSummary;
   final VoidCallback onPressed;
 
   @override
@@ -1718,40 +1696,6 @@ class _MealHistorySummaryButton extends StatelessWidget {
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceWarm,
-                  borderRadius: AppRadius.card,
-                  border: Border.all(color: AppColors.borderWarm),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                    vertical: AppSpacing.md,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          recentSummary,
-                          style: textTheme.bodyLarge?.copyWith(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w700,
-                            height: 1.34,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: AppColors.textSecondary,
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                ),
               ),
             ],
           ),
