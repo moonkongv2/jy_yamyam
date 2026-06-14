@@ -23,6 +23,7 @@ class VehicleSelectionCard extends StatelessWidget {
     this.avatarForVehicle,
     this.avatarImageBuilder,
     this.showSelectedPreview = false,
+    this.compact = false,
     this.footer,
   });
 
@@ -35,6 +36,7 @@ class VehicleSelectionCard extends StatelessWidget {
   final Widget Function(BuildContext context, String imagePath)?
   avatarImageBuilder;
   final bool showSelectedPreview;
+  final bool compact;
   final Widget? footer;
 
   @override
@@ -49,7 +51,7 @@ class VehicleSelectionCard extends StatelessWidget {
         boxShadow: AppShadows.surface,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(compact ? AppSpacing.sm : AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -92,21 +94,24 @@ class VehicleSelectionCard extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: compact ? AppSpacing.sm : AppSpacing.md),
             if (showSelectedPreview) ...[
               _SelectedVehiclePreview(
                 vehicle: selectedVehicle,
                 avatar: avatar,
                 avatarImageBuilder: avatarImageBuilder,
+                compact: compact,
               ),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: compact ? AppSpacing.sm : AppSpacing.md),
             ],
             LayoutBuilder(
               builder: (context, constraints) {
                 const spacing = AppSpacing.sm;
                 final fourAcrossWidth =
                     (constraints.maxWidth - (spacing * 3)) / 4;
-                final itemSize = fourAcrossWidth.clamp(72.0, 84.0).toDouble();
+                final itemSize = compact
+                    ? fourAcrossWidth.clamp(60.0, 68.0).toDouble()
+                    : fourAcrossWidth.clamp(72.0, 84.0).toDouble();
 
                 return Wrap(
                   alignment: WrapAlignment.center,
@@ -129,7 +134,7 @@ class VehicleSelectionCard extends StatelessWidget {
               },
             ),
             if (footer != null) ...[
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: compact ? AppSpacing.sm : AppSpacing.md),
               const Divider(
                 color: AppColors.borderSoft,
                 height: 1,
@@ -150,12 +155,14 @@ class _SelectedVehiclePreview extends StatelessWidget {
     required this.vehicle,
     required this.avatar,
     this.avatarImageBuilder,
+    required this.compact,
   });
 
   final VehicleDefinition vehicle;
   final VehicleAvatarPresentation avatar;
   final Widget Function(BuildContext context, String imagePath)?
   avatarImageBuilder;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -174,15 +181,15 @@ class _SelectedVehiclePreview extends StatelessWidget {
         ),
         child: SizedBox(
           key: const ValueKey('selectedVehiclePreview'),
-          height: 120,
+          height: compact ? 92 : 120,
           width: double.infinity,
           child: Center(
             child: SizedBox(
-              width: 148,
-              height: 104,
+              width: compact ? 120 : 148,
+              height: compact ? 76 : 104,
               child: _VehicleChoiceImage(
                 vehicle: vehicle,
-                size: 120,
+                size: compact ? 92 : 120,
                 avatar: avatar,
                 avatarImageBuilder: avatarImageBuilder,
               ),

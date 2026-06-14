@@ -123,7 +123,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('식사 시간을 작은 라이딩으로'), findsOneWidget);
+    expect(find.text('식사 시간을 신나는 라이딩으로'), findsOneWidget);
   });
 
   testWidgets('First-run onboarding complete button completes once', (
@@ -4009,6 +4009,47 @@ void main() {
       );
     },
   );
+
+  testWidgets('Vehicle selection card supports compact layout', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 360,
+              child: VehicleSelectionCard(
+                title: '오늘의 빠방',
+                selectedVehicleId: 'motorcycle',
+                onVehicleSelected: (_) {},
+                showSelectedPreview: true,
+                compact: true,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('selectedVehiclePreview')))
+          .height,
+      92,
+    );
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('vehicleChoice.motorcycle')))
+          .width,
+      lessThan(72),
+    );
+  });
 
   testWidgets('Selected vehicle on home is saved to preferences', (
     tester,
