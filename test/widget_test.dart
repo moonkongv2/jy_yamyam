@@ -42,6 +42,7 @@ import 'package:jy_yamyam/services/local_settings_service.dart';
 import 'package:jy_yamyam/services/motivation_audio_service.dart';
 import 'package:jy_yamyam/services/orientation_service.dart';
 import 'package:jy_yamyam/services/screen_awake_service.dart';
+import 'package:jy_yamyam/theme/app_spacing.dart';
 import 'package:jy_yamyam/utils/motivation_video_schedule.dart'
     as motivation_schedule;
 import 'package:jy_yamyam/widgets/app/app_bouncy_button.dart';
@@ -3866,7 +3867,7 @@ void main() {
     expect(find.byType(VehicleSelectionCard), findsNothing);
   });
 
-  testWidgets('Home screen shows vehicle choices above meal courses', (
+  testWidgets('Home screen shows mission before vehicle choices and courses', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -3935,8 +3936,10 @@ void main() {
         2;
     expect((thirdRowCenterX - firstRowCenterX).abs(), lessThan(1.0));
 
+    final missionTitleTop = tester.getTopLeft(find.text('오늘의 냠냠 미션')).dy;
     final vehicleTitleTop = tester.getTopLeft(find.text('오늘의 빠방')).dy;
     final firstCourseTop = tester.getTopLeft(find.text('15분 코스')).dy;
+    expect(missionTitleTop, lessThan(vehicleTitleTop));
     expect(vehicleTitleTop, lessThan(firstCourseTop));
   });
 
@@ -4047,7 +4050,7 @@ void main() {
       tester
           .getSize(find.byKey(const ValueKey('vehicleChoice.motorcycle')))
           .width,
-      lessThan(72),
+      closeTo((360 - (AppSpacing.sm * 2) - (AppSpacing.sm * 3)) / 4, 0.1),
     );
   });
 

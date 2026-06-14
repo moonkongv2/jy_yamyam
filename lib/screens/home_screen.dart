@@ -681,23 +681,18 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     );
 
                 if (constraints.maxWidth >= 700) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  return Column(
                     children: [
-                      Expanded(
-                        child: Column(
-                          children: [activeSessionCard, vehicleCard],
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xl),
-                      Expanded(
-                        child: Column(
-                          children: [
-                            heroCard,
-                            const SizedBox(height: AppSpacing.md),
-                            quickCourses,
-                          ],
-                        ),
+                      activeSessionCard,
+                      heroCard,
+                      const SizedBox(height: AppSpacing.xl),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(child: vehicleCard),
+                          const SizedBox(width: AppSpacing.xl),
+                          Expanded(child: quickCourses),
+                        ],
                       ),
                     ],
                   );
@@ -706,9 +701,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 return Column(
                   children: [
                     activeSessionCard,
-                    vehicleCard,
-                    const SizedBox(height: AppSpacing.xl),
                     heroCard,
+                    const SizedBox(height: AppSpacing.xl),
+                    vehicleCard,
                     const SizedBox(height: AppSpacing.xl),
                     quickCourses,
                   ],

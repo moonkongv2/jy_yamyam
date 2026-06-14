@@ -110,7 +110,7 @@ class VehicleSelectionCard extends StatelessWidget {
                 final fourAcrossWidth =
                     (constraints.maxWidth - (spacing * 3)) / 4;
                 final itemSize = compact
-                    ? fourAcrossWidth.clamp(60.0, 68.0).toDouble()
+                    ? fourAcrossWidth.toDouble()
                     : fourAcrossWidth.clamp(72.0, 84.0).toDouble();
 
                 return Wrap(
