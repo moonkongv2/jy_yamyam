@@ -4050,7 +4050,7 @@ void main() {
       tester
           .getSize(find.byKey(const ValueKey('vehicleChoice.motorcycle')))
           .width,
-      closeTo((360 - (AppSpacing.sm * 2) - (AppSpacing.sm * 3)) / 4, 0.1),
+      closeTo((360 - (AppSpacing.md * 2) - (AppSpacing.sm * 3)) / 4, 0.1),
     );
   });
 

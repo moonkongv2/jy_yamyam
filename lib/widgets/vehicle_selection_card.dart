@@ -51,7 +51,7 @@ class VehicleSelectionCard extends StatelessWidget {
         boxShadow: AppShadows.surface,
       ),
       child: Padding(
-        padding: EdgeInsets.all(compact ? AppSpacing.sm : AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
