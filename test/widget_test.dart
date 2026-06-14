@@ -3866,7 +3866,7 @@ void main() {
     expect(find.byType(VehicleSelectionCard), findsNothing);
   });
 
-  testWidgets('Home screen shows quick courses above vehicle choices', (
+  testWidgets('Home screen shows vehicle choices above meal courses', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
@@ -3937,7 +3937,7 @@ void main() {
 
     final vehicleTitleTop = tester.getTopLeft(find.text('오늘의 빠방')).dy;
     final firstCourseTop = tester.getTopLeft(find.text('15분 코스')).dy;
-    expect(firstCourseTop, lessThan(vehicleTitleTop));
+    expect(vehicleTitleTop, lessThan(firstCourseTop));
   });
 
   testWidgets(

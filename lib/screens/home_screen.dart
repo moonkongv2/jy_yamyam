@@ -611,6 +611,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   avatarForVehicle: _config.avatarPresentationForVehicle,
                   avatarImageBuilder: widget.avatarImageBuilder,
                   showSelectedPreview: true,
+                  compact: true,
                   footer: _AvatarInlineCta(
                     stateText: avatarStateText,
                     description: texts.home.avatarCtaSubtitle,
@@ -684,15 +685,17 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Column(children: [activeSessionCard, heroCard]),
+                        child: Column(
+                          children: [activeSessionCard, vehicleCard],
+                        ),
                       ),
                       const SizedBox(width: AppSpacing.xl),
                       Expanded(
                         child: Column(
                           children: [
-                            quickCourses,
+                            heroCard,
                             const SizedBox(height: AppSpacing.md),
-                            vehicleCard,
+                            quickCourses,
                           ],
                         ),
                       ),
@@ -703,11 +706,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 return Column(
                   children: [
                     activeSessionCard,
+                    vehicleCard,
+                    const SizedBox(height: AppSpacing.xl),
                     heroCard,
                     const SizedBox(height: AppSpacing.xl),
                     quickCourses,
-                    const SizedBox(height: AppSpacing.xl),
-                    vehicleCard,
                   ],
                 );
               },
