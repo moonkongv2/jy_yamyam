@@ -7,6 +7,7 @@ The app is designed around one simple goal: make mealtime pacing feel like a coz
 ## Highlights
 
 - First-run child name setup and local settings persistence
+- First-run parent onboarding guide before child name setup
 - Preset meal courses for 15, 25, and 35 minutes
 - Custom meal duration from 1 to 60 minutes
 - Meal ingredient course setup with random or selected ingredients
@@ -29,16 +30,17 @@ The app is designed around one simple goal: make mealtime pacing feel like a coz
 
 ## App Flow
 
-1. Launch the app and enter the child's name on first run.
-2. Pick a rider vehicle on the home screen.
-3. Start a preset course or configure a custom duration.
-4. Choose random meal ingredients or select up to five ingredients for the course.
-5. Watch the selected vehicle move along its course as the timer progresses.
-6. See short motivation videos at progress milestones.
-7. If sound is enabled, hear a short locale-based cheer voice with the motivation video.
-8. Pause, resume, complete, or respond to the arrival prompt when needed.
-9. Review the result and earned stickers.
-10. Track meal history, sticker inventory, and reward goals from the home screen.
+1. Launch the app and review the first-run parent guide on a new install.
+2. Enter the child's name on first run.
+3. Pick a rider vehicle on the home screen.
+4. Start a preset course or configure a custom duration.
+5. Choose random meal ingredients or select up to five ingredients for the course.
+6. Watch the selected vehicle move along its course as the timer progresses.
+7. See short motivation videos at progress milestones.
+8. If sound is enabled, hear a short locale-based cheer voice with the motivation video.
+9. Pause, resume, complete, or respond to the arrival prompt when needed.
+10. Review the result and earned stickers.
+11. Track meal history, sticker inventory, and reward goals from the home screen.
 
 ## Motivation Media
 

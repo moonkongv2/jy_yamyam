@@ -19,7 +19,7 @@ class UserGuideTexts implements UserGuideTextSet {
 
   String get whatIsYamyamTitle => '냠냠 라이더는 어떤 앱인가요?';
   List<String> get whatIsYamyamItems => const [
-    '식사 시간을 단순한 카운트다운이 아니라 작은 코스 주행처럼 느끼게 해주는 앱이에요.',
+    '식사 시간을 단순한 카운트다운이 아니라 신나는 코스 주행처럼 느끼게 해주는 앱이에요.',
     '아이가 차량을 고르고, 정해진 시간 동안 코스를 따라가며 식사 페이스를 맞춰요.',
     '마지막에는 보호자가 식사를 마쳤는지 확인해 완료 여부를 정해요.',
   ];

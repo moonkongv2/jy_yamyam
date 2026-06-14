@@ -62,6 +62,9 @@ class _YamyamRiderAppState extends State<YamyamRiderApp> {
   }
 
   Future<void> _completeFirstRunOnboarding() async {
+    if (_hasSeenFirstRunOnboarding) {
+      return;
+    }
     setState(() => _hasSeenFirstRunOnboarding = true);
     await widget.settingsService.saveHasSeenFirstRunOnboarding(true);
   }

@@ -1756,6 +1756,37 @@ void main() {
     );
   });
 
+  testWidgets(
+    'Skipping first-run onboarding opens child name setup and persists seen state',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+
+      await _pumpYamyamApp(
+        tester,
+        initialConfig: MealTimerConfig.defaults(),
+        initialHasSeenFirstRunOnboarding: false,
+      );
+
+      expect(
+        find.byKey(const ValueKey('firstRunOnboardingScreen')),
+        findsOneWidget,
+      );
+
+      final skipButton = find.byKey(
+        const ValueKey('firstRunOnboardingSkipButton'),
+      );
+      await tester.ensureVisible(skipButton);
+      await tester.pumpAndSettle();
+      await tester.tap(skipButton);
+      await tester.pumpAndSettle();
+
+      expect(find.text('누가 냠냠 라이더를 탈까?'), findsOneWidget);
+
+      final preferences = await SharedPreferences.getInstance();
+      expect(preferences.getBool('hasSeenFirstRunOnboarding'), isTrue);
+    },
+  );
+
   testWidgets('Saved child name skips first-run onboarding', (tester) async {
     SharedPreferences.setMockInitialValues({});
 

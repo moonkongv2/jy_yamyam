@@ -178,16 +178,18 @@ class _FirstRunOnboardingScreenState extends State<FirstRunOnboardingScreen> {
                           ),
                         ],
                       ),
-                      if (_pageIndex < slides.length - 1) ...[
-                        const SizedBox(height: AppSpacing.sm),
-                        Center(
-                          child: TextButton(
-                            key: const ValueKey('firstRunOnboardingSkipButton'),
-                            onPressed: _isCompleting ? null : _complete,
-                            child: Text(texts.skipButtonLabel),
-                          ),
-                        ),
-                      ],
+                      const SizedBox(height: AppSpacing.sm),
+                      Center(
+                        child: _pageIndex < slides.length - 1
+                            ? TextButton(
+                                key: const ValueKey(
+                                  'firstRunOnboardingSkipButton',
+                                ),
+                                onPressed: _isCompleting ? null : _complete,
+                                child: Text(texts.skipButtonLabel),
+                              )
+                            : const SizedBox(height: 48),
+                      ),
                     ],
                   ),
                 ),

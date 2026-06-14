@@ -17,7 +17,9 @@ class EnFirstRunOnboardingTexts implements FirstRunOnboardingTextSet {
       emoji: '💛',
       title: 'Mealtime can be hard for parents too',
       body:
-          'Some days, even one more bite can feel far away. Parents can feel tired, and children can start to feel pressured. Yamyam Rider helps replace repeated reminders with a gentle meal flow.',
+          'Some days, even one more bite can feel far away.\n'
+          'Parents can feel tired, and children can start to feel pressured.\n'
+          'Yamyam Rider helps replace repeated reminders with a gentle meal flow.',
       bullets: [
         'Children can see time moving forward.',
         'Parents can rely on a simple visual rhythm.',
