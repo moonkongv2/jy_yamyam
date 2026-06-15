@@ -34,6 +34,7 @@ import 'package:jy_yamyam/screens/meal_history_screen.dart';
 import 'package:jy_yamyam/screens/reward_goal_screen.dart';
 import 'package:jy_yamyam/screens/result_screen.dart';
 import 'package:jy_yamyam/screens/settings_screen.dart';
+import 'package:jy_yamyam/screens/sticker_collection_screen.dart';
 import 'package:jy_yamyam/screens/timer_screen.dart';
 import 'package:jy_yamyam/screens/user_guide_screen.dart';
 import 'package:jy_yamyam/services/active_meal_timer_session_store.dart';
@@ -639,6 +640,13 @@ void main() {
     }
   });
 
+  test('Catalog vehicles place motorcycle and supercar first', () {
+    expect(VehicleCatalog.all.map((vehicle) => vehicle.id).take(2), [
+      'motorcycle',
+      'supercar',
+    ]);
+  });
+
   test(
     'Catalog vehicles use success result videos or the motorcycle fallback',
     () {
@@ -675,6 +683,10 @@ void main() {
 
   test('Reward catalog generates one sticker for every vehicle', () {
     expect(RewardCatalog.all, hasLength(VehicleCatalog.all.length));
+    expect(RewardCatalog.all.map((reward) => reward.vehicleId).take(2), [
+      'motorcycle',
+      'supercar',
+    ]);
 
     for (final vehicle in VehicleCatalog.all) {
       final sticker = RewardCatalog.findVehicleStickerByVehicleId(vehicle.id);
@@ -4141,6 +4153,7 @@ void main() {
     final firstRowTop = tester
         .getTopLeft(_vehicleChoiceFinder('motorcycle'))
         .dy;
+    expect(tester.getTopLeft(_vehicleChoiceFinder('supercar')).dy, firstRowTop);
     expect(
       tester.getTopLeft(_vehicleChoiceFinder('fire_truck')).dy,
       firstRowTop,
@@ -4149,17 +4162,15 @@ void main() {
       tester.getTopLeft(_vehicleChoiceFinder('police_car')).dy,
       firstRowTop,
     );
-    expect(
-      tester.getTopLeft(_vehicleChoiceFinder('excavator')).dy,
-      firstRowTop,
-    );
-    final secondRowTop = tester.getTopLeft(_vehicleChoiceFinder('airplane')).dy;
+    final secondRowTop = tester
+        .getTopLeft(_vehicleChoiceFinder('excavator'))
+        .dy;
     expect(secondRowTop, greaterThan(firstRowTop));
-    expect(tester.getTopLeft(_vehicleChoiceFinder('bus')).dy, secondRowTop);
     expect(
-      tester.getTopLeft(_vehicleChoiceFinder('supercar')).dy,
+      tester.getTopLeft(_vehicleChoiceFinder('airplane')).dy,
       secondRowTop,
     );
+    expect(tester.getTopLeft(_vehicleChoiceFinder('bus')).dy, secondRowTop);
     expect(tester.getTopLeft(_vehicleChoiceFinder('train')).dy, secondRowTop);
     final thirdRowTop = tester.getTopLeft(_vehicleChoiceFinder('t_rex')).dy;
     expect(thirdRowTop, greaterThan(secondRowTop));
@@ -4175,7 +4186,7 @@ void main() {
     );
     final firstRowCenterX =
         (_vehicleChoiceRect(tester, 'motorcycle').left +
-            _vehicleChoiceRect(tester, 'excavator').right) /
+            _vehicleChoiceRect(tester, 'police_car').right) /
         2;
     final thirdRowCenterX =
         (_vehicleChoiceRect(tester, 't_rex').left +
@@ -7675,6 +7686,42 @@ void main() {
       expect(find.text('Create Reward Promise'), findsNothing);
     },
   );
+
+  testWidgets('Sticker collection shows motorcycle and supercar first', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'rewardInventory': [
+        jsonEncode({
+          'rewardId': 'sticker_vehicle_motorcycle',
+          'acquiredAt': DateTime(2026, 5, 4, 12).toIso8601String(),
+          'count': 1,
+        }),
+        jsonEncode({
+          'rewardId': 'sticker_vehicle_supercar',
+          'acquiredAt': DateTime(2026, 5, 4, 13).toIso8601String(),
+          'count': 1,
+        }),
+      ],
+    });
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
+        home: StickerCollectionScreen(
+          mealProgressService: LocalMealProgressService(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.getTopLeft(find.text('오토바이 스티커')).dy,
+      tester.getTopLeft(find.text('슈퍼카 스티커')).dy,
+    );
+  });
 
   testWidgets('Home meal records summary opens meal history screen', (
     tester,

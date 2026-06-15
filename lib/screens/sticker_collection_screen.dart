@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../catalogs/vehicle_catalog.dart';
 import '../l10n/app_texts.dart';
 import '../models/meal_progress_snapshot.dart';
 import '../models/reward_item.dart';
@@ -39,9 +40,12 @@ class StickerCollectionScreen extends StatelessWidget {
                 crossAxisSpacing: AppSpacing.md,
                 childAspectRatio: 0.88,
               ),
-              itemCount: RewardCatalog.all.length,
+              itemCount: VehicleCatalog.all.length,
               itemBuilder: (context, index) {
-                final sticker = RewardCatalog.all[index];
+                final vehicle = VehicleCatalog.all[index];
+                final sticker = RewardCatalog.findVehicleStickerByVehicleId(
+                  vehicle.id,
+                )!;
                 final item = _inventoryItemFor(inventory, sticker.id);
 
                 return _StickerCard(sticker: sticker, count: item?.count ?? 0);

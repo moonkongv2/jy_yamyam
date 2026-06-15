@@ -12,7 +12,7 @@ The app is designed around one simple goal: make mealtime pacing feel like a coz
 - Custom meal duration from 1 to 60 minutes
 - Meal ingredient course setup with random or selected ingredients
 - Home course suggestions that adapt to the saved default duration
-- 12 selectable rider vehicles: motorcycle, fire truck, police car, excavator, airplane, bus, supercar, train, T-rex, shark, brachio, and pteranodon
+- 12 selectable rider vehicles: motorcycle, supercar, fire truck, police car, excavator, airplane, bus, train, T-rex, shark, brachio, and pteranodon
 - Vehicle-specific custom avatar storage and preview
 - Custom avatar setup flow with image upload, per-vehicle adjustment controls, and prompt guidance
 - Animated road, rail, sky, or water course progress based on the selected vehicle
