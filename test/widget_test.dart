@@ -7108,7 +7108,7 @@ void main() {
         requiredStickerCount: 1,
         filledSlots: [
           RewardGoalSlot(
-            rewardId: 'sticker_finish_flag',
+            rewardId: 'sticker_vehicle_motorcycle',
             filledAt: DateTime(2026, 5, 4, 12),
             mealSessionId: 'meal-1',
           ),
@@ -7168,7 +7168,7 @@ void main() {
         'completedBeforeArrival': true,
         'mealCompleted': true,
         'completionStatus': MealCompletionStatus.completedBeforeArrival.name,
-        'rewardIds': <String>['sticker_finish_flag'],
+        'rewardIds': <String>['sticker_vehicle_motorcycle'],
         'selectedIngredientIds': <String>['egg'],
       });
       final secondMeal = jsonEncode({
@@ -7180,7 +7180,7 @@ void main() {
         'completedBeforeArrival': false,
         'mealCompleted': true,
         'completionStatus': MealCompletionStatus.completedAfterArrival.name,
-        'rewardIds': <String>['sticker_twinkle_star'],
+        'rewardIds': <String>['sticker_vehicle_fire_truck'],
         'selectedIngredientIds': <String>['tofu'],
       });
       final rawHistory = [
@@ -7196,7 +7196,7 @@ void main() {
       final preferences = await SharedPreferences.getInstance();
 
       expect(snapshot.history.map((entry) => entry.id), ['meal-1', 'meal-2']);
-      expect(snapshot.history.first.rewardIds, ['sticker_finish_flag']);
+      expect(snapshot.history.first.rewardIds, ['sticker_vehicle_motorcycle']);
       expect(snapshot.history.last.selectedIngredientIds, ['tofu']);
       expect(preferences.getStringList('mealHistory'), rawHistory);
     },
@@ -7206,12 +7206,12 @@ void main() {
     'Malformed reward inventory items are skipped during snapshot load',
     () async {
       final firstReward = jsonEncode({
-        'rewardId': 'sticker_finish_flag',
+        'rewardId': 'sticker_vehicle_motorcycle',
         'acquiredAt': DateTime(2026, 5, 4, 12).toIso8601String(),
         'count': 1,
       });
       final secondReward = jsonEncode({
-        'rewardId': 'sticker_twinkle_star',
+        'rewardId': 'sticker_vehicle_fire_truck',
         'acquiredAt': DateTime(2026, 5, 5, 12).toIso8601String(),
         'count': 2,
       });
@@ -7232,8 +7232,8 @@ void main() {
       final preferences = await SharedPreferences.getInstance();
 
       expect(snapshot.inventory.map((item) => item.rewardId), [
-        'sticker_finish_flag',
-        'sticker_twinkle_star',
+        'sticker_vehicle_motorcycle',
+        'sticker_vehicle_fire_truck',
       ]);
       expect(snapshot.inventory.map((item) => item.count), [1, 2]);
       expect(preferences.getStringList('rewardInventory'), rawInventory);

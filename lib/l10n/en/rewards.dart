@@ -63,16 +63,6 @@ class EnRewardTexts implements RewardTextSet {
   String rewardGoalRedeemedAt(String dateLabel) => 'Given: $dateLabel';
 
   String name(String rewardId) {
-    return switch (rewardId) {
-      RewardCatalog.finishFlagStickerId => 'Finish Flag Sticker',
-      RewardCatalog.twinkleStarStickerId => 'Twinkle Star Sticker',
-      RewardCatalog.riceBowlStickerId => 'Hearty Rice Bowl Sticker',
-      RewardCatalog.yumSpoonStickerId => 'Yummy Spoon Sticker',
-      RewardCatalog.crunchyCarrotStickerId => 'Crunchy Carrot Sticker',
-      RewardCatalog.sunnyMealStickerId => 'Sunny Meal Sticker',
-      RewardCatalog.rainbowCourseStickerId => 'Rainbow Ride Sticker',
-      RewardCatalog.rocketBiteStickerId => 'Rocket Bite Sticker',
-      _ => rewardId,
-    };
+    return RewardCatalog.findById(rewardId)?.labelEn ?? rewardId;
   }
 }

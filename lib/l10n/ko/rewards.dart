@@ -58,16 +58,6 @@ class RewardTexts implements RewardTextSet {
   String rewardGoalRedeemedAt(String dateLabel) => '지급: $dateLabel';
 
   String name(String rewardId) {
-    return switch (rewardId) {
-      RewardCatalog.finishFlagStickerId => '도착 깃발 스티커',
-      RewardCatalog.twinkleStarStickerId => '반짝 별 스티커',
-      RewardCatalog.riceBowlStickerId => '든든 밥그릇 스티커',
-      RewardCatalog.yumSpoonStickerId => '냠냠 숟가락 스티커',
-      RewardCatalog.crunchyCarrotStickerId => '아삭 당근 스티커',
-      RewardCatalog.sunnyMealStickerId => '햇살 식사 스티커',
-      RewardCatalog.rainbowCourseStickerId => '무지개 코스 스티커',
-      RewardCatalog.rocketBiteStickerId => '로켓 한입 스티커',
-      _ => rewardId,
-    };
+    return RewardCatalog.findById(rewardId)?.labelKo ?? rewardId;
   }
 }

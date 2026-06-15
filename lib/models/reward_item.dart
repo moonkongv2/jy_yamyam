@@ -1,3 +1,5 @@
+import '../catalogs/vehicle_catalog.dart';
+
 enum RewardType { sticker }
 
 class RewardDefinition {
@@ -5,13 +7,23 @@ class RewardDefinition {
     required this.id,
     required this.type,
     required this.emoji,
+    required this.imageAssetPath,
+    required this.labelKo,
+    required this.labelEn,
+    this.vehicleId,
   });
 
   final String id;
   final RewardType type;
   final String emoji;
+  final String imageAssetPath;
+  final String labelKo;
+  final String labelEn;
+  final String? vehicleId;
 
-  String get imageAssetPath => 'assets/images/$id.png';
+  String labelForLanguage(String languageCode) {
+    return languageCode == 'ko' ? labelKo : labelEn;
+  }
 }
 
 class RewardInventoryItem {
@@ -51,75 +63,34 @@ class RewardInventoryItem {
 }
 
 class RewardCatalog {
-  static const finishFlagStickerId = 'sticker_finish_flag';
-  static const twinkleStarStickerId = 'sticker_twinkle_star';
-  static const riceBowlStickerId = 'sticker_rice_bowl';
-  static const yumSpoonStickerId = 'sticker_yum_spoon';
-  static const crunchyCarrotStickerId = 'sticker_crunchy_carrot';
-  static const sunnyMealStickerId = 'sticker_sunny_meal';
-  static const rainbowCourseStickerId = 'sticker_rainbow_course';
-  static const rocketBiteStickerId = 'sticker_rocket_bite';
+  static final List<RewardDefinition> all = VehicleCatalog.all
+      .map(
+        (vehicle) => RewardDefinition(
+          id: vehicleStickerIdForVehicle(vehicle.id),
+          type: RewardType.sticker,
+          emoji: vehicle.emoji,
+          imageAssetPath: vehicle.assetPath,
+          labelKo: '${vehicle.labelKo} 스티커',
+          labelEn: '${vehicle.labelEn} Sticker',
+          vehicleId: vehicle.id,
+        ),
+      )
+      .toList(growable: false);
 
-  static const finishFlagSticker = RewardDefinition(
-    id: finishFlagStickerId,
-    type: RewardType.sticker,
-    emoji: '🏁',
-  );
+  static final List<RewardDefinition> successStickers = all;
 
-  static const twinkleStarSticker = RewardDefinition(
-    id: twinkleStarStickerId,
-    type: RewardType.sticker,
-    emoji: '⭐',
-  );
+  static String vehicleStickerIdForVehicle(String vehicleId) {
+    return 'sticker_vehicle_$vehicleId';
+  }
 
-  static const riceBowlSticker = RewardDefinition(
-    id: riceBowlStickerId,
-    type: RewardType.sticker,
-    emoji: '🍚',
-  );
-
-  static const yumSpoonSticker = RewardDefinition(
-    id: yumSpoonStickerId,
-    type: RewardType.sticker,
-    emoji: '🥄',
-  );
-
-  static const crunchyCarrotSticker = RewardDefinition(
-    id: crunchyCarrotStickerId,
-    type: RewardType.sticker,
-    emoji: '🥕',
-  );
-
-  static const sunnyMealSticker = RewardDefinition(
-    id: sunnyMealStickerId,
-    type: RewardType.sticker,
-    emoji: '🌞',
-  );
-
-  static const rainbowCourseSticker = RewardDefinition(
-    id: rainbowCourseStickerId,
-    type: RewardType.sticker,
-    emoji: '🌈',
-  );
-
-  static const rocketBiteSticker = RewardDefinition(
-    id: rocketBiteStickerId,
-    type: RewardType.sticker,
-    emoji: '🚀',
-  );
-
-  static const successStickers = [
-    finishFlagSticker,
-    twinkleStarSticker,
-    riceBowlSticker,
-    yumSpoonSticker,
-    crunchyCarrotSticker,
-    sunnyMealSticker,
-    rainbowCourseSticker,
-    rocketBiteSticker,
-  ];
-
-  static const all = successStickers;
+  static RewardDefinition? findVehicleStickerByVehicleId(String vehicleId) {
+    for (final reward in all) {
+      if (reward.vehicleId == vehicleId) {
+        return reward;
+      }
+    }
+    return null;
+  }
 
   static RewardDefinition? findById(String id) {
     for (final reward in all) {
