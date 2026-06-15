@@ -17,9 +17,9 @@ class HomeTexts implements HomeTextSet {
   String get customStartButton => '직접 설정으로 출발';
   String get customSheetTitle => '직접 설정';
   String get mealSummaryLabel => '식사';
-  String get stickerKindSummaryLabel => '종류';
-  String get stickerSummaryLabel => '스티커';
-  String get openStickerCollection => '스티커 보관함 보기';
+  String get stickerKindSummaryLabel => '차량 종류';
+  String get stickerSummaryLabel => '차량 스티커';
+  String get openStickerCollection => '차량 스티커 보관함 보기';
   String get avatarCtaSubtitle => '아이 얼굴을 빠방에 태워보세요.';
   String get avatarCtaButton => '만들기';
   String get avatarCtaEditButton => '편집';

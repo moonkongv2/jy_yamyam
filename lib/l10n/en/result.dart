@@ -52,8 +52,8 @@ class EnResultTexts implements ResultTextSet {
 
   List<String> helpBulletItems(bool mealCompleted) => mealCompleted
       ? const [
-          'A completed meal earns 1 random success sticker.',
-          'If a reward goal is active, the sticker can fill one goal slot.',
+          'A completed meal earns 1 vehicle sticker for the selected vehicle.',
+          'If a reward goal is active, the vehicle sticker can fill one goal slot.',
         ]
       : const [
           'Incomplete meals stay in meal history, but no sticker is awarded.',
@@ -66,8 +66,8 @@ class EnResultTexts implements ResultTextSet {
   List<String> resultHelpMeaningItems(bool mealCompleted) => mealCompleted
       ? const [
           'When you confirm the meal is finished, it’s recorded as complete.',
-          'A completed meal earns one random success sticker.',
-          'If a reward goal is active, the sticker can fill one goal slot.',
+          'A completed meal earns one vehicle sticker for the selected vehicle.',
+          'If a reward goal is active, the vehicle sticker can fill one goal slot.',
         ]
       : const [
           'The rider arrived first, so the meal was recorded as incomplete.',

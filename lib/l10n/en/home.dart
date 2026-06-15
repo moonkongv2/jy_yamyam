@@ -17,9 +17,9 @@ class EnHomeTexts implements HomeTextSet {
   String get customStartButton => 'Start Custom Ride';
   String get customSheetTitle => 'Custom time';
   String get mealSummaryLabel => 'Meals';
-  String get stickerKindSummaryLabel => 'Kinds';
-  String get stickerSummaryLabel => 'Stickers';
-  String get openStickerCollection => 'View Sticker Collection';
+  String get stickerKindSummaryLabel => 'Vehicle types';
+  String get stickerSummaryLabel => 'Vehicle stickers';
+  String get openStickerCollection => 'View Vehicle Sticker Collection';
   String get avatarCtaSubtitle => "Put your child's face on the ride.";
   String get avatarCtaButton => 'Create';
   String get avatarCtaEditButton => 'Edit';

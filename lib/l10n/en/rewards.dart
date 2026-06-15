@@ -5,7 +5,7 @@ import '../text_sets.dart';
 class EnRewardTexts implements RewardTextSet {
   const EnRewardTexts();
 
-  String get collectionTitle => 'Sticker Collection';
+  String get collectionTitle => 'Vehicle Sticker Collection';
   String get lockedSticker => 'Not collected yet';
   String get lockedStatus => 'Locked';
   String get uncollectedSemanticLabel => 'Not collected yet';
@@ -13,9 +13,9 @@ class EnRewardTexts implements RewardTextSet {
   String get createRewardGoal => 'Create Reward Promise';
   String get rewardGoalEmptyTitle => 'Create a new reward promise';
   String get rewardGoalEmptyBody =>
-      'Each completed meal fills one space on the reward board.';
+      'Each completed meal earns a vehicle sticker and fills one space on the reward board.';
   String get rewardGoalRewardFieldLabel => 'Reward';
-  String get rewardGoalRequiredStickerCountLabel => 'Stickers needed';
+  String get rewardGoalRequiredStickerCountLabel => 'Vehicle stickers needed';
   String get rewardGoalSaveButton => 'Save Promise';
   String get rewardGoalReadyMessage => 'Your reward is ready!';
   String get rewardGoalGivenButton => 'Use Reward';

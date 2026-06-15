@@ -41,7 +41,10 @@ class ResultTexts implements ResultTextSet {
       : const ['타이머가 먼저 도착했는데 아직 식사가 끝나지 않았으면 미완료로 기록돼요.'];
 
   List<String> helpBulletItems(bool mealCompleted) => mealCompleted
-      ? const ['성공하면 랜덤 성공 스티커 1개를 받아요.', '보상 목표가 있으면 성공 스티커가 목표 칸을 채울 수 있어요.']
+      ? const [
+          '완료하면 선택한 빠방의 차량 스티커 1개를 받아요.',
+          '보상 목표가 있으면 차량 스티커가 목표 칸을 채울 수 있어요.',
+        ]
       : const [
           '미완료 기록은 식사 기록에 남지만 스티커는 지급되지 않아요.',
           '미완료는 벌이 아니라 다음 도전을 위한 기록이에요.',
@@ -52,8 +55,8 @@ class ResultTexts implements ResultTextSet {
   List<String> resultHelpMeaningItems(bool mealCompleted) => mealCompleted
       ? const [
           '식사를 마쳤다고 확인되어 성공으로 기록돼요.',
-          '성공한 식사는 랜덤 성공 스티커 1개를 받아요.',
-          '보상 목표가 있으면 성공 스티커가 목표 칸을 채울 수 있어요.',
+          '완료한 식사는 선택한 빠방의 차량 스티커 1개를 받아요.',
+          '보상 목표가 있으면 차량 스티커가 목표 칸을 채울 수 있어요.',
         ]
       : const [
           '타이머가 먼저 도착했지만 아직 식사가 끝나지 않아 미완료로 기록돼요.',

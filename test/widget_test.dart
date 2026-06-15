@@ -3723,7 +3723,7 @@ void main() {
     expect(find.textContaining('진행률 10%'), findsOneWidget);
 
     await tester.scrollUntilVisible(
-      find.textContaining('성공하면 랜덤 성공 스티커'),
+      find.textContaining('차량 스티커 1개'),
       200,
       scrollable: find.byType(Scrollable).first,
     );
@@ -7657,7 +7657,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('강우의 냠냠 기록'), findsOneWidget);
-    expect(find.text('최근 식사 20:00 · 미완료 · 스티커 없음 · 초과 +05:00'), findsNothing);
+    expect(
+      find.text('최근 식사 20:00 · 미완료 · 차량 스티커 없음 · 초과 +05:00'),
+      findsNothing,
+    );
     expect(find.textContaining('최근 식사'), findsNothing);
   });
 
@@ -7778,7 +7781,7 @@ void main() {
     expect(find.text('25:00'), findsNothing);
     expect(find.text('초과 +05:00'), findsNothing);
     expect(find.text('완료'), findsOneWidget);
-    expect(find.text('받은 스티커'), findsOneWidget);
+    expect(find.text('받은 차량 스티커'), findsOneWidget);
     expect(find.text('고른 식재료'), findsNothing);
   });
 
@@ -7816,7 +7819,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('이 식사 기록을 삭제할까요?'), findsOneWidget);
-    expect(find.text('기록만 삭제되고 받은 스티커는 유지돼요.'), findsOneWidget);
+    expect(find.text('기록만 삭제되고 받은 차량 스티커는 유지돼요.'), findsOneWidget);
 
     await tester.tap(find.text('삭제'));
     await tester.pumpAndSettle();
@@ -7921,7 +7924,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('미완료'), findsOneWidget);
-    expect(find.text('스티커 없음'), findsOneWidget);
+    expect(find.text('차량 스티커 없음'), findsOneWidget);
     expect(find.text('초과 +05:00'), findsNothing);
   });
 }

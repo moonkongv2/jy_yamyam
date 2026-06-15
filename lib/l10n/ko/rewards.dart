@@ -5,16 +5,16 @@ import '../text_sets.dart';
 class RewardTexts implements RewardTextSet {
   const RewardTexts();
 
-  String get collectionTitle => '스티커 보관함';
+  String get collectionTitle => '차량 스티커 보관함';
   String get lockedSticker => '아직 미획득';
   String get lockedStatus => '잠금';
   String get uncollectedSemanticLabel => '아직 미획득';
   String get rewardGoalTitle => '보상 약속';
   String get createRewardGoal => '보상 약속 만들기';
   String get rewardGoalEmptyTitle => '새 보상 약속을 만들어 주세요';
-  String get rewardGoalEmptyBody => '식사를 완료할 때마다 보상판이 한 칸씩 채워져요.';
+  String get rewardGoalEmptyBody => '식사를 완료할 때마다 차량 스티커를 받고, 보상판이 한 칸씩 채워져요.';
   String get rewardGoalRewardFieldLabel => '받을 보상';
-  String get rewardGoalRequiredStickerCountLabel => '필요한 스티커 수';
+  String get rewardGoalRequiredStickerCountLabel => '필요한 차량 스티커 수';
   String get rewardGoalSaveButton => '약속 저장';
   String get rewardGoalReadyMessage => '보상 받을 준비가 됐어요!';
   String get rewardGoalGivenButton => '사용하기';

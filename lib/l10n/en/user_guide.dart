@@ -52,10 +52,10 @@ class EnUserGuideTexts implements UserGuideTextSet {
     'If sound is off, the video may appear without voice playback.',
   ];
 
-  String get completionTitle => 'Complete, incomplete, and stickers';
+  String get completionTitle => 'Complete, incomplete, and vehicle stickers';
   List<String> get completionItems => const [
     'When you confirm the meal is finished, it is recorded as complete.',
-    'A completed meal earns 1 random success sticker.',
+    'A completed meal earns 1 vehicle sticker for the selected vehicle.',
     'If the timer arrives first and the meal is not finished, tap “Not yet.” The meal is recorded as incomplete.',
     'Incomplete meals are saved in history but do not earn stickers.',
     'The child-facing result keeps a next-try tone instead of harsh failure wording.',
@@ -63,9 +63,9 @@ class EnUserGuideTexts implements UserGuideTextSet {
 
   String get historyRewardsTitle => 'Meal history and reward goals';
   List<String> get historyRewardsItems => const [
-    'Meal history shows target time, actual time, and completion status. It also shows earned stickers and manually chosen ingredients.',
-    'Earned stickers collect in the sticker collection screen.',
-    'If reward goals are active, success stickers can fill goal slots.',
+    'Meal history shows target time, actual time, and completion status. It also shows earned vehicle stickers and manually chosen ingredients.',
+    'Earned vehicle stickers collect in the vehicle sticker collection screen.',
+    'If reward goals are active, vehicle stickers can fill goal slots.',
   ];
 
   String get exitResumeTitle => 'Leaving and resuming during a timer';

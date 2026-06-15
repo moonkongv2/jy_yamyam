@@ -52,10 +52,10 @@ class UserGuideTexts implements UserGuideTextSet {
     '소리 설정이 꺼져 있으면 영상만 나오거나 음성이 재생되지 않을 수 있어요.',
   ];
 
-  String get completionTitle => '완료, 미완료, 스티커';
+  String get completionTitle => '완료, 미완료, 차량 스티커';
   List<String> get completionItems => const [
     '식사를 마쳤다고 확인하면 성공으로 기록돼요.',
-    '성공하면 랜덤 성공 스티커 1개를 받아요.',
+    '완료하면 선택한 빠방의 차량 스티커 1개를 받아요.',
     '타이머가 먼저 도착했는데 식사가 끝나지 않았다면 “아직 아니에요”를 눌러요. 이때 미완료로 기록돼요.',
     '미완료 기록은 남지만 스티커는 받지 않아요.',
     '아이 화면은 강한 실패 표현보다 다음 도전을 떠올릴 수 있는 톤을 유지해요.',
@@ -63,9 +63,9 @@ class UserGuideTexts implements UserGuideTextSet {
 
   String get historyRewardsTitle => '식사 기록과 보상 목표';
   List<String> get historyRewardsItems => const [
-    '식사 기록에서 목표 시간, 실제 시간, 완료 상태를 볼 수 있어요. 받은 스티커와 직접 고른 식재료도 함께 확인해요.',
-    '받은 스티커는 스티커 모음 화면에 쌓여요.',
-    '보상 목표가 있으면 성공 스티커가 목표 칸을 채울 수 있어요.',
+    '식사 기록에서 목표 시간, 실제 시간, 완료 상태를 볼 수 있어요. 받은 차량 스티커와 직접 고른 식재료도 함께 확인해요.',
+    '받은 차량 스티커는 차량 스티커 보관함에 쌓여요.',
+    '보상 목표가 있으면 차량 스티커가 목표 칸을 채울 수 있어요.',
   ];
 
   String get exitResumeTitle => '타이머 중 나가기와 이어하기';

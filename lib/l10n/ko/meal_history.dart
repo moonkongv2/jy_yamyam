@@ -11,19 +11,19 @@ class MealHistoryTexts implements MealHistoryTextSet {
   String get emptyBody => '타이머를 완료하면 기록이 여기에 쌓여요.';
   String get helpTitle => '식사 기록 안내';
   List<String> get helpBulletItems => const [
-    '식사 기록에는 목표 시간, 실제 시간, 완료 상태, 받은 스티커가 표시돼요.',
+    '식사 기록에는 목표 시간, 실제 시간, 완료 상태, 받은 차량 스티커가 표시돼요.',
     '직접 고른 식재료가 있으면 기록에 함께 표시돼요.',
     '자동 선택 식재료는 도로에만 보이고 기록에는 남지 않아요.',
-    '미완료 기록은 스티커 없음으로 표시될 수 있어요.',
+    '미완료 기록은 차량 스티커 없음으로 표시될 수 있어요.',
   ];
   String get targetTimeLabel => '목표';
   String get actualTimeLabel => '실제';
-  String get rewardLabel => '받은 스티커';
-  String get noRewardLabel => '스티커 없음';
+  String get rewardLabel => '받은 차량 스티커';
+  String get noRewardLabel => '차량 스티커 없음';
   String get selectedIngredientLabel => '고른 식재료';
   String get deleteRecordLabel => '식사 기록 삭제';
   String get deleteRecordDialogTitle => '이 식사 기록을 삭제할까요?';
-  String get deleteRecordDialogBody => '기록만 삭제되고 받은 스티커는 유지돼요.';
+  String get deleteRecordDialogBody => '기록만 삭제되고 받은 차량 스티커는 유지돼요.';
   String get deleteRecordConfirmLabel => '삭제';
   String get deleteRecordSuccessMessage => '식사 기록을 삭제했어요.';
 
