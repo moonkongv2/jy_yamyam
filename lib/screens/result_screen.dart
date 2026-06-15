@@ -1173,27 +1173,11 @@ class _RewardBadge extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.74),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.white, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.orange.withValues(alpha: 0.12),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: RewardStickerImage(
-                        reward: reward,
-                        semanticLabel: rewardName,
-                        size: 78,
-                      ),
-                    ),
+                  RewardStickerImage(
+                    reward: reward,
+                    semanticLabel: rewardName,
+                    size: 132,
+                    framed: false,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text(
@@ -1214,9 +1198,9 @@ class _RewardBadge extends StatelessWidget {
       );
     }
 
-    final stickerSize = isCondensed ? 58.0 : 64.0;
+    final stickerSize = isCondensed ? 132.0 : 144.0;
     return SizedBox(
-      width: isCondensed ? 104 : 116,
+      width: isCondensed ? 156 : 168,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1224,6 +1208,7 @@ class _RewardBadge extends StatelessWidget {
             reward: reward,
             semanticLabel: rewardName,
             size: stickerSize,
+            framed: false,
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(

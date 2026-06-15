@@ -10,16 +10,18 @@ class RewardStickerImage extends StatelessWidget {
     this.semanticLabel,
     this.size = 88,
     this.locked = false,
+    this.framed = true,
   });
 
   final RewardDefinition reward;
   final String? semanticLabel;
   final double size;
   final bool locked;
+  final bool framed;
 
   @override
   Widget build(BuildContext context) {
-    final padding = (size * 0.14).clamp(3.0, 10.0).toDouble();
+    final padding = framed ? (size * 0.14).clamp(3.0, 10.0).toDouble() : 0.0;
     final imageSize = (size - padding * 2).clamp(0.0, size).toDouble();
     final image = Image.asset(
       reward.imageAssetPath,
@@ -33,6 +35,13 @@ class RewardStickerImage extends StatelessWidget {
           _FallbackStickerIcon(reward: reward, size: imageSize, locked: locked),
     );
     final artwork = locked ? Opacity(opacity: 0.58, child: image) : image;
+
+    if (!framed) {
+      return SizedBox.square(
+        dimension: size,
+        child: Center(child: artwork),
+      );
+    }
 
     return _StickerFrame(size: size, padding: padding, child: artwork);
   }

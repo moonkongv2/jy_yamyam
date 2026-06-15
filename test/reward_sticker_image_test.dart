@@ -25,6 +25,27 @@ void main() {
     expect(find.byType(ColorFiltered), findsNothing);
   });
 
+  testWidgets(
+    'Unframed reward sticker renders artwork without the sticker frame',
+    (tester) async {
+      final reward = RewardCatalog.findVehicleStickerByVehicleId('motorcycle')!;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Center(
+            child: RewardStickerImage(reward: reward, size: 132, framed: false),
+          ),
+        ),
+      );
+
+      final image = tester.widget<Image>(find.byType(Image));
+
+      expect(image.width, 132);
+      expect(image.height, 132);
+      expect(find.byType(DecoratedBox), findsNothing);
+    },
+  );
+
   testWidgets('Locked reward sticker silhouettes the image only', (
     tester,
   ) async {

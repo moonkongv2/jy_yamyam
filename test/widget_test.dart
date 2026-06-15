@@ -52,6 +52,7 @@ import 'package:jy_yamyam/widgets/app/app_bouncy_button.dart';
 import 'package:jy_yamyam/widgets/avatar/avatar_composite_preview.dart';
 import 'package:jy_yamyam/widgets/road_painter.dart';
 import 'package:jy_yamyam/widgets/road_view.dart';
+import 'package:jy_yamyam/widgets/reward_sticker_image.dart';
 import 'package:jy_yamyam/widgets/timer_control_bar.dart';
 import 'package:jy_yamyam/widgets/vehicle_selection_card.dart';
 import 'package:jy_yamyam/widgets/vehicle_widget.dart';
@@ -950,6 +951,62 @@ void main() {
     expect(find.text('빨리 먹어서 잘했어.'), findsOneWidget);
     expect(find.textContaining('스티커 1개'), findsOneWidget);
   });
+
+  testWidgets(
+    'Completed result shows a large sticker without an outer circle',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('ko'),
+          supportedLocales: const [Locale('ko'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          home: ResultScreen(
+            result: _mealResult(completedBeforeArrival: true),
+            config: MealTimerConfig.defaults().copyWith(vehicleId: 'supercar'),
+            mealProgressService: LocalMealProgressService(),
+            onConfigChanged: (_) {},
+            introControllerFactory: (_) {
+              return VideoPlayerController.asset(
+                'assets/videos/missing_result_success.mp4',
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final stickerFinder = find.byWidgetPredicate(
+        (widget) =>
+            widget is RewardStickerImage &&
+            widget.size == 132 &&
+            !widget.framed,
+      );
+      final outerCircleFinder = find.ancestor(
+        of: stickerFinder,
+        matching: find.byWidgetPredicate((widget) {
+          final decoration = widget is DecoratedBox ? widget.decoration : null;
+          return decoration is BoxDecoration &&
+              decoration.shape == BoxShape.circle;
+        }),
+      );
+
+      expect(find.text('슈퍼카 스티커'), findsOneWidget);
+      expect(stickerFinder, findsOneWidget);
+      expect(outerCircleFinder, findsNothing);
+    },
+  );
 
   testWidgets('Incomplete result help explains record without sticker', (
     tester,
