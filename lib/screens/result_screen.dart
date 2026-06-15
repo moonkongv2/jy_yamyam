@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
+import '../catalogs/vehicle_catalog.dart';
 import '../l10n/app_texts.dart';
 import '../l10n/text_sets.dart';
 import '../models/meal_progress_snapshot.dart';
@@ -133,7 +134,7 @@ class _ResultScreenState extends State<ResultScreen> {
     unawaited(widget.orientationService.allowMealFlowOrientations());
     _recordedSession = widget.mealProgressService.recordMealResult(
       widget.result,
-      vehicleId: widget.config.vehicleId,
+      vehicleId: _resolvedVehicleId,
     );
     if (!widget.result.mealCompleted) {
       _introFinished = true;
@@ -148,8 +149,11 @@ class _ResultScreenState extends State<ResultScreen> {
     _initializeIntroVideo();
   }
 
+  String get _resolvedVehicleId =>
+      VehicleCatalog.findById(widget.config.vehicleId).id;
+
   String get _introVideoPath =>
-      resultVideoAssetPathForVehicle(vehicleId: widget.config.vehicleId);
+      resultVideoAssetPathForVehicle(vehicleId: _resolvedVehicleId);
 
   void _handleIntroChanged() {
     final controller = _introController;
@@ -231,8 +235,9 @@ class _ResultScreenState extends State<ResultScreen> {
   Widget build(BuildContext context) {
     final mealCompleted = widget.result.mealCompleted;
     final texts = AppTexts.of(context);
+    final vehicleId = _resolvedVehicleId;
     final failureRiderAssetPath = failureRiderAssetPathForVehicle(
-      vehicleId: widget.config.vehicleId,
+      vehicleId: vehicleId,
     );
 
     final introController = _introController;
@@ -266,7 +271,7 @@ class _ResultScreenState extends State<ResultScreen> {
                       mealProgressService: widget.mealProgressService,
                       orientationService: widget.orientationService,
                       failureRiderAssetPath: failureRiderAssetPath,
-                      vehicleId: widget.config.vehicleId,
+                      vehicleId: vehicleId,
                       onRestart: () => _restart(context),
                       onHome: () => _goHome(context),
                     );
@@ -362,7 +367,7 @@ class _ResultScreenState extends State<ResultScreen> {
                                     Text(
                                       texts.result.primaryMessage(
                                         mealCompleted,
-                                        vehicleId: widget.config.vehicleId,
+                                        vehicleId: vehicleId,
                                       ),
                                       textAlign: TextAlign.center,
                                       style: Theme.of(context)

@@ -1156,6 +1156,41 @@ void main() {
     );
   });
 
+  testWidgets('Result records the resolved vehicle sticker', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final service = LocalMealProgressService();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: ResultScreen(
+          result: _mealResult(completedBeforeArrival: true),
+          config: MealTimerConfig.defaults().copyWith(
+            vehicleId: 'missing_vehicle',
+          ),
+          mealProgressService: service,
+          onConfigChanged: (_) {},
+          introControllerFactory: (_) {
+            return VideoPlayerController.asset(
+              'assets/videos/missing_result_success.mp4',
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final snapshot = await service.loadSnapshot();
+    expect(snapshot.history.single.rewardIds, ['sticker_vehicle_motorcycle']);
+    expect(snapshot.inventory.single.rewardId, 'sticker_vehicle_motorcycle');
+  });
+
   testWidgets('Result screen allows landscape until disposed', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final orientationService = _FakeOrientationService();
@@ -5918,6 +5953,46 @@ void main() {
 
     final snapshot = await service.loadSnapshot();
     expect(snapshot.history.single.selectedIngredientIds, ['carrot', 'egg']);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Timer awards sticker for the configured vehicle on completion', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+
+    var now = DateTime(2026);
+    final service = LocalMealProgressService();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(seconds: 1),
+            vehicleId: 'bus',
+          ),
+          mealProgressService: service,
+          now: () => now,
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+    now = now.add(const Duration(seconds: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton).last);
+    await tester.pump();
+    await tester.pump();
+
+    final snapshot = await service.loadSnapshot();
+    expect(snapshot.history.single.rewardIds, ['sticker_vehicle_bus']);
+    expect(snapshot.inventory.single.rewardId, 'sticker_vehicle_bus');
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
