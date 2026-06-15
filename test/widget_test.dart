@@ -20,6 +20,7 @@ import 'package:jy_yamyam/l10n/app_texts.dart';
 import 'package:jy_yamyam/main.dart' as app;
 import 'package:jy_yamyam/models/active_meal_timer_session.dart';
 import 'package:jy_yamyam/models/meal_completion_status.dart';
+import 'package:jy_yamyam/models/meal_progress_snapshot.dart';
 import 'package:jy_yamyam/models/meal_session_result.dart';
 import 'package:jy_yamyam/models/meal_timer_config.dart';
 import 'package:jy_yamyam/models/reward_goal.dart';
@@ -1996,6 +1997,56 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
 
     expect(remainingText(), isNot(initialRemainingText));
+  });
+
+  testWidgets('Home active timer ticks without reloading progress snapshot', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(() async {
+      await const ActiveMealTimerSessionStore().clear();
+    });
+    var now = DateTime(2026, 6, 10, 8);
+    await const ActiveMealTimerSessionStore().save(
+      ActiveMealTimerSession(
+        sessionId: 'active-session',
+        startedAt: now.subtract(const Duration(minutes: 10)),
+        config: MealTimerConfig.defaults().copyWith(
+          childName: '지율',
+          duration: const Duration(minutes: 25),
+        ),
+        state: ActiveMealTimerSessionState.running,
+      ),
+    );
+    final mealProgressService = _CountingMealProgressService();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(childName: '지율'),
+          mealProgressService: mealProgressService,
+          onConfigChanged: (_) {},
+          now: () => now,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.byKey(const ValueKey('activeTimerResumeCard')), findsOneWidget);
+    expect(mealProgressService.loadSnapshotCallCount, 1);
+
+    now = now.add(const Duration(seconds: 2));
+    await tester.pump(const Duration(seconds: 2));
+
+    expect(find.byKey(const ValueKey('activeTimerResumeCard')), findsOneWidget);
+    expect(mealProgressService.loadSnapshotCallCount, 1);
   });
 
   testWidgets('Home screen shows finished copy for arrived active sessions', (
@@ -7929,5 +7980,15 @@ class _FakeLocalAvatarImageService extends LocalAvatarImageService {
   @override
   Future<String> savePickedAvatarImage(XFile pickedFile) async {
     return savedPath;
+  }
+}
+
+class _CountingMealProgressService extends LocalMealProgressService {
+  var loadSnapshotCallCount = 0;
+
+  @override
+  Future<MealProgressSnapshot> loadSnapshot() {
+    loadSnapshotCallCount += 1;
+    return super.loadSnapshot();
   }
 }
