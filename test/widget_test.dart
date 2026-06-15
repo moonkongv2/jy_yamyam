@@ -7346,6 +7346,45 @@ void main() {
     expect(find.text('Create Reward Promise'), findsOneWidget);
   });
 
+  testWidgets(
+    'Home reward summary refreshes after returning from reward goal',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final service = LocalMealProgressService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          home: HomeScreen(
+            config: MealTimerConfig.defaults().copyWith(childName: 'Jiyul'),
+            mealProgressService: service,
+            onConfigChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.drag(find.byType(ListView), const Offset(0, -700));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Create Reward Promise'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'ice cream');
+      await tester.pump();
+      await tester.tap(find.text('Save Promise'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(RewardGoalScreen), findsOneWidget);
+      expect(find.text('ice cream'), findsOneWidget);
+
+      Navigator.of(tester.element(find.byType(RewardGoalScreen))).pop();
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.text('ice cream · 0/5'), findsOneWidget);
+      expect(find.text('Create Reward Promise'), findsNothing);
+    },
+  );
+
   testWidgets('Home meal records summary opens meal history screen', (
     tester,
   ) async {
