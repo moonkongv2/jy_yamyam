@@ -26,26 +26,15 @@ class RewardStickerImage extends StatelessWidget {
       width: imageSize,
       height: imageSize,
       fit: BoxFit.contain,
+      color: locked ? AppColors.textSecondary : null,
+      colorBlendMode: locked ? BlendMode.srcIn : null,
       semanticLabel: semanticLabel ?? reward.id,
       errorBuilder: (_, _, _) =>
           _FallbackStickerIcon(reward: reward, size: imageSize, locked: locked),
     );
-    final sticker = _StickerFrame(size: size, padding: padding, child: image);
+    final artwork = locked ? Opacity(opacity: 0.58, child: image) : image;
 
-    if (!locked) {
-      return sticker;
-    }
-
-    return Opacity(
-      opacity: 0.48,
-      child: ColorFiltered(
-        colorFilter: const ColorFilter.mode(
-          AppColors.textSecondary,
-          BlendMode.srcIn,
-        ),
-        child: sticker,
-      ),
-    );
+    return _StickerFrame(size: size, padding: padding, child: artwork);
   }
 }
 
