@@ -67,13 +67,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   late MealTimerConfig _config = widget.config;
   late double _customMinutes = _config.duration.inMinutes.toDouble();
   late Future<ActiveMealTimerSession?> _activeSessionFuture;
-  ActiveMealTimerSession? _activeSession;
-  Timer? _activeSessionTicker;
+  late Future<MealProgressSnapshot> _progressSnapshotFuture;
+  bool _isRouteVisible = true;
 
   @override
   void initState() {
     super.initState();
     _activeSessionFuture = _loadActiveSession();
+    _progressSnapshotFuture = widget.mealProgressService.loadSnapshot();
   }
 
   @override
@@ -85,14 +86,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     if (oldWidget.config.duration != _config.duration) {
       _customMinutes = _config.duration.inMinutes.toDouble();
     }
-    if (oldWidget.activeSessionStore != widget.activeSessionStore) {
-      _refreshProgressSnapshot();
+    if (oldWidget.activeSessionStore != widget.activeSessionStore ||
+        oldWidget.mealProgressService != widget.mealProgressService) {
+      _refreshHomeData();
     }
   }
 
-  void _refreshProgressSnapshot() {
+  void _refreshHomeData({bool? isRouteVisible}) {
     setState(() {
+      if (isRouteVisible != null) {
+        _isRouteVisible = isRouteVisible;
+      }
       _activeSessionFuture = _loadActiveSession();
+      _progressSnapshotFuture = widget.mealProgressService.loadSnapshot();
     });
   }
 
@@ -104,47 +110,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       await widget.activeSessionStore.clear();
       session = null;
     }
-    if (mounted) {
-      _activeSession = session;
-      _updateActiveSessionTicker(session);
-    }
     return session;
-  }
-
-  void _updateActiveSessionTicker(ActiveMealTimerSession? session) {
-    if (session?.state == ActiveMealTimerSessionState.running &&
-        _remainingForActiveSession(session!, now: _now()) > Duration.zero) {
-      _activeSessionTicker ??= Timer.periodic(
-        const Duration(seconds: 1),
-        _handleActiveSessionTick,
-      );
-      return;
-    }
-
-    _stopActiveSessionTicker();
-  }
-
-  void _handleActiveSessionTick(Timer timer) {
-    final session = _activeSession;
-    if (!mounted || session == null) {
-      timer.cancel();
-      if (identical(_activeSessionTicker, timer)) {
-        _activeSessionTicker = null;
-      }
-      return;
-    }
-
-    if (session.state != ActiveMealTimerSessionState.running ||
-        _remainingForActiveSession(session, now: _now()) <= Duration.zero) {
-      _stopActiveSessionTicker();
-    }
-
-    setState(() {});
-  }
-
-  void _stopActiveSessionTicker() {
-    _activeSessionTicker?.cancel();
-    _activeSessionTicker = null;
   }
 
   @override
@@ -158,19 +124,20 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   void dispose() {
-    _stopActiveSessionTicker();
     appRouteObserver.unsubscribe(this);
     super.dispose();
   }
 
   @override
   void didPushNext() {
-    _stopActiveSessionTicker();
+    if (_isRouteVisible) {
+      setState(() => _isRouteVisible = false);
+    }
   }
 
   @override
   void didPopNext() {
-    _refreshProgressSnapshot();
+    _refreshHomeData(isRouteVisible: true);
   }
 
   void _updateConfig(MealTimerConfig config) {
@@ -223,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       ),
     );
     if (mounted) {
-      _refreshProgressSnapshot();
+      _refreshHomeData();
     }
   }
 
@@ -233,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       return false;
     }
     if (activeSession == null) {
-      _refreshProgressSnapshot();
+      _refreshHomeData();
       return true;
     }
 
@@ -270,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       case _ActiveTimerStartChoice.startNew:
         await widget.activeSessionStore.clear();
         if (mounted) {
-          _refreshProgressSnapshot();
+          _refreshHomeData();
         }
         return mounted;
       case _ActiveTimerStartChoice.cancel:
@@ -292,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       ),
     );
     if (mounted) {
-      _refreshProgressSnapshot();
+      _refreshHomeData();
     }
   }
 
@@ -324,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
     await widget.activeSessionStore.clear();
     if (mounted) {
-      _refreshProgressSnapshot();
+      _refreshHomeData();
     }
   }
 
@@ -664,15 +631,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-                          child: _ActiveTimerResumeCard(
-                            remaining: _remainingForActiveSession(
-                              activeSession,
-                              now: _now(),
-                            ),
-                            hasArrived: _hasActiveSessionArrived(
-                              activeSession,
-                              now: _now(),
-                            ),
+                          child: _ActiveTimerResumeCardContainer(
+                            session: activeSession,
+                            now: _now,
+                            isRouteVisible: _isRouteVisible,
                             onPressed: () => _resumeActiveTimer(activeSession),
                             onCancel: _cancelActiveTimer,
                           ),
@@ -712,7 +674,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             ),
             const SizedBox(height: AppSpacing.xxl),
             FutureBuilder<MealProgressSnapshot>(
-              future: widget.mealProgressService.loadSnapshot(),
+              future: _progressSnapshotFuture,
               builder: (context, snapshot) {
                 return _ProgressSummary(
                   childName: childName,
@@ -735,7 +697,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       ),
                     );
                     if (context.mounted) {
-                      _refreshProgressSnapshot();
+                      _refreshHomeData();
                     }
                   },
                   onOpenStickers: () {
@@ -925,6 +887,104 @@ class _ActiveTimerResumeCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ActiveTimerResumeCardContainer extends StatefulWidget {
+  const _ActiveTimerResumeCardContainer({
+    required this.session,
+    required this.now,
+    required this.isRouteVisible,
+    required this.onPressed,
+    required this.onCancel,
+  });
+
+  final ActiveMealTimerSession session;
+  final DateTime Function() now;
+  final bool isRouteVisible;
+  final VoidCallback onPressed;
+  final VoidCallback onCancel;
+
+  @override
+  State<_ActiveTimerResumeCardContainer> createState() =>
+      _ActiveTimerResumeCardContainerState();
+}
+
+class _ActiveTimerResumeCardContainerState
+    extends State<_ActiveTimerResumeCardContainer> {
+  Timer? _ticker;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateTicker();
+  }
+
+  @override
+  void didUpdateWidget(covariant _ActiveTimerResumeCardContainer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.session != widget.session ||
+        oldWidget.isRouteVisible != widget.isRouteVisible ||
+        oldWidget.now != widget.now) {
+      _updateTicker();
+    }
+  }
+
+  @override
+  void dispose() {
+    _stopTicker();
+    super.dispose();
+  }
+
+  void _updateTicker() {
+    if (!_shouldTick()) {
+      _stopTicker();
+      return;
+    }
+
+    _ticker ??= Timer.periodic(const Duration(seconds: 1), _handleTick);
+  }
+
+  bool _shouldTick() {
+    return widget.isRouteVisible &&
+        widget.session.state == ActiveMealTimerSessionState.running &&
+        _remainingForActiveSession(widget.session, now: widget.now()) >
+            Duration.zero;
+  }
+
+  void _handleTick(Timer timer) {
+    if (!mounted) {
+      timer.cancel();
+      if (identical(_ticker, timer)) {
+        _ticker = null;
+      }
+      return;
+    }
+
+    if (!_shouldTick()) {
+      _stopTicker();
+    }
+
+    setState(() {});
+  }
+
+  void _stopTicker() {
+    _ticker?.cancel();
+    _ticker = null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final remaining = _remainingForActiveSession(
+      widget.session,
+      now: widget.now(),
+    );
+    return _ActiveTimerResumeCard(
+      remaining: remaining,
+      hasArrived: _hasActiveSessionArrived(widget.session, now: widget.now()),
+      onPressed: widget.onPressed,
+      onCancel: widget.onCancel,
     );
   }
 }
