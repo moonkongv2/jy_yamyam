@@ -24,6 +24,7 @@ import 'package:jy_yamyam/models/meal_progress_snapshot.dart';
 import 'package:jy_yamyam/models/meal_session_result.dart';
 import 'package:jy_yamyam/models/meal_timer_config.dart';
 import 'package:jy_yamyam/models/reward_goal.dart';
+import 'package:jy_yamyam/models/reward_item.dart';
 import 'package:jy_yamyam/models/vehicle.dart';
 import 'package:jy_yamyam/models/vehicle_avatar_presentation.dart';
 import 'package:jy_yamyam/screens/avatar_setup_screen.dart';
@@ -671,6 +672,43 @@ void main() {
       }
     },
   );
+
+  test('Reward catalog generates one sticker for every vehicle', () {
+    expect(RewardCatalog.all, hasLength(VehicleCatalog.all.length));
+
+    for (final vehicle in VehicleCatalog.all) {
+      final sticker = RewardCatalog.findVehicleStickerByVehicleId(vehicle.id);
+
+      expect(sticker, isNotNull, reason: vehicle.id);
+      expect(
+        sticker?.id,
+        RewardCatalog.vehicleStickerIdForVehicle(vehicle.id),
+        reason: vehicle.id,
+      );
+      expect(sticker?.id, 'sticker_vehicle_${vehicle.id}', reason: vehicle.id);
+      expect(sticker?.imageAssetPath, vehicle.assetPath, reason: vehicle.id);
+      expect(sticker?.vehicleId, vehicle.id, reason: vehicle.id);
+    }
+  });
+
+  test('Reward catalog finds generated vehicle stickers safely', () {
+    for (final vehicle in VehicleCatalog.all) {
+      final stickerId = RewardCatalog.vehicleStickerIdForVehicle(vehicle.id);
+      final stickerById = RewardCatalog.findById(stickerId);
+      final stickerByVehicle = RewardCatalog.findVehicleStickerByVehicleId(
+        vehicle.id,
+      );
+
+      expect(stickerById, isNotNull, reason: vehicle.id);
+      expect(stickerById, same(stickerByVehicle), reason: vehicle.id);
+    }
+
+    expect(
+      RewardCatalog.findVehicleStickerByVehicleId('missing_vehicle'),
+      isNull,
+    );
+    expect(RewardCatalog.findById('sticker_vehicle_missing_vehicle'), isNull);
+  });
 
   testWidgets('Completed-before-arrival result shows intro video screen', (
     tester,
@@ -7034,6 +7072,7 @@ void main() {
       MealCompletionStatus.notCompleted,
     );
     expect(recordedSession.entry.rewardIds, isEmpty);
+    expect((await service.loadSnapshot()).inventory, isEmpty);
   });
 
   test('Unknown vehicle does not award stickers', () async {
@@ -7528,6 +7567,55 @@ void main() {
     expect(inventoryCount, recordedSession.awardedRewards.length);
     expect(snapshot.activeRewardGoals.single.filledCount, 1);
   });
+
+  test(
+    'Completing meals with the same vehicle increments inventory count',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+
+      final service = LocalMealProgressService();
+      await service.recordMealResult(
+        _mealResult(endedAt: DateTime(2026, 5, 4, 12, 20)),
+        vehicleId: 'bus',
+      );
+      await service.recordMealResult(
+        _mealResult(endedAt: DateTime(2026, 5, 4, 13, 20)),
+        vehicleId: 'bus',
+      );
+
+      final snapshot = await service.loadSnapshot();
+
+      expect(snapshot.inventory, hasLength(1));
+      expect(snapshot.inventory.single.rewardId, 'sticker_vehicle_bus');
+      expect(snapshot.inventory.single.count, 2);
+    },
+  );
+
+  test(
+    'Completing meals with different vehicles creates separate inventory items',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+
+      final service = LocalMealProgressService();
+      await service.recordMealResult(
+        _mealResult(endedAt: DateTime(2026, 5, 4, 12, 20)),
+        vehicleId: 'motorcycle',
+      );
+      await service.recordMealResult(
+        _mealResult(endedAt: DateTime(2026, 5, 4, 13, 20)),
+        vehicleId: 'fire_truck',
+      );
+
+      final snapshot = await service.loadSnapshot();
+
+      expect(snapshot.inventory, hasLength(2));
+      expect(snapshot.inventory.map((item) => item.rewardId), [
+        'sticker_vehicle_motorcycle',
+        'sticker_vehicle_fire_truck',
+      ]);
+      expect(snapshot.inventory.map((item) => item.count), [1, 1]);
+    },
+  );
 
   testWidgets('Home screen shows reward goal CTA', (tester) async {
     SharedPreferences.setMockInitialValues({});
