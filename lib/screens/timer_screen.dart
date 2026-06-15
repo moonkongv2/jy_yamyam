@@ -7,6 +7,7 @@ import '../catalogs/meal_ingredient_catalog.dart';
 import '../catalogs/motivation_asset_catalog.dart';
 import '../catalogs/vehicle_catalog.dart';
 import '../controllers/meal_timer_controller.dart';
+import '../controllers/motivation_cue_controller.dart';
 import '../controllers/timer_active_session_controller.dart';
 import '../l10n/app_texts.dart';
 import '../l10n/text_sets.dart';
@@ -203,15 +204,11 @@ class _TimerScreenState extends State<TimerScreen>
   late final bool _ownsMotivationAudioService;
   late MealTimerConfig _timerConfig;
   final math.Random _motivationRandom = math.Random();
-  final Set<int> _shownMotivationMilestones = {};
   bool _arrivalPromptShown = false;
   bool _screenAwakeEnabled = false;
   bool _exitPromptShown = false;
   bool _allowExit = false;
-  int? _activeMotivationMilestone;
-  String? _activeMotivationVideoPath;
-  Duration? _lastMotivationVideoShownAt;
-  Duration _motivationScheduleStartedAt = Duration.zero;
+  late final MotivationCueController _motivationCueController;
   Timer? _motivationVoiceTimer;
   Timer? _arrivalPromptTimer;
   bool _isFinishDriving = false;
@@ -234,16 +231,16 @@ class _TimerScreenState extends State<TimerScreen>
     if (restoredSession == null) {
       _controller = MealTimerController(config: widget.config, now: widget.now);
       _activeSessionId = _createActiveSessionId();
+      _motivationCueController = MotivationCueController();
       _controller.start();
     } else {
       _timerConfig = restoredSession.config;
-      _shownMotivationMilestones.addAll(
-        restoredSession.shownMotivationMilestones,
-      );
-      _lastMotivationVideoShownAt = restoredSession.lastMotivationVideoShownAt;
-      _motivationScheduleStartedAt =
-          restoredSession.motivationScheduleStartedAt;
       _activeSessionId = restoredSession.sessionId;
+      _motivationCueController = MotivationCueController(
+        shownMilestones: restoredSession.shownMotivationMilestones,
+        lastShownAt: restoredSession.lastMotivationVideoShownAt,
+        scheduleStartedAt: restoredSession.motivationScheduleStartedAt,
+      );
       _controller = MealTimerController.fromSession(
         session: restoredSession,
         now: widget.now,
@@ -254,9 +251,10 @@ class _TimerScreenState extends State<TimerScreen>
       store: widget.activeSessionStore,
       sessionId: _activeSessionId,
       config: () => _timerConfig,
-      shownMotivationMilestones: () => _shownMotivationMilestones,
-      lastMotivationVideoShownAt: () => _lastMotivationVideoShownAt,
-      motivationScheduleStartedAt: () => _motivationScheduleStartedAt,
+      shownMotivationMilestones: () => _motivationCueController.shownMilestones,
+      lastMotivationVideoShownAt: () => _motivationCueController.lastShownAt,
+      motivationScheduleStartedAt: () =>
+          _motivationCueController.scheduleStartedAt,
     );
     _controller.addListener(_handleTimerChanged);
     _finishDriveController = AnimationController(vsync: this)
@@ -368,49 +366,23 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _maybeShowMotivationVideo() {
-    if (!mounted || _isFinishDriving || _activeMotivationMilestone != null) {
+    if (!mounted || _isFinishDriving) {
       return;
     }
 
-    final motivationSchedule =
-        motivation_schedule.MotivationVideoSchedule.fromConfig(_timerConfig);
-    final usesTimedSchedule = motivationSchedule.usesTimedSchedule(
-      _timerConfig.duration,
-    );
-    final milestone = motivationSchedule.nextMilestoneForTimer(
-      duration: _timerConfig.duration,
+    final cue = _motivationCueController.maybeActivateCue(
+      config: _timerConfig,
       elapsed: _controller.elapsed,
       progress: _controller.progress,
-      shownMilestones: _shownMotivationMilestones,
-      scheduleStartedAt: _motivationScheduleStartedAt,
-    );
-    if (milestone == null) {
-      return;
-    }
-    if (!canShowMotivationVideoAt(
-      elapsed: _controller.elapsed,
-      lastShownAt: _lastMotivationVideoShownAt,
-    )) {
-      return;
-    }
-
-    final videoPath = motivationVideoAssetPathForVehicle(
-      vehicleId: _timerConfig.vehicleId,
-      milestone: milestone,
+      videoPathForVehicle: motivationVideoAssetPathForVehicle,
       nextInt: _motivationRandom.nextInt,
-      allowTimedMilestone: usesTimedSchedule,
     );
-    if (videoPath == null) {
+    if (cue == null) {
       return;
     }
 
-    _shownMotivationMilestones.add(milestone);
-    _lastMotivationVideoShownAt = _controller.elapsed;
     unawaited(_persistActiveSession());
-    setState(() {
-      _activeMotivationMilestone = milestone;
-      _activeMotivationVideoPath = videoPath;
-    });
+    setState(() {});
     _scheduleMotivationVoice();
   }
 
@@ -461,21 +433,13 @@ class _TimerScreenState extends State<TimerScreen>
       motivationVideoUseCustomInterval: useCustomInterval,
       motivationVideoInterval: interval,
     );
-    final schedule = motivation_schedule.MotivationVideoSchedule.fromConfig(
-      nextConfig,
-    );
-
     setState(() {
       _timerConfig = nextConfig;
-      _motivationScheduleStartedAt = _controller.elapsed;
-      _lastMotivationVideoShownAt = _controller.elapsed;
-      _shownMotivationMilestones
-        ..clear()
-        ..addAll(_shownMilestonesForCurrentSchedule(schedule));
-      if (!nextConfig.motivationVideoEnabled) {
-        _activeMotivationMilestone = null;
-        _activeMotivationVideoPath = null;
-      }
+      _motivationCueController.updateSettings(
+        config: nextConfig,
+        elapsed: _controller.elapsed,
+        progress: _controller.progress,
+      );
     });
 
     if (!nextConfig.motivationVideoEnabled) {
@@ -484,20 +448,6 @@ class _TimerScreenState extends State<TimerScreen>
     }
     widget.onConfigChanged(nextConfig);
     unawaited(_persistActiveSession());
-  }
-
-  Iterable<int> _shownMilestonesForCurrentSchedule(
-    motivation_schedule.MotivationVideoSchedule schedule,
-  ) {
-    if (schedule.usesTimedSchedule(_timerConfig.duration)) {
-      return const [];
-    }
-
-    final reachedPercent = (_controller.progress * 100).floor();
-    return [
-      for (var milestone = 10; milestone <= 90; milestone += 10)
-        if (reachedPercent >= milestone) milestone,
-    ];
   }
 
   Future<void> _openMotivationSettings() async {
@@ -519,13 +469,12 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _handleMotivationVideoFinished() {
-    if (!mounted || _activeMotivationMilestone == null) {
+    if (!mounted || !_motivationCueController.hasActiveCue) {
       return;
     }
 
     setState(() {
-      _activeMotivationMilestone = null;
-      _activeMotivationVideoPath = null;
+      _motivationCueController.completeActiveCue();
     });
   }
 
@@ -673,8 +622,7 @@ class _TimerScreenState extends State<TimerScreen>
 
     setState(() {
       _isFinishDriving = true;
-      _activeMotivationMilestone = null;
-      _activeMotivationVideoPath = null;
+      _motivationCueController.completeActiveCue();
     });
     _finishDriveController.forward();
   }
@@ -871,10 +819,10 @@ class _TimerScreenState extends State<TimerScreen>
                     avatar: vehicleAvatar,
                     motivationVideoAssetPath: _isFinishDriving
                         ? null
-                        : _activeMotivationVideoPath,
+                        : _motivationCueController.activeVideoPath,
                     motivationVideoMilestone: _isFinishDriving
                         ? null
-                        : _activeMotivationMilestone,
+                        : _motivationCueController.activeMilestone,
                     onMotivationVideoFinished: _handleMotivationVideoFinished,
                     showVehicle: !isLandscape,
                     showMotivationVideo: !isLandscape,
@@ -896,11 +844,11 @@ class _TimerScreenState extends State<TimerScreen>
                   final landscapeMotivationVideoLayer =
                       !_isFinishDriving &&
                           isLandscape &&
-                          _activeMotivationVideoPath != null &&
-                          _activeMotivationMilestone != null
+                          _motivationCueController.activeVideoPath != null &&
+                          _motivationCueController.activeMilestone != null
                       ? RoadMotivationVideoLayer(
-                          assetPath: _activeMotivationVideoPath!,
-                          milestone: _activeMotivationMilestone!,
+                          assetPath: _motivationCueController.activeVideoPath!,
+                          milestone: _motivationCueController.activeMilestone!,
                           reservedRightInset: reservesCompactControlsSpace
                               ? _compactLandscapeControlsRightInset
                               : 0,
