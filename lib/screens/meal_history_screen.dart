@@ -559,7 +559,12 @@ class _RewardRow extends StatelessWidget {
       runSpacing: AppSpacing.sm,
       children: [
         for (final reward in rewards)
-          _RewardPill(reward: reward, label: texts.rewards.name(reward.id)),
+          _RewardPill(
+            reward: reward,
+            label: reward.labelForLanguage(
+              Localizations.localeOf(context).languageCode,
+            ),
+          ),
       ],
     );
   }
