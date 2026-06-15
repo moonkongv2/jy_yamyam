@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -10,7 +9,7 @@ import '../models/reward_goal.dart';
 import '../models/reward_item.dart';
 
 class LocalMealProgressService {
-  LocalMealProgressService({Random? random}) : _random = random ?? Random();
+  LocalMealProgressService();
 
   static const _historyKey = 'mealHistory';
   static const _inventoryKey = 'rewardInventory';
@@ -20,8 +19,6 @@ class LocalMealProgressService {
   static const _earnedRewardGoalsKey = 'earnedRewardGoals';
   static const _usedRewardGoalsKey = 'usedRewardGoals';
   static const maxActiveRewardGoals = 2;
-
-  final Random _random;
 
   Future<MealProgressSnapshot> loadSnapshot() async {
     final preferences = await SharedPreferences.getInstance();
@@ -218,7 +215,10 @@ class LocalMealProgressService {
     return true;
   }
 
-  Future<RecordedMealSession> recordMealResult(MealSessionResult result) async {
+  Future<RecordedMealSession> recordMealResult(
+    MealSessionResult result, {
+    required String vehicleId,
+  }) async {
     final preferences = await SharedPreferences.getInstance();
     final history = _decodeList(
       preferences.getStringList(_historyKey),
@@ -231,7 +231,7 @@ class LocalMealProgressService {
     final activeRewardGoals = _loadActiveRewardGoals(preferences).toList();
     final earnedRewardGoals = _loadEarnedRewardGoals(preferences).toList();
 
-    final awardedRewards = _selectRewards(result);
+    final awardedRewards = _selectRewards(result, vehicleId: vehicleId);
     final entry = MealHistoryEntry(
       id: result.endedAt.microsecondsSinceEpoch.toString(),
       startedAt: result.startedAt,
@@ -285,17 +285,16 @@ class LocalMealProgressService {
     );
   }
 
-  List<RewardDefinition> _selectRewards(MealSessionResult result) {
+  List<RewardDefinition> _selectRewards(
+    MealSessionResult result, {
+    required String vehicleId,
+  }) {
     if (!result.mealCompleted) {
       return const [];
     }
 
-    return [_randomSuccessSticker()];
-  }
-
-  RewardDefinition _randomSuccessSticker() {
-    final stickerIndex = _random.nextInt(RewardCatalog.successStickers.length);
-    return RewardCatalog.successStickers[stickerIndex];
+    final sticker = RewardCatalog.findVehicleStickerByVehicleId(vehicleId);
+    return sticker == null ? const [] : [sticker];
   }
 
   void _addRewardsToInventory(

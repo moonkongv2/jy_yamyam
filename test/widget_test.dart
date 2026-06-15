@@ -6891,7 +6891,7 @@ void main() {
     expect(find.textContaining('Custom time'), findsOneWidget);
   });
 
-  test('Fast meal awards only one random sticker', () async {
+  test('Fast meal awards the selected vehicle sticker', () async {
     SharedPreferences.setMockInitialValues({});
 
     final service = LocalMealProgressService();
@@ -6903,12 +6903,18 @@ void main() {
         actualDuration: const Duration(minutes: 13),
         completedBeforeArrival: true,
       ),
+      vehicleId: 'motorcycle',
     );
 
     expect(recordedSession.awardedRewards, hasLength(1));
+    expect(
+      recordedSession.awardedRewards.single.id,
+      'sticker_vehicle_motorcycle',
+    );
+    expect(recordedSession.entry.rewardIds, ['sticker_vehicle_motorcycle']);
   });
 
-  test('Completed overtime meal awards a random sticker', () async {
+  test('Completed overtime meal awards the selected vehicle sticker', () async {
     SharedPreferences.setMockInitialValues({});
 
     final service = LocalMealProgressService();
@@ -6920,9 +6926,14 @@ void main() {
         actualDuration: const Duration(minutes: 25),
         completedBeforeArrival: false,
       ),
+      vehicleId: 'fire_truck',
     );
 
     expect(recordedSession.awardedRewards, hasLength(1));
+    expect(
+      recordedSession.awardedRewards.single.id,
+      'sticker_vehicle_fire_truck',
+    );
   });
 
   test('Incomplete meal does not award stickers', () async {
@@ -6938,6 +6949,7 @@ void main() {
         completedBeforeArrival: false,
         mealCompleted: false,
       ),
+      vehicleId: 'shark',
     );
 
     expect(recordedSession.awardedRewards, isEmpty);
@@ -6946,6 +6958,19 @@ void main() {
       recordedSession.entry.completionStatus,
       MealCompletionStatus.notCompleted,
     );
+    expect(recordedSession.entry.rewardIds, isEmpty);
+  });
+
+  test('Unknown vehicle does not award stickers', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final service = LocalMealProgressService();
+    final recordedSession = await service.recordMealResult(
+      _mealResult(),
+      vehicleId: 'missing_vehicle',
+    );
+
+    expect(recordedSession.awardedRewards, isEmpty);
     expect(recordedSession.entry.rewardIds, isEmpty);
   });
 
@@ -6959,6 +6984,7 @@ void main() {
         completedBeforeArrival: false,
         completionStatus: MealCompletionStatus.completedAtArrival,
       ),
+      vehicleId: 'motorcycle',
     );
     final snapshot = await service.loadSnapshot();
 
@@ -6978,6 +7004,7 @@ void main() {
     final service = LocalMealProgressService();
     final recordedSession = await service.recordMealResult(
       _mealResult(selectedIngredientIds: const ['carrot', 'egg']),
+      vehicleId: 'motorcycle',
     );
     final snapshot = await service.loadSnapshot();
 
@@ -6993,7 +7020,10 @@ void main() {
       requiredStickerCount: 2,
       rewardText: '아이스크림',
     );
-    final recordedSession = await service.recordMealResult(_mealResult());
+    final recordedSession = await service.recordMealResult(
+      _mealResult(),
+      vehicleId: 'motorcycle',
+    );
     final beforeDelete = await service.loadSnapshot();
 
     expect(beforeDelete.history, hasLength(1));
@@ -7029,7 +7059,7 @@ void main() {
       SharedPreferences.setMockInitialValues({});
 
       final service = LocalMealProgressService();
-      await service.recordMealResult(_mealResult());
+      await service.recordMealResult(_mealResult(), vehicleId: 'motorcycle');
 
       final deleted = await service.deleteMealHistoryEntry('missing-meal');
       final snapshot = await service.loadSnapshot();
@@ -7048,7 +7078,10 @@ void main() {
       rewardText: '아이스크림',
     );
 
-    final recordedSession = await service.recordMealResult(_mealResult());
+    final recordedSession = await service.recordMealResult(
+      _mealResult(),
+      vehicleId: 'motorcycle',
+    );
     final snapshot = await service.loadSnapshot();
 
     expect(recordedSession.updatedRewardGoal?.filledCount, 1);
@@ -7066,7 +7099,10 @@ void main() {
     );
     await service.createRewardGoal(requiredStickerCount: 7, rewardText: '딸기');
 
-    final recordedSession = await service.recordMealResult(_mealResult());
+    final recordedSession = await service.recordMealResult(
+      _mealResult(),
+      vehicleId: 'motorcycle',
+    );
     final snapshot = await service.loadSnapshot();
 
     expect(recordedSession.updatedRewardGoals, hasLength(2));
@@ -7254,6 +7290,7 @@ void main() {
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 13),
       ),
+      vehicleId: 'motorcycle',
     );
     final snapshot = await service.loadSnapshot();
 
@@ -7272,6 +7309,7 @@ void main() {
 
     final recordedSession = await service.recordMealResult(
       _mealResult(mealCompleted: false),
+      vehicleId: 'motorcycle',
     );
     final snapshot = await service.loadSnapshot();
 
@@ -7290,9 +7328,11 @@ void main() {
 
     await service.recordMealResult(
       _mealResult(endedAt: DateTime(2026, 5, 4, 12)),
+      vehicleId: 'motorcycle',
     );
     final recordedSession = await service.recordMealResult(
       _mealResult(endedAt: DateTime(2026, 5, 4, 13)),
+      vehicleId: 'motorcycle',
     );
     final snapshot = await service.loadSnapshot();
 
@@ -7310,7 +7350,7 @@ void main() {
       requiredStickerCount: 1,
       rewardText: '아이스크림',
     );
-    await service.recordMealResult(_mealResult());
+    await service.recordMealResult(_mealResult(), vehicleId: 'motorcycle');
 
     final usedGoal = await service.useEarnedRewardGoal();
     final snapshot = await service.loadSnapshot();
@@ -7354,9 +7394,10 @@ void main() {
         requiredStickerCount: 5,
         rewardText: '아이스크림',
       );
-      await service.recordMealResult(_mealResult());
+      await service.recordMealResult(_mealResult(), vehicleId: 'motorcycle');
       await service.recordMealResult(
         _mealResult(endedAt: DateTime(2026, 5, 4, 13)),
+        vehicleId: 'motorcycle',
       );
 
       final updatedGoal = await service.updateActiveRewardGoal(
@@ -7399,7 +7440,10 @@ void main() {
       rewardText: '아이스크림',
     );
 
-    final recordedSession = await service.recordMealResult(_mealResult());
+    final recordedSession = await service.recordMealResult(
+      _mealResult(),
+      vehicleId: 'motorcycle',
+    );
     final snapshot = await service.loadSnapshot();
     final inventoryCount = snapshot.inventory.fold<int>(
       0,
@@ -7479,6 +7523,7 @@ void main() {
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 25),
       ),
+      vehicleId: 'motorcycle',
     );
 
     await tester.pumpWidget(
@@ -7517,6 +7562,7 @@ void main() {
         mealCompleted: false,
         completionStatus: MealCompletionStatus.notCompleted,
       ),
+      vehicleId: 'motorcycle',
     );
 
     await tester.pumpWidget(
@@ -7571,7 +7617,7 @@ void main() {
       requiredStickerCount: 1,
       rewardText: 'ice cream',
     );
-    await service.recordMealResult(_mealResult());
+    await service.recordMealResult(_mealResult(), vehicleId: 'motorcycle');
 
     await tester.pumpWidget(
       MaterialApp(
@@ -7637,6 +7683,7 @@ void main() {
         actualDuration: const Duration(minutes: 25),
         completedBeforeArrival: false,
       ),
+      vehicleId: 'motorcycle',
     );
 
     await tester.pumpWidget(
@@ -7671,6 +7718,7 @@ void main() {
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 25),
       ),
+      vehicleId: 'motorcycle',
     );
 
     await tester.pumpWidget(
@@ -7713,6 +7761,7 @@ void main() {
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 25),
       ),
+      vehicleId: 'motorcycle',
     );
 
     await tester.pumpWidget(
@@ -7750,6 +7799,7 @@ void main() {
         actualDuration: const Duration(minutes: 20),
         selectedIngredientIds: const ['carrot', 'egg'],
       ),
+      vehicleId: 'motorcycle',
     );
 
     await tester.pumpWidget(
@@ -7782,6 +7832,7 @@ void main() {
         mealCompleted: false,
         completionStatus: MealCompletionStatus.notCompleted,
       ),
+      vehicleId: 'motorcycle',
     );
 
     await tester.pumpWidget(

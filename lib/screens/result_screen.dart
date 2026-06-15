@@ -133,6 +133,7 @@ class _ResultScreenState extends State<ResultScreen> {
     unawaited(widget.orientationService.allowMealFlowOrientations());
     _recordedSession = widget.mealProgressService.recordMealResult(
       widget.result,
+      vehicleId: widget.config.vehicleId,
     );
     if (!widget.result.mealCompleted) {
       _introFinished = true;
