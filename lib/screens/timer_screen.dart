@@ -10,6 +10,7 @@ import '../controllers/meal_timer_controller.dart';
 import '../controllers/motivation_cue_controller.dart';
 import '../controllers/timer_active_session_controller.dart';
 import '../controllers/timer_completion_flow_controller.dart';
+import '../controllers/timer_lifecycle_controller.dart';
 import '../l10n/app_texts.dart';
 import '../l10n/text_sets.dart';
 import '../models/active_meal_timer_session.dart';
@@ -205,7 +206,6 @@ class _TimerScreenState extends State<TimerScreen>
   late MealTimerConfig _timerConfig;
   final math.Random _motivationRandom = math.Random();
   bool _arrivalPromptShown = false;
-  bool _screenAwakeEnabled = false;
   bool _exitPromptShown = false;
   bool _allowExit = false;
   late final MotivationCueController _motivationCueController;
@@ -215,11 +215,12 @@ class _TimerScreenState extends State<TimerScreen>
   Animation<double>? _finishDriveAnimation;
   MealSessionResult? _pendingFinishDriveResult;
   double _finishDriveStartProgress = 0;
-  bool _handoffOrientation = false;
   late final String _activeSessionId;
   late final TimerActiveSessionController _activeSessionController;
   final TimerCompletionFlowController _completionFlowController =
       const TimerCompletionFlowController();
+  final TimerLifecycleController _lifecycleController =
+      TimerLifecycleController();
 
   @override
   void initState() {
@@ -262,7 +263,9 @@ class _TimerScreenState extends State<TimerScreen>
     _finishDriveController = AnimationController(vsync: this)
       ..addStatusListener(_handleFinishDriveStatusChanged);
     unawaited(_persistActiveSession());
-    unawaited(widget.orientationService.allowMealFlowOrientations());
+    unawaited(
+      _lifecycleController.allowMealFlowOrientations(widget.orientationService),
+    );
     _applyScreenAwakeSetting();
   }
 
@@ -277,11 +280,12 @@ class _TimerScreenState extends State<TimerScreen>
       _timerConfig = widget.config;
       unawaited(_persistActiveSession());
     }
-    if (oldWidget.screenAwakeService != widget.screenAwakeService &&
-        _screenAwakeEnabled) {
-      unawaited(oldWidget.screenAwakeService.setEnabled(false));
-      _screenAwakeEnabled = false;
-    }
+    unawaited(
+      _lifecycleController.replaceScreenAwakeServiceIfNeeded(
+        oldService: oldWidget.screenAwakeService,
+        newService: widget.screenAwakeService,
+      ),
+    );
     _applyScreenAwakeSetting();
   }
 
@@ -291,12 +295,14 @@ class _TimerScreenState extends State<TimerScreen>
     _motivationVoiceTimer?.cancel();
     _arrivalPromptTimer?.cancel();
     unawaited(_disposeMotivationAudioService());
-    if (!_handoffOrientation) {
-      unawaited(widget.orientationService.lockPortrait());
-    }
-    if (_screenAwakeEnabled) {
-      unawaited(widget.screenAwakeService.setEnabled(false));
-    }
+    unawaited(
+      _lifecycleController.lockPortraitIfNeeded(widget.orientationService),
+    );
+    unawaited(
+      _lifecycleController.disableScreenAwakeIfNeeded(
+        widget.screenAwakeService,
+      ),
+    );
     _finishDriveController
       ..removeStatusListener(_handleFinishDriveStatusChanged)
       ..dispose();
@@ -328,12 +334,12 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _applyScreenAwakeSetting() {
-    final shouldKeepAwake = widget.config.keepScreenAwake;
-    if (_screenAwakeEnabled == shouldKeepAwake) {
-      return;
-    }
-    _screenAwakeEnabled = shouldKeepAwake;
-    unawaited(widget.screenAwakeService.setEnabled(shouldKeepAwake));
+    unawaited(
+      _lifecycleController.applyScreenAwakeSetting(
+        screenAwakeService: widget.screenAwakeService,
+        keepScreenAwake: widget.config.keepScreenAwake,
+      ),
+    );
   }
 
   void _handleTimerChanged() {
@@ -649,7 +655,7 @@ class _TimerScreenState extends State<TimerScreen>
   void _openResult(MealSessionResult result) {
     final recordableResult = _completionFlowController
         .resultWithSelectedIngredients(result: result, config: _timerConfig);
-    _handoffOrientation = true;
+    _lifecycleController.handOffOrientation();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => ResultScreen(
