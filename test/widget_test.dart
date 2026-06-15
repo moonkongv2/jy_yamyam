@@ -7156,6 +7156,90 @@ void main() {
     expect(snapshot.history.single.selectedIngredientIds, isEmpty);
   });
 
+  test(
+    'Malformed meal history items are skipped during snapshot load',
+    () async {
+      final firstMeal = jsonEncode({
+        'id': 'meal-1',
+        'startedAt': DateTime(2026, 5, 4, 12).toIso8601String(),
+        'endedAt': DateTime(2026, 5, 4, 12, 20).toIso8601String(),
+        'targetMs': const Duration(minutes: 20).inMilliseconds,
+        'actualMs': const Duration(minutes: 20).inMilliseconds,
+        'completedBeforeArrival': true,
+        'mealCompleted': true,
+        'completionStatus': MealCompletionStatus.completedBeforeArrival.name,
+        'rewardIds': <String>['sticker_finish_flag'],
+        'selectedIngredientIds': <String>['egg'],
+      });
+      final secondMeal = jsonEncode({
+        'id': 'meal-2',
+        'startedAt': DateTime(2026, 5, 5, 12).toIso8601String(),
+        'endedAt': DateTime(2026, 5, 5, 12, 25).toIso8601String(),
+        'targetMs': const Duration(minutes: 20).inMilliseconds,
+        'actualMs': const Duration(minutes: 25).inMilliseconds,
+        'completedBeforeArrival': false,
+        'mealCompleted': true,
+        'completionStatus': MealCompletionStatus.completedAfterArrival.name,
+        'rewardIds': <String>['sticker_twinkle_star'],
+        'selectedIngredientIds': <String>['tofu'],
+      });
+      final rawHistory = [
+        firstMeal,
+        '{malformed',
+        jsonEncode(<String>['not-a-map']),
+        jsonEncode({'id': 'bad-meal', 'startedAt': 'not-a-date'}),
+        secondMeal,
+      ];
+      SharedPreferences.setMockInitialValues({'mealHistory': rawHistory});
+
+      final snapshot = await LocalMealProgressService().loadSnapshot();
+      final preferences = await SharedPreferences.getInstance();
+
+      expect(snapshot.history.map((entry) => entry.id), ['meal-1', 'meal-2']);
+      expect(snapshot.history.first.rewardIds, ['sticker_finish_flag']);
+      expect(snapshot.history.last.selectedIngredientIds, ['tofu']);
+      expect(preferences.getStringList('mealHistory'), rawHistory);
+    },
+  );
+
+  test(
+    'Malformed reward inventory items are skipped during snapshot load',
+    () async {
+      final firstReward = jsonEncode({
+        'rewardId': 'sticker_finish_flag',
+        'acquiredAt': DateTime(2026, 5, 4, 12).toIso8601String(),
+        'count': 1,
+      });
+      final secondReward = jsonEncode({
+        'rewardId': 'sticker_twinkle_star',
+        'acquiredAt': DateTime(2026, 5, 5, 12).toIso8601String(),
+        'count': 2,
+      });
+      final rawInventory = [
+        firstReward,
+        '{malformed',
+        jsonEncode('not-a-map'),
+        jsonEncode({
+          'rewardId': 'bad-reward',
+          'acquiredAt': 'not-a-date',
+          'count': 'many',
+        }),
+        secondReward,
+      ];
+      SharedPreferences.setMockInitialValues({'rewardInventory': rawInventory});
+
+      final snapshot = await LocalMealProgressService().loadSnapshot();
+      final preferences = await SharedPreferences.getInstance();
+
+      expect(snapshot.inventory.map((item) => item.rewardId), [
+        'sticker_finish_flag',
+        'sticker_twinkle_star',
+      ]);
+      expect(snapshot.inventory.map((item) => item.count), [1, 2]);
+      expect(preferences.getStringList('rewardInventory'), rawInventory);
+    },
+  );
+
   test('Fast meal fills only one reward goal slot', () async {
     SharedPreferences.setMockInitialValues({});
 
