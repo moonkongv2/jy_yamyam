@@ -1999,6 +1999,67 @@ void main() {
     expect(remainingText(), isNot(initialRemainingText));
   });
 
+  testWidgets('Home active timer remaining time stays fixed when paused', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(() async {
+      await const ActiveMealTimerSessionStore().clear();
+    });
+    var now = DateTime(2026, 6, 10, 8, 20);
+    final pausedAt = DateTime(2026, 6, 10, 8, 10);
+    await const ActiveMealTimerSessionStore().save(
+      ActiveMealTimerSession(
+        sessionId: 'paused-session',
+        startedAt: DateTime(2026, 6, 10, 8),
+        pausedAt: pausedAt,
+        config: MealTimerConfig.defaults().copyWith(
+          childName: '지율',
+          duration: const Duration(minutes: 25),
+        ),
+        state: ActiveMealTimerSessionState.paused,
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(childName: '지율'),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          now: () => now,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final activeTimerCard = find.byKey(const ValueKey('activeTimerResumeCard'));
+    String remainingText() {
+      return tester
+          .widget<Text>(
+            find.descendant(
+              of: activeTimerCard,
+              matching: find.textContaining('남은 시간'),
+            ),
+          )
+          .data!;
+    }
+
+    expect(remainingText(), '남은 시간 15:00');
+
+    now = now.add(const Duration(minutes: 10));
+    await tester.pump(const Duration(seconds: 2));
+
+    expect(remainingText(), '남은 시간 15:00');
+  });
+
   testWidgets('Home active timer ticks without reloading progress snapshot', (
     tester,
   ) async {
