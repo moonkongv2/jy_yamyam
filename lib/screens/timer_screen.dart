@@ -7,6 +7,7 @@ import '../catalogs/meal_ingredient_catalog.dart';
 import '../catalogs/motivation_asset_catalog.dart';
 import '../catalogs/vehicle_catalog.dart';
 import '../controllers/meal_timer_controller.dart';
+import '../controllers/timer_active_session_controller.dart';
 import '../l10n/app_texts.dart';
 import '../l10n/text_sets.dart';
 import '../models/active_meal_timer_session.dart';
@@ -219,6 +220,7 @@ class _TimerScreenState extends State<TimerScreen>
   double _finishDriveStartProgress = 0;
   bool _handoffOrientation = false;
   late final String _activeSessionId;
+  late final TimerActiveSessionController _activeSessionController;
 
   @override
   void initState() {
@@ -247,6 +249,15 @@ class _TimerScreenState extends State<TimerScreen>
         now: widget.now,
       );
     }
+    _activeSessionController = TimerActiveSessionController(
+      timerController: _controller,
+      store: widget.activeSessionStore,
+      sessionId: _activeSessionId,
+      config: () => _timerConfig,
+      shownMotivationMilestones: () => _shownMotivationMilestones,
+      lastMotivationVideoShownAt: () => _lastMotivationVideoShownAt,
+      motivationScheduleStartedAt: () => _motivationScheduleStartedAt,
+    );
     _controller.addListener(_handleTimerChanged);
     _finishDriveController = AnimationController(vsync: this)
       ..addStatusListener(_handleFinishDriveStatusChanged);
@@ -705,50 +716,12 @@ class _TimerScreenState extends State<TimerScreen>
     );
   }
 
-  ActiveMealTimerSession? _activeSessionSnapshot() {
-    final startedAt = _controller.startedAt;
-    if (startedAt == null || _controller.state == MealTimerState.completed) {
-      return null;
-    }
-
-    return ActiveMealTimerSession(
-      sessionId: _activeSessionId,
-      startedAt: startedAt,
-      config: _timerConfig,
-      state: switch (_controller.state) {
-        MealTimerState.paused => ActiveMealTimerSessionState.paused,
-        MealTimerState.arrived => ActiveMealTimerSessionState.arrived,
-        _ => ActiveMealTimerSessionState.running,
-      },
-      totalPausedDuration: _controller.totalPausedDuration,
-      pausedAt: _controller.pausedAt,
-      shownMotivationMilestones: Set.unmodifiable(_shownMotivationMilestones),
-      lastMotivationVideoShownAt: _lastMotivationVideoShownAt,
-      motivationScheduleStartedAt: _motivationScheduleStartedAt,
-    );
-  }
-
   Future<void> _persistActiveSession() async {
-    final session = _activeSessionSnapshot();
-    if (session == null) {
-      return;
-    }
-
-    try {
-      await widget.activeSessionStore.save(session);
-    } catch (error, stackTrace) {
-      debugPrint('Unable to save active meal timer session: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    }
+    await _activeSessionController.persist();
   }
 
   Future<void> _clearActiveSession() async {
-    try {
-      await widget.activeSessionStore.clear();
-    } catch (error, stackTrace) {
-      debugPrint('Unable to clear active meal timer session: $error');
-      debugPrintStack(stackTrace: stackTrace);
-    }
+    await _activeSessionController.clear();
   }
 
   String _runningProgressMessage(TimerTextSet texts, double progress) {
