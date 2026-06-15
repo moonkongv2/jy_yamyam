@@ -9,10 +9,10 @@ import '../catalogs/vehicle_catalog.dart';
 import '../controllers/meal_timer_controller.dart';
 import '../controllers/motivation_cue_controller.dart';
 import '../controllers/timer_active_session_controller.dart';
+import '../controllers/timer_completion_flow_controller.dart';
 import '../l10n/app_texts.dart';
 import '../l10n/text_sets.dart';
 import '../models/active_meal_timer_session.dart';
-import '../models/meal_completion_status.dart';
 import '../models/meal_ingredient.dart';
 import '../models/meal_session_result.dart';
 import '../models/meal_timer_config.dart';
@@ -218,6 +218,8 @@ class _TimerScreenState extends State<TimerScreen>
   bool _handoffOrientation = false;
   late final String _activeSessionId;
   late final TimerActiveSessionController _activeSessionController;
+  final TimerCompletionFlowController _completionFlowController =
+      const TimerCompletionFlowController();
 
   @override
   void initState() {
@@ -578,10 +580,14 @@ class _TimerScreenState extends State<TimerScreen>
     }
 
     if (confirmed != true) {
-      if (showFailureOnDecline) {
+      if (_completionFlowController.shouldRecordIncompleteResult(
+        confirmed: confirmed,
+        showFailureOnDecline: showFailureOnDecline,
+      )) {
         final result = _controller.complete(
           mealCompleted: false,
-          completionStatus: MealCompletionStatus.notCompleted,
+          completionStatus: _completionFlowController
+              .completionStatusForIncompleteResult(),
         );
         unawaited(_clearActiveSession());
         _openResult(result);
@@ -590,12 +596,13 @@ class _TimerScreenState extends State<TimerScreen>
     }
 
     final result = _controller.complete(
-      completionStatus: showFailureOnDecline
-          ? MealCompletionStatus.completedAtArrival
-          : null,
+      completionStatus: _completionFlowController
+          .completionStatusForConfirmedResult(
+            showFailureOnDecline: showFailureOnDecline,
+          ),
     );
     unawaited(_clearActiveSession());
-    if (result.completedBeforeArrival) {
+    if (_completionFlowController.shouldStartFinishDrive(result)) {
       _startFinishDrive(result);
       return;
     }
@@ -640,7 +647,8 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _openResult(MealSessionResult result) {
-    final recordableResult = _resultWithSelectedIngredients(result);
+    final recordableResult = _completionFlowController
+        .resultWithSelectedIngredients(result: result, config: _timerConfig);
     _handoffOrientation = true;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
@@ -652,15 +660,6 @@ class _TimerScreenState extends State<TimerScreen>
           orientationService: widget.orientationService,
         ),
       ),
-    );
-  }
-
-  MealSessionResult _resultWithSelectedIngredients(MealSessionResult result) {
-    if (_timerConfig.courseIngredientMode != CourseIngredientMode.manual) {
-      return result.copyWith(selectedIngredientIds: const []);
-    }
-    return result.copyWith(
-      selectedIngredientIds: _timerConfig.selectedCourseIngredientIds,
     );
   }
 
