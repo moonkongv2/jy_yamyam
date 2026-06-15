@@ -19,28 +19,73 @@ class RewardStickerImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final padding = (size * 0.14).clamp(3.0, 10.0).toDouble();
+    final imageSize = (size - padding * 2).clamp(0.0, size).toDouble();
     final image = Image.asset(
       reward.imageAssetPath,
-      width: size,
-      height: size,
+      width: imageSize,
+      height: imageSize,
       fit: BoxFit.contain,
       semanticLabel: semanticLabel ?? reward.id,
       errorBuilder: (_, _, _) =>
-          _FallbackStickerIcon(reward: reward, size: size, locked: locked),
+          _FallbackStickerIcon(reward: reward, size: imageSize, locked: locked),
     );
+    final sticker = _StickerFrame(size: size, padding: padding, child: image);
 
     if (!locked) {
-      return image;
+      return sticker;
     }
 
     return Opacity(
-      opacity: 0.34,
+      opacity: 0.48,
       child: ColorFiltered(
         colorFilter: const ColorFilter.mode(
           AppColors.textSecondary,
           BlendMode.srcIn,
         ),
-        child: image,
+        child: sticker,
+      ),
+    );
+  }
+}
+
+class _StickerFrame extends StatelessWidget {
+  const _StickerFrame({
+    required this.size,
+    required this.padding,
+    required this.child,
+  });
+
+  final double size;
+  final double padding;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = (size * 0.22).clamp(6.0, 18.0).toDouble();
+    final shadow = size < 36
+        ? const <BoxShadow>[]
+        : [
+            BoxShadow(
+              color: AppColors.brown700.withValues(alpha: 0.08),
+              blurRadius: (size * 0.10).clamp(3.0, 8.0).toDouble(),
+              offset: Offset(0, (size * 0.04).clamp(1.0, 3.0).toDouble()),
+            ),
+          ];
+
+    return SizedBox.square(
+      dimension: size,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(color: AppColors.borderSoft),
+          boxShadow: shadow,
+        ),
+        child: Padding(
+          padding: EdgeInsets.all(padding),
+          child: Center(child: child),
+        ),
       ),
     );
   }
