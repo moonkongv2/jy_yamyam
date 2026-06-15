@@ -2786,6 +2786,15 @@ void main() {
       ),
     );
     await tester.pump();
+    for (var attempt = 0; attempt < 10; attempt += 1) {
+      if (find.text('아이 얼굴 탑승 중').evaluate().isNotEmpty) {
+        break;
+      }
+      await tester.runAsync(() async {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+      });
+      await tester.pump();
+    }
 
     expect(find.text('오늘의 냠냠 미션'), findsOneWidget);
     expect(find.text('오늘의 빠방'), findsOneWidget);
@@ -2802,6 +2811,59 @@ void main() {
           widget.avatarRotationDegrees == 5.0;
     });
     expect(customAvatarPreview, findsNWidgets(3));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Home screen falls back when selected custom avatar is missing', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            childName: '지율',
+            avatarMode: AvatarImageMode.custom,
+            customAvatarsByVehicle: const {
+              'motorcycle': VehicleAvatarConfig(
+                imagePath: '/missing/home-avatar.png',
+                scale: 1.0,
+                offsetX: 0.0,
+                offsetY: 0.0,
+                rotationDegrees: 0.0,
+              ),
+            },
+          ),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          avatarImageBuilder: (context, imagePath) {
+            return const ColoredBox(
+              key: ValueKey('avatarCompositeOverlayImage'),
+              color: Colors.pink,
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+    });
+    await tester.pump();
+
+    expect(find.text('기본 얼굴 사용 중'), findsOneWidget);
+    expect(find.text('만들기'), findsOneWidget);
+    expect(find.text('아이 얼굴 탑승 중'), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();

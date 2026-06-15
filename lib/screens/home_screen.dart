@@ -69,12 +69,17 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   late Future<ActiveMealTimerSession?> _activeSessionFuture;
   late Future<MealProgressSnapshot> _progressSnapshotFuture;
   bool _isRouteVisible = true;
+  final Map<String, bool> _customAvatarFileExistsByPath = {};
+  String? _selectedVehicleCustomAvatarPath;
+  bool _selectedVehicleCustomAvatarExists = false;
+  int _customAvatarFileCheckRequestId = 0;
 
   @override
   void initState() {
     super.initState();
     _activeSessionFuture = _loadActiveSession();
     _progressSnapshotFuture = widget.mealProgressService.loadSnapshot();
+    _syncSelectedVehicleCustomAvatarExists(notify: false);
   }
 
   @override
@@ -89,6 +94,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     if (oldWidget.activeSessionStore != widget.activeSessionStore ||
         oldWidget.mealProgressService != widget.mealProgressService) {
       _refreshHomeData();
+    }
+    if (oldWidget.config != widget.config) {
+      _syncSelectedVehicleCustomAvatarExists();
     }
   }
 
@@ -147,7 +155,74 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       }
       _config = config;
     });
+    _syncSelectedVehicleCustomAvatarExists();
     widget.onConfigChanged(config);
+  }
+
+  String? _selectedVehicleCustomAvatarPathForConfig(MealTimerConfig config) {
+    final avatar = config.avatarPresentationForVehicle(config.vehicleId);
+    if (!avatar.isCustom) {
+      return null;
+    }
+
+    final path = avatar.imagePath?.trim();
+    return path == null || path.isEmpty ? null : path;
+  }
+
+  void _syncSelectedVehicleCustomAvatarExists({bool notify = true}) {
+    final path = _selectedVehicleCustomAvatarPathForConfig(_config);
+    if (_selectedVehicleCustomAvatarPath == path) {
+      return;
+    }
+
+    _selectedVehicleCustomAvatarPath = path;
+    _customAvatarFileCheckRequestId += 1;
+    final requestId = _customAvatarFileCheckRequestId;
+    final cachedExists = path == null
+        ? false
+        : _customAvatarFileExistsByPath[path] ?? false;
+    if (_selectedVehicleCustomAvatarExists != cachedExists) {
+      if (notify && mounted) {
+        setState(() {
+          _selectedVehicleCustomAvatarExists = cachedExists;
+        });
+      } else {
+        _selectedVehicleCustomAvatarExists = cachedExists;
+      }
+    }
+
+    if (path == null || _customAvatarFileExistsByPath.containsKey(path)) {
+      return;
+    }
+
+    unawaited(_resolveSelectedVehicleCustomAvatarExists(path, requestId));
+  }
+
+  Future<void> _resolveSelectedVehicleCustomAvatarExists(
+    String path,
+    int requestId,
+  ) async {
+    bool exists;
+    try {
+      exists = await File(path).exists();
+    } catch (_) {
+      exists = false;
+    }
+
+    if (!mounted ||
+        requestId != _customAvatarFileCheckRequestId ||
+        _selectedVehicleCustomAvatarPath != path) {
+      return;
+    }
+
+    _customAvatarFileExistsByPath[path] = exists;
+    if (_selectedVehicleCustomAvatarExists == exists) {
+      return;
+    }
+
+    setState(() {
+      _selectedVehicleCustomAvatarExists = exists;
+    });
   }
 
   void _updateTimerRuntimeConfig(MealTimerConfig config) {
@@ -506,11 +581,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     final selectedVehicleAvatar = _config.avatarPresentationForVehicle(
       selectedVehicle.id,
     );
-    final selectedVehicleAvatarImagePath = selectedVehicleAvatar.imagePath;
     final isUsingCustomAvatar =
         selectedVehicleAvatar.isCustom &&
-        selectedVehicleAvatarImagePath != null &&
-        File(selectedVehicleAvatarImagePath).existsSync();
+        _selectedVehicleCustomAvatarPath ==
+            _selectedVehicleCustomAvatarPathForConfig(_config) &&
+        _selectedVehicleCustomAvatarExists;
     final avatarStateText = isUsingCustomAvatar
         ? texts.home.avatarInlineCustomState
         : texts.home.avatarInlineDefaultState;
