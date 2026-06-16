@@ -555,8 +555,8 @@ class _RewardRow extends StatelessWidget {
     }
 
     return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
+      spacing: AppSpacing.lg,
+      runSpacing: AppSpacing.md,
       children: [
         for (final reward in rewards)
           _RewardPill(
@@ -578,32 +578,25 @@ class _RewardPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceWarm,
-        borderRadius: AppRadius.pill,
-        border: Border.all(color: AppColors.borderWarm),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        RewardStickerImage(
+          reward: reward,
+          semanticLabel: label,
+          size: 56,
+          framed: false,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RewardStickerImage(reward: reward, semanticLabel: label, size: 28),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: AppColors.textStrong,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ],
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: AppColors.textStrong,
+            fontWeight: FontWeight.w900,
+          ),
+          textAlign: TextAlign.center,
         ),
-      ),
+      ],
     );
   }
 }
