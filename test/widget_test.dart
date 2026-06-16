@@ -5645,6 +5645,9 @@ void main() {
     );
     await tester.pump();
 
+    expect(await store.load(), isNull);
+    await _finishCoursePreview(tester);
+
     final session = await store.load();
     expect(session, isNotNull);
     expect(session!.startedAt, startedAt);
@@ -5680,6 +5683,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await _finishCoursePreview(tester);
 
     now = now.add(const Duration(minutes: 5));
     await tester.pump(const Duration(milliseconds: 250));
@@ -5729,6 +5733,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await _finishCoursePreview(tester);
     expect(await store.load(), isNotNull);
 
     tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
@@ -5865,6 +5870,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await _finishCoursePreview(tester);
 
     expect(tester.widget<RoadView>(find.byType(RoadView)).progress, 0);
 
@@ -5897,6 +5903,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await _finishCoursePreview(tester);
 
     tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
     await tester.pump();
@@ -5973,6 +5980,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await _finishCoursePreview(tester);
 
     tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
     await tester.pump();
@@ -6225,6 +6233,7 @@ void main() {
         ),
       );
       await tester.pump();
+      await _finishCoursePreview(tester);
 
       now = now.add(const Duration(minutes: 2, seconds: 59));
       await tester.pump(const Duration(milliseconds: 250));
@@ -6283,6 +6292,7 @@ void main() {
         ),
       );
       await tester.pump();
+      await _finishCoursePreview(tester);
 
       now = now.add(const Duration(minutes: 2));
       await tester.pump(const Duration(milliseconds: 250));
@@ -6340,6 +6350,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await _finishCoursePreview(tester);
 
     now = now.add(const Duration(minutes: 3));
     await tester.pump(const Duration(milliseconds: 250));
@@ -6404,6 +6415,7 @@ void main() {
         ),
       );
       await tester.pump();
+      await _finishCoursePreview(tester);
 
       now = now.add(const Duration(minutes: 3));
       await tester.pump(const Duration(milliseconds: 250));
@@ -6467,6 +6479,7 @@ void main() {
         ),
       );
       await tester.pump();
+      await _finishCoursePreview(tester);
 
       now = now.add(const Duration(minutes: 2));
       await tester.pump(const Duration(milliseconds: 250));
@@ -6536,6 +6549,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await _finishCoursePreview(tester);
 
     now = now.add(const Duration(minutes: 3));
     await tester.pump(const Duration(milliseconds: 250));
@@ -6573,6 +6587,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await _finishCoursePreview(tester);
     now = now.add(const Duration(minutes: 20));
     await tester.pump(const Duration(milliseconds: 250));
 
@@ -6728,6 +6743,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await _finishCoursePreview(tester);
 
     expect(tester.getSize(find.byType(RoadView)), const Size(1200, 520));
     expect(
@@ -7030,6 +7046,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await _finishCoursePreview(tester);
 
     expect(find.text("Today's Yamyam Ride"), findsOneWidget);
     expect(find.text("We're off!"), findsOneWidget);
@@ -7051,6 +7068,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await _finishCoursePreview(tester);
 
     await tester.ensureVisible(find.text('Pause'));
     await tester.pump();
@@ -7977,6 +7995,38 @@ void main() {
     expect(find.text('고른 식재료'), findsNothing);
   });
 
+  testWidgets('Meal history reward sticker renders without a frame', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final service = LocalMealProgressService();
+    await service.recordMealResult(
+      _mealResult(
+        startedAt: DateTime(2026, 5, 4, 12),
+        targetDuration: const Duration(minutes: 20),
+        actualDuration: const Duration(minutes: 18),
+      ),
+      vehicleId: 'motorcycle',
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
+        home: MealHistoryScreen(mealProgressService: service),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final stickerFinder = find.byWidgetPredicate(
+      (widget) =>
+          widget is RewardStickerImage && widget.size == 56 && !widget.framed,
+    );
+
+    expect(stickerFinder, findsOneWidget);
+  });
+
   testWidgets('Meal history screen deletes a record after confirmation', (
     tester,
   ) async {
@@ -8431,6 +8481,12 @@ class _FakeAvatarImagePicker implements AvatarImagePicker {
   Future<XFile?> pickAvatarImage() async {
     return pickedFile;
   }
+}
+
+Future<void> _finishCoursePreview(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 4100));
+  await tester.pump();
 }
 
 class _FakeScreenAwakeService implements ScreenAwakeService {

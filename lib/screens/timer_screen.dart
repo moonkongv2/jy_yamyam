@@ -39,6 +39,8 @@ const _landscapeCourseCanvasSize = Size(1200, 520);
 const _compactLandscapeControlsWidth = 72.0;
 const _compactLandscapeControlsRightInset =
     _compactLandscapeControlsWidth + AppSpacing.xl;
+const _coursePreviewDuration = Duration(seconds: 4);
+const _coursePreviewReferenceDuration = Duration(minutes: 5);
 const motivationMinimumVideoInterval = Duration(seconds: 10);
 const motivationVoiceStartDelay = Duration(milliseconds: 350);
 const _motivationVideoIntervalOptions = [
@@ -198,9 +200,11 @@ class _TimerStatusCopy {
 }
 
 class _TimerScreenState extends State<TimerScreen>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   late final MealTimerController _controller;
   late final AnimationController _finishDriveController;
+  late final AnimationController _coursePreviewController;
+  late final Animation<double> _coursePreviewAnimation;
   late final MotivationAudioService _motivationAudioService;
   late final bool _ownsMotivationAudioService;
   late MealTimerConfig _timerConfig;
@@ -208,6 +212,9 @@ class _TimerScreenState extends State<TimerScreen>
   bool _arrivalPromptShown = false;
   bool _exitPromptShown = false;
   bool _allowExit = false;
+  bool _startsNewSession = false;
+  bool _initialCourseStartResolved = false;
+  bool _isCoursePreviewing = false;
   late final MotivationCueController _motivationCueController;
   Timer? _motivationVoiceTimer;
   Timer? _arrivalPromptTimer;
@@ -232,10 +239,13 @@ class _TimerScreenState extends State<TimerScreen>
     _ownsMotivationAudioService = widget.motivationAudioService == null;
     final restoredSession = widget.restoredSession;
     if (restoredSession == null) {
+      _startsNewSession = true;
       _controller = MealTimerController(config: widget.config, now: widget.now);
       _activeSessionId = _createActiveSessionId();
       _motivationCueController = MotivationCueController();
-      _controller.start();
+      if (!_durationMayNeedCoursePreview(widget.config.duration)) {
+        _controller.start();
+      }
     } else {
       _timerConfig = restoredSession.config;
       _activeSessionId = restoredSession.sessionId;
@@ -262,7 +272,29 @@ class _TimerScreenState extends State<TimerScreen>
     _controller.addListener(_handleTimerChanged);
     _finishDriveController = AnimationController(vsync: this)
       ..addStatusListener(_handleFinishDriveStatusChanged);
-    unawaited(_persistActiveSession());
+    _coursePreviewController = AnimationController(
+      vsync: this,
+      duration: _coursePreviewDuration,
+    )..addStatusListener(_handleCoursePreviewStatusChanged);
+    _coursePreviewAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 0,
+          end: 1,
+        ).chain(CurveTween(curve: Curves.easeInOutCubic)),
+        weight: 1,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 1,
+          end: 0,
+        ).chain(CurveTween(curve: Curves.easeInOutCubic)),
+        weight: 1,
+      ),
+    ]).animate(_coursePreviewController);
+    if (!_startsNewSession || _controller.startedAt != null) {
+      unawaited(_persistActiveSession());
+    }
     unawaited(
       _lifecycleController.allowMealFlowOrientations(widget.orientationService),
     );
@@ -271,6 +303,69 @@ class _TimerScreenState extends State<TimerScreen>
 
   String _createActiveSessionId() {
     return (widget.now ?? DateTime.now)().microsecondsSinceEpoch.toString();
+  }
+
+  bool _durationMayNeedCoursePreview(Duration duration) {
+    return duration > _coursePreviewReferenceDuration;
+  }
+
+  void _resolveInitialCourseStart(Size roadViewportSize) {
+    if (!_startsNewSession ||
+        _initialCourseStartResolved ||
+        _controller.startedAt != null ||
+        !roadViewportSize.width.isFinite ||
+        !roadViewportSize.height.isFinite ||
+        roadViewportSize.width <= 0 ||
+        roadViewportSize.height <= 0) {
+      return;
+    }
+
+    _initialCourseStartResolved = true;
+    final needsPreview = roadCourseNeedsCameraPreview(
+      viewportSize: roadViewportSize,
+      duration: _timerConfig.duration,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _controller.startedAt != null) {
+        return;
+      }
+      if (needsPreview) {
+        _startCoursePreview();
+      } else {
+        _startTimerSession();
+      }
+    });
+  }
+
+  void _startCoursePreview() {
+    setState(() {
+      _isCoursePreviewing = true;
+    });
+    _coursePreviewController.forward(from: 0);
+  }
+
+  void _handleCoursePreviewStatusChanged(AnimationStatus status) {
+    if (status != AnimationStatus.completed || !_isCoursePreviewing) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isCoursePreviewing = false;
+    });
+    _coursePreviewController.reset();
+    _startTimerSession();
+  }
+
+  void _startTimerSession() {
+    if (_controller.startedAt != null) {
+      return;
+    }
+
+    _controller.start();
+    unawaited(_persistActiveSession());
   }
 
   @override
@@ -305,6 +400,9 @@ class _TimerScreenState extends State<TimerScreen>
     );
     _finishDriveController
       ..removeStatusListener(_handleFinishDriveStatusChanged)
+      ..dispose();
+    _coursePreviewController
+      ..removeStatusListener(_handleCoursePreviewStatusChanged)
       ..dispose();
     _controller.dispose();
     super.dispose();
@@ -740,7 +838,11 @@ class _TimerScreenState extends State<TimerScreen>
     final texts = AppTexts.of(context);
 
     return AnimatedBuilder(
-      animation: Listenable.merge([_controller, _finishDriveController]),
+      animation: Listenable.merge([
+        _controller,
+        _finishDriveController,
+        _coursePreviewController,
+      ]),
       builder: (context, _) {
         final vehicle = VehicleCatalog.findById(_timerConfig.vehicleId);
         final vehicleAvatar = _timerConfig.avatarPresentationForVehicle(
@@ -761,13 +863,19 @@ class _TimerScreenState extends State<TimerScreen>
                   .clamp(0.0, 1.0)
                   .toDouble()
             : timerProgress;
+        final timerHasStarted = _controller.startedAt != null;
+        final canUseTimerControls =
+            timerHasStarted && !_isCoursePreviewing && !_isFinishDriving;
+        final coursePreviewCameraProgress = _isCoursePreviewing
+            ? _coursePreviewAnimation.value
+            : null;
         final statusCopy = _timerStatusCopy(
           texts.timer,
           _controller.state,
           displayProgress,
         );
         void handlePauseResume() {
-          if (_isFinishDriving) {
+          if (!canUseTimerControls) {
             return;
           }
           if (_controller.isPaused) {
@@ -814,6 +922,9 @@ class _TimerScreenState extends State<TimerScreen>
                 builder: (context, constraints) {
                   final isLandscape =
                       constraints.maxWidth > constraints.maxHeight;
+                  if (isLandscape) {
+                    _resolveInitialCourseStart(_landscapeCourseCanvasSize);
+                  }
                   final reservesCompactControlsSpace =
                       isLandscape &&
                       constraints.maxHeight - AppSpacing.xs - AppSpacing.md <
@@ -822,23 +933,26 @@ class _TimerScreenState extends State<TimerScreen>
                     progress: displayProgress,
                     vehicle: vehicle,
                     avatar: vehicleAvatar,
-                    motivationVideoAssetPath: _isFinishDriving
+                    motivationVideoAssetPath:
+                        _isFinishDriving || _isCoursePreviewing
                         ? null
                         : _motivationCueController.activeVideoPath,
-                    motivationVideoMilestone: _isFinishDriving
+                    motivationVideoMilestone:
+                        _isFinishDriving || _isCoursePreviewing
                         ? null
                         : _motivationCueController.activeMilestone,
                     onMotivationVideoFinished: _handleMotivationVideoFinished,
-                    showVehicle: !isLandscape,
-                    showMotivationVideo: !isLandscape,
+                    showVehicle: !isLandscape && !_isCoursePreviewing,
+                    showMotivationVideo: !isLandscape && !_isCoursePreviewing,
                     ingredients: courseIngredients,
                     ingredientClearProgress: displayProgress,
+                    cameraProgressOverride: coursePreviewCameraProgress,
                     isRoadMotionActive:
                         _isFinishDriving ||
                         _controller.state == MealTimerState.running,
                     courseDuration: _timerConfig.duration,
                   );
-                  final landscapeVehicleLayer = isLandscape
+                  final landscapeVehicleLayer = isLandscape && !_isCoursePreviewing
                       ? RoadVehicleLayer(
                           progress: displayProgress,
                           vehicle: vehicle,
@@ -848,6 +962,7 @@ class _TimerScreenState extends State<TimerScreen>
                       : null;
                   final landscapeMotivationVideoLayer =
                       !_isFinishDriving &&
+                          !_isCoursePreviewing &&
                           isLandscape &&
                           _motivationCueController.activeVideoPath != null &&
                           _motivationCueController.activeMilestone != null
@@ -902,18 +1017,22 @@ class _TimerScreenState extends State<TimerScreen>
                       onMotivationSettings: _openMotivationSettings,
                       controls: TimerControlBar(
                         isPaused: _controller.isPaused,
-                        onPauseResume: _isFinishDriving
-                            ? null
-                            : handlePauseResume,
-                        onComplete: _isFinishDriving ? null : _confirmComplete,
+                        onPauseResume: canUseTimerControls
+                            ? handlePauseResume
+                            : null,
+                        onComplete: canUseTimerControls
+                            ? _confirmComplete
+                            : null,
                       ),
                       compactControls: _CompactLandscapeControls(
                         isPaused: _controller.isPaused,
                         onMotivationSettings: _openMotivationSettings,
-                        onPauseResume: _isFinishDriving
-                            ? null
-                            : handlePauseResume,
-                        onComplete: _isFinishDriving ? null : _confirmComplete,
+                        onPauseResume: canUseTimerControls
+                            ? handlePauseResume
+                            : null,
+                        onComplete: canUseTimerControls
+                            ? _confirmComplete
+                            : null,
                       ),
                     );
                   }
@@ -932,7 +1051,19 @@ class _TimerScreenState extends State<TimerScreen>
                           progress: displayProgress,
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        Expanded(child: roadView),
+                        Expanded(
+                          child: LayoutBuilder(
+                            builder: (context, roadConstraints) {
+                              _resolveInitialCourseStart(
+                                Size(
+                                  roadConstraints.maxWidth,
+                                  roadConstraints.maxHeight,
+                                ),
+                              );
+                              return roadView;
+                            },
+                          ),
+                        ),
                         if (remainingTimeCard != null) ...[
                           const SizedBox(height: AppSpacing.md),
                           remainingTimeCard,
@@ -940,12 +1071,12 @@ class _TimerScreenState extends State<TimerScreen>
                         const SizedBox(height: AppSpacing.md),
                         TimerControlBar(
                           isPaused: _controller.isPaused,
-                          onPauseResume: _isFinishDriving
-                              ? null
-                              : handlePauseResume,
-                          onComplete: _isFinishDriving
-                              ? null
-                              : _confirmComplete,
+                          onPauseResume: canUseTimerControls
+                              ? handlePauseResume
+                              : null,
+                          onComplete: canUseTimerControls
+                              ? _confirmComplete
+                              : null,
                         ),
                       ],
                     ),
