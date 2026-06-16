@@ -204,6 +204,7 @@ class _TimerScreenState extends State<TimerScreen>
   late final AnimationController _finishDriveController;
   AnimationController? _previewController;
   bool _isPreviewing = false;
+  _PreviewMessageState _previewMessageState = _PreviewMessageState.none;
   late final MotivationAudioService _motivationAudioService;
   late final bool _ownsMotivationAudioService;
   late MealTimerConfig _timerConfig;
@@ -310,7 +311,20 @@ class _TimerScreenState extends State<TimerScreen>
 
     if (!mounted) return;
     setState(() {
+      _previewMessageState = _PreviewMessageState.ready;
+    });
+    await Future.delayed(const Duration(milliseconds: 700));
+
+    if (!mounted) return;
+    setState(() {
+      _previewMessageState = _PreviewMessageState.go;
+    });
+    await Future.delayed(const Duration(milliseconds: 700));
+
+    if (!mounted) return;
+    setState(() {
       _isPreviewing = false;
+      _previewMessageState = _PreviewMessageState.none;
     });
     _controller.start();
     unawaited(_persistActiveSession());
@@ -815,6 +829,20 @@ class _TimerScreenState extends State<TimerScreen>
             ? (_previewController?.value ?? 0.0).clamp(0.0, 1.0).toDouble()
             : displayProgress;
         final vehicleDisplayProgress = _isPreviewing ? 0.0 : displayProgress;
+
+        String? previewMessageText;
+        switch (_previewMessageState) {
+          case _PreviewMessageState.ready:
+            previewMessageText = texts.timer.previewReady;
+            break;
+          case _PreviewMessageState.go:
+            previewMessageText = texts.timer.previewGo;
+            break;
+          case _PreviewMessageState.none:
+            previewMessageText = null;
+            break;
+        }
+
         final statusCopy = _timerStatusCopy(
           texts.timer,
           _controller.state,
@@ -864,8 +892,11 @@ class _TimerScreenState extends State<TimerScreen>
                     ],
                   ),
             body: SafeArea(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  LayoutBuilder(
+                    builder: (context, constraints) {
                   final isLandscape =
                       constraints.maxWidth > constraints.maxHeight;
 
@@ -1018,7 +1049,39 @@ class _TimerScreenState extends State<TimerScreen>
                   );
                 },
               ),
-            ),
+              if (previewMessageText != null)
+                IgnorePointer(
+                  child: Container(
+                    color: Colors.black38,
+                    alignment: Alignment.center,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(scale: animation, child: child),
+                      ),
+                      child: Text(
+                        previewMessageText,
+                        key: ValueKey(previewMessageText),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: AppColors.white,
+                          fontSize: 40,
+                          fontWeight: FontWeight.w900,
+                          shadows: [
+                            Shadow(
+                              blurRadius: 12,
+                              color: AppColors.black,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
           ),
         );
       },
@@ -1946,4 +2009,10 @@ class _RemainingTimeCard extends StatelessWidget {
       ),
     );
   }
+}
+
+enum _PreviewMessageState {
+  none,
+  ready,
+  go,
 }
