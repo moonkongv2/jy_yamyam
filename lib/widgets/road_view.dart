@@ -31,6 +31,7 @@ class RoadView extends StatelessWidget {
     this.showMotivationVideo = true,
     this.ingredients = const [],
     this.ingredientClearProgress,
+    this.cameraProgressOverride,
     this.isRoadMotionActive = false,
     this.courseDuration = const Duration(minutes: 5),
   });
@@ -47,6 +48,7 @@ class RoadView extends StatelessWidget {
   final bool showMotivationVideo;
   final List<MealIngredientDefinition> ingredients;
   final double? ingredientClearProgress;
+  final double? cameraProgressOverride;
   final bool isRoadMotionActive;
   final Duration courseDuration;
   static const double _portraitVehicleSize = 164;
@@ -93,9 +95,12 @@ class RoadView extends StatelessWidget {
             ? viewportSize.height * 0.18
             : videoMargin;
         final clampedProgress = progress.clamp(0.0, 1.0).toDouble();
+        final cameraProgress = (cameraProgressOverride ?? clampedProgress)
+            .clamp(0.0, 1.0)
+            .toDouble();
         final cameraOffsetY = roadCameraOffsetForGeometryProgress(
           geometry: geometry,
-          progress: clampedProgress,
+          progress: cameraProgress,
         );
         final vehiclePlacement = _roadVehiclePlacementForGeometryProgress(
           geometry: geometry,
