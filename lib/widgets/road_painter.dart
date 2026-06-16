@@ -113,6 +113,19 @@ RoadCourseGeometry createRoadCourseGeometry({
   );
 }
 
+bool roadCourseNeedsCameraPreview({
+  required Size viewportSize,
+  required Duration duration,
+  double overflowTolerance = 1,
+}) {
+  final geometry = createRoadCourseGeometry(
+    viewportSize: viewportSize,
+    duration: duration,
+  );
+  return geometry.canvasSize.height - geometry.viewportSize.height >
+      overflowTolerance;
+}
+
 Path createRoadPathForGeometry(RoadCourseGeometry geometry) {
   final bounds = geometry.roadBounds;
   final left = bounds.left;
