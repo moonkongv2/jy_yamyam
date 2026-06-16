@@ -20,7 +20,8 @@ import 'vehicle_widget.dart';
 class RoadView extends StatelessWidget {
   const RoadView({
     super.key,
-    required this.progress,
+    required this.cameraProgress,
+    required this.vehicleProgress,
     required this.vehicle,
     this.avatar = VehicleAvatarPresentation.defaultImage,
     this.avatarImageBuilder,
@@ -31,12 +32,12 @@ class RoadView extends StatelessWidget {
     this.showMotivationVideo = true,
     this.ingredients = const [],
     this.ingredientClearProgress,
-    this.cameraProgressOverride,
     this.isRoadMotionActive = false,
     this.courseDuration = const Duration(minutes: 5),
   });
 
-  final double progress;
+  final double cameraProgress;
+  final double vehicleProgress;
   final VehicleDefinition vehicle;
   final VehicleAvatarPresentation avatar;
   final Widget Function(BuildContext context, String imagePath)?
@@ -48,7 +49,6 @@ class RoadView extends StatelessWidget {
   final bool showMotivationVideo;
   final List<MealIngredientDefinition> ingredients;
   final double? ingredientClearProgress;
-  final double? cameraProgressOverride;
   final bool isRoadMotionActive;
   final Duration courseDuration;
   static const double _portraitVehicleSize = 164;
@@ -94,23 +94,23 @@ class RoadView extends StatelessWidget {
         final videoFrameTop = isLandscape
             ? viewportSize.height * 0.18
             : videoMargin;
-        final clampedProgress = progress.clamp(0.0, 1.0).toDouble();
-        final cameraProgress = (cameraProgressOverride ?? clampedProgress)
-            .clamp(0.0, 1.0)
-            .toDouble();
+        final clampedCameraProgress = cameraProgress.clamp(0.0, 1.0).toDouble();
+        final clampedVehicleProgress = vehicleProgress.clamp(0.0, 1.0).toDouble();
         final cameraOffsetY = roadCameraOffsetForGeometryProgress(
           geometry: geometry,
-          progress: cameraProgress,
+          progress: clampedCameraProgress,
         );
+        final disableViewportBounding = cameraProgress != vehicleProgress;
         final vehiclePlacement = _roadVehiclePlacementForGeometryProgress(
           geometry: geometry,
-          progress: clampedProgress,
+          progress: clampedVehicleProgress,
           vehicle: vehicle,
           vehicleSize: vehicleSize,
           cameraOffsetY: cameraOffsetY,
           isLandscape: isLandscape,
+          disableViewportBounding: disableViewportBounding,
         );
-        final clearProgress = (ingredientClearProgress ?? clampedProgress)
+        final clearProgress = (ingredientClearProgress ?? clampedVehicleProgress)
             .clamp(0.0, 1.0)
             .toDouble();
         final visualStyle = RoadCourseVisualStyle.forCourseKind(
@@ -145,7 +145,7 @@ class RoadView extends StatelessWidget {
                     children: [
                       Positioned.fill(
                         child: _AnimatedRoadPaint(
-                          progress: clampedProgress,
+                          progress: clampedVehicleProgress,
                           isMotionActive: isRoadMotionActive,
                           geometry: geometry,
                           courseKind: vehicle.courseKind,
@@ -169,12 +169,12 @@ class RoadView extends StatelessWidget {
                         position: roadPointForGeometryProgress(geometry, 1),
                         icon: Icons.flag_rounded,
                         label: texts.common.complete,
-                        isActive: clampedProgress >= 1,
+                        isActive: clampedVehicleProgress >= 1,
                         size: isLandscape ? 42 : 36,
                       ),
                       if (showVehicle)
                         _PositionedRoadVehicle(
-                          progress: clampedProgress,
+                          progress: clampedVehicleProgress,
                           vehicle: vehicle,
                           vehicleSize: vehicleSize,
                           vehicleLeft: vehiclePlacement.contentOffset.dx,
@@ -600,14 +600,16 @@ class RoadMotivationVideoLayer extends StatelessWidget {
 class RoadVehicleLayer extends StatelessWidget {
   const RoadVehicleLayer({
     super.key,
-    required this.progress,
+    required this.cameraProgress,
+    required this.vehicleProgress,
     required this.vehicle,
     this.avatar = VehicleAvatarPresentation.defaultImage,
     this.avatarImageBuilder,
     this.courseDuration = const Duration(minutes: 5),
   });
 
-  final double progress;
+  final double cameraProgress;
+  final double vehicleProgress;
   final VehicleDefinition vehicle;
   final VehicleAvatarPresentation avatar;
   final Widget Function(BuildContext context, String imagePath)?
@@ -639,24 +641,27 @@ class RoadVehicleLayer extends StatelessWidget {
                 ),
               )
               .toDouble();
-          final clampedProgress = progress.clamp(0.0, 1.0).toDouble();
+          final clampedCameraProgress = cameraProgress.clamp(0.0, 1.0).toDouble();
+          final clampedVehicleProgress = vehicleProgress.clamp(0.0, 1.0).toDouble();
           final cameraOffsetY = roadCameraOffsetForGeometryProgress(
             geometry: geometry,
-            progress: clampedProgress,
+            progress: clampedCameraProgress,
           );
+          final disableViewportBounding = cameraProgress != vehicleProgress;
           final vehiclePlacement = _roadVehiclePlacementForGeometryProgress(
             geometry: geometry,
-            progress: clampedProgress,
+            progress: clampedVehicleProgress,
             vehicle: vehicle,
             vehicleSize: vehicleSize,
             cameraOffsetY: cameraOffsetY,
             isLandscape: isLandscape,
+            disableViewportBounding: disableViewportBounding,
           );
 
           return Stack(
             children: [
               _PositionedRoadVehicle(
-                progress: clampedProgress,
+                progress: clampedVehicleProgress,
                 vehicle: vehicle,
                 vehicleSize: vehicleSize,
                 vehicleLeft: vehiclePlacement.viewportOffset.dx,
@@ -692,6 +697,7 @@ _RoadVehiclePlacement _roadVehiclePlacementForGeometryProgress({
   required double vehicleSize,
   required double cameraOffsetY,
   required bool isLandscape,
+  bool disableViewportBounding = false,
 }) {
   final isVehicleFacingLeft = roadIsFacingLeftForGeometryProgress(
     geometry,
@@ -707,11 +713,19 @@ _RoadVehiclePlacement _roadVehiclePlacementForGeometryProgress({
         isLandscape: isLandscape,
         isFacingLeft: isVehicleFacingLeft,
       );
-  final viewportOffset = _boundedVehicleOffset(
-    size: geometry.viewportSize,
-    position: vehiclePosition,
-    vehicleSize: vehicleSize,
-  );
+  final Offset viewportOffset;
+  if (disableViewportBounding) {
+    viewportOffset = Offset(
+      vehiclePosition.dx - (vehicleSize / 2),
+      vehiclePosition.dy - (vehicleSize / 2),
+    );
+  } else {
+    viewportOffset = _boundedVehicleOffset(
+      size: geometry.viewportSize,
+      position: vehiclePosition,
+      vehicleSize: vehicleSize,
+    );
+  }
 
   return _RoadVehiclePlacement(
     contentOffset: viewportOffset + Offset(0, cameraOffsetY),

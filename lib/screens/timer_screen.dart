@@ -869,6 +869,8 @@ class _TimerScreenState extends State<TimerScreen>
         final coursePreviewCameraProgress = _isCoursePreviewing
             ? _coursePreviewAnimation.value
             : null;
+        final cameraDisplayProgress = coursePreviewCameraProgress ?? displayProgress;
+        final vehicleDisplayProgress = _isCoursePreviewing ? 0.0 : displayProgress;
         final statusCopy = _timerStatusCopy(
           texts.timer,
           _controller.state,
@@ -930,7 +932,8 @@ class _TimerScreenState extends State<TimerScreen>
                       constraints.maxHeight - AppSpacing.xs - AppSpacing.md <
                           430;
                   final roadView = RoadView(
-                    progress: displayProgress,
+                    cameraProgress: cameraDisplayProgress,
+                    vehicleProgress: vehicleDisplayProgress,
                     vehicle: vehicle,
                     avatar: vehicleAvatar,
                     motivationVideoAssetPath:
@@ -942,19 +945,19 @@ class _TimerScreenState extends State<TimerScreen>
                         ? null
                         : _motivationCueController.activeMilestone,
                     onMotivationVideoFinished: _handleMotivationVideoFinished,
-                    showVehicle: !isLandscape && !_isCoursePreviewing,
+                    showVehicle: !isLandscape,
                     showMotivationVideo: !isLandscape && !_isCoursePreviewing,
                     ingredients: courseIngredients,
-                    ingredientClearProgress: displayProgress,
-                    cameraProgressOverride: coursePreviewCameraProgress,
+                    ingredientClearProgress: vehicleDisplayProgress,
                     isRoadMotionActive:
                         _isFinishDriving ||
                         _controller.state == MealTimerState.running,
                     courseDuration: _timerConfig.duration,
                   );
-                  final landscapeVehicleLayer = isLandscape && !_isCoursePreviewing
+                  final landscapeVehicleLayer = isLandscape
                       ? RoadVehicleLayer(
-                          progress: displayProgress,
+                          cameraProgress: cameraDisplayProgress,
+                          vehicleProgress: vehicleDisplayProgress,
                           vehicle: vehicle,
                           avatar: vehicleAvatar,
                           courseDuration: _timerConfig.duration,
