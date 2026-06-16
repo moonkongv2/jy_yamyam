@@ -39,8 +39,7 @@ const _landscapeCourseCanvasSize = Size(1200, 520);
 const _compactLandscapeControlsWidth = 72.0;
 const _compactLandscapeControlsRightInset =
     _compactLandscapeControlsWidth + AppSpacing.xl;
-const _coursePreviewDuration = Duration(seconds: 4);
-const _coursePreviewReferenceDuration = Duration(minutes: 5);
+
 const motivationMinimumVideoInterval = Duration(seconds: 10);
 const motivationVoiceStartDelay = Duration(milliseconds: 350);
 const _motivationVideoIntervalOptions = [
@@ -203,8 +202,8 @@ class _TimerScreenState extends State<TimerScreen>
     with WidgetsBindingObserver, TickerProviderStateMixin {
   late final MealTimerController _controller;
   late final AnimationController _finishDriveController;
-  late final AnimationController _coursePreviewController;
-  late final Animation<double> _coursePreviewAnimation;
+  AnimationController? _previewController;
+  bool _isPreviewing = false;
   late final MotivationAudioService _motivationAudioService;
   late final bool _ownsMotivationAudioService;
   late MealTimerConfig _timerConfig;
@@ -212,9 +211,6 @@ class _TimerScreenState extends State<TimerScreen>
   bool _arrivalPromptShown = false;
   bool _exitPromptShown = false;
   bool _allowExit = false;
-  bool _startsNewSession = false;
-  bool _initialCourseStartResolved = false;
-  bool _isCoursePreviewing = false;
   late final MotivationCueController _motivationCueController;
   Timer? _motivationVoiceTimer;
   Timer? _arrivalPromptTimer;
@@ -239,13 +235,9 @@ class _TimerScreenState extends State<TimerScreen>
     _ownsMotivationAudioService = widget.motivationAudioService == null;
     final restoredSession = widget.restoredSession;
     if (restoredSession == null) {
-      _startsNewSession = true;
       _controller = MealTimerController(config: widget.config, now: widget.now);
       _activeSessionId = _createActiveSessionId();
       _motivationCueController = MotivationCueController();
-      if (!_durationMayNeedCoursePreview(widget.config.duration)) {
-        _controller.start();
-      }
     } else {
       _timerConfig = restoredSession.config;
       _activeSessionId = restoredSession.sessionId;
@@ -272,98 +264,54 @@ class _TimerScreenState extends State<TimerScreen>
     _controller.addListener(_handleTimerChanged);
     _finishDriveController = AnimationController(vsync: this)
       ..addStatusListener(_handleFinishDriveStatusChanged);
-    _coursePreviewController = AnimationController(
-      vsync: this,
-      duration: _coursePreviewDuration,
-    )..addStatusListener(_handleCoursePreviewStatusChanged);
-    _coursePreviewAnimation = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(
-          begin: 0,
-          end: 1,
-        ).chain(CurveTween(curve: Curves.easeInOutCubic)),
-        weight: 1,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(
-          begin: 1,
-          end: 0,
-        ).chain(CurveTween(curve: Curves.easeInOutCubic)),
-        weight: 1,
-      ),
-    ]).animate(_coursePreviewController);
-    if (!_startsNewSession || _controller.startedAt != null) {
+    if (_controller.startedAt != null) {
       unawaited(_persistActiveSession());
     }
     unawaited(
       _lifecycleController.allowMealFlowOrientations(widget.orientationService),
     );
     _applyScreenAwakeSetting();
+    if (restoredSession == null) {
+      _startPreviewSequence();
+    }
   }
 
   String _createActiveSessionId() {
     return (widget.now ?? DateTime.now)().microsecondsSinceEpoch.toString();
   }
 
-  bool _durationMayNeedCoursePreview(Duration duration) {
-    return duration > _coursePreviewReferenceDuration;
-  }
+  Future<void> _startPreviewSequence() async {
+    final needsPreview = _timerConfig.duration.inMinutes > 5;
 
-  void _resolveInitialCourseStart(Size roadViewportSize) {
-    if (!_startsNewSession ||
-        _initialCourseStartResolved ||
-        _controller.startedAt != null ||
-        !roadViewportSize.width.isFinite ||
-        !roadViewportSize.height.isFinite ||
-        roadViewportSize.width <= 0 ||
-        roadViewportSize.height <= 0) {
-      return;
-    }
-
-    _initialCourseStartResolved = true;
-    final needsPreview = roadCourseNeedsCameraPreview(
-      viewportSize: roadViewportSize,
-      duration: _timerConfig.duration,
-    );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _controller.startedAt != null) {
-        return;
-      }
-      if (needsPreview) {
-        _startCoursePreview();
-      } else {
-        _startTimerSession();
-      }
-    });
-  }
-
-  void _startCoursePreview() {
+    if (!mounted) return;
     setState(() {
-      _isCoursePreviewing = true;
+      _isPreviewing = true;
     });
-    _coursePreviewController.forward(from: 0);
-  }
 
-  void _handleCoursePreviewStatusChanged(AnimationStatus status) {
-    if (status != AnimationStatus.completed || !_isCoursePreviewing) {
-      return;
-    }
-    if (!mounted) {
-      return;
+    if (needsPreview) {
+      _previewController = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 2000),
+      );
+      _previewController!.addListener(() => setState(() {}));
+
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+
+      await _previewController!.forward();
+
+      if (!mounted) return;
+      await Future.delayed(const Duration(milliseconds: 1200));
+
+      if (!mounted) return;
+      _previewController!.duration = const Duration(milliseconds: 1000);
+      await _previewController!.reverse();
     }
 
+    if (!mounted) return;
     setState(() {
-      _isCoursePreviewing = false;
+      _isPreviewing = false;
     });
-    _coursePreviewController.reset();
-    _startTimerSession();
-  }
-
-  void _startTimerSession() {
-    if (_controller.startedAt != null) {
-      return;
-    }
-
     _controller.start();
     unawaited(_persistActiveSession());
   }
@@ -401,9 +349,7 @@ class _TimerScreenState extends State<TimerScreen>
     _finishDriveController
       ..removeStatusListener(_handleFinishDriveStatusChanged)
       ..dispose();
-    _coursePreviewController
-      ..removeStatusListener(_handleCoursePreviewStatusChanged)
-      ..dispose();
+    _previewController?.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -841,7 +787,6 @@ class _TimerScreenState extends State<TimerScreen>
       animation: Listenable.merge([
         _controller,
         _finishDriveController,
-        _coursePreviewController,
       ]),
       builder: (context, _) {
         final vehicle = VehicleCatalog.findById(_timerConfig.vehicleId);
@@ -865,12 +810,11 @@ class _TimerScreenState extends State<TimerScreen>
             : timerProgress;
         final timerHasStarted = _controller.startedAt != null;
         final canUseTimerControls =
-            timerHasStarted && !_isCoursePreviewing && !_isFinishDriving;
-        final coursePreviewCameraProgress = _isCoursePreviewing
-            ? _coursePreviewAnimation.value
-            : null;
-        final cameraDisplayProgress = coursePreviewCameraProgress ?? displayProgress;
-        final vehicleDisplayProgress = _isCoursePreviewing ? 0.0 : displayProgress;
+            timerHasStarted && !_isPreviewing && !_isFinishDriving;
+        final cameraDisplayProgress = _isPreviewing
+            ? (_previewController?.value ?? 0.0).clamp(0.0, 1.0).toDouble()
+            : displayProgress;
+        final vehicleDisplayProgress = _isPreviewing ? 0.0 : displayProgress;
         final statusCopy = _timerStatusCopy(
           texts.timer,
           _controller.state,
@@ -924,9 +868,7 @@ class _TimerScreenState extends State<TimerScreen>
                 builder: (context, constraints) {
                   final isLandscape =
                       constraints.maxWidth > constraints.maxHeight;
-                  if (isLandscape) {
-                    _resolveInitialCourseStart(_landscapeCourseCanvasSize);
-                  }
+
                   final reservesCompactControlsSpace =
                       isLandscape &&
                       constraints.maxHeight - AppSpacing.xs - AppSpacing.md <
@@ -937,16 +879,16 @@ class _TimerScreenState extends State<TimerScreen>
                     vehicle: vehicle,
                     avatar: vehicleAvatar,
                     motivationVideoAssetPath:
-                        _isFinishDriving || _isCoursePreviewing
+                        _isFinishDriving || _isPreviewing
                         ? null
                         : _motivationCueController.activeVideoPath,
                     motivationVideoMilestone:
-                        _isFinishDriving || _isCoursePreviewing
+                        _isFinishDriving || _isPreviewing
                         ? null
                         : _motivationCueController.activeMilestone,
                     onMotivationVideoFinished: _handleMotivationVideoFinished,
                     showVehicle: !isLandscape,
-                    showMotivationVideo: !isLandscape && !_isCoursePreviewing,
+                    showMotivationVideo: !isLandscape && !_isPreviewing,
                     ingredients: courseIngredients,
                     ingredientClearProgress: vehicleDisplayProgress,
                     isRoadMotionActive:
@@ -965,7 +907,7 @@ class _TimerScreenState extends State<TimerScreen>
                       : null;
                   final landscapeMotivationVideoLayer =
                       !_isFinishDriving &&
-                          !_isCoursePreviewing &&
+                          !_isPreviewing &&
                           isLandscape &&
                           _motivationCueController.activeVideoPath != null &&
                           _motivationCueController.activeMilestone != null
@@ -1055,17 +997,7 @@ class _TimerScreenState extends State<TimerScreen>
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, roadConstraints) {
-                              _resolveInitialCourseStart(
-                                Size(
-                                  roadConstraints.maxWidth,
-                                  roadConstraints.maxHeight,
-                                ),
-                              );
-                              return roadView;
-                            },
-                          ),
+                          child: roadView,
                         ),
                         if (remainingTimeCard != null) ...[
                           const SizedBox(height: AppSpacing.md),
