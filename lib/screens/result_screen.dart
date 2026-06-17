@@ -1352,7 +1352,11 @@ class _RewardConfettiDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned.fill(
+    return Positioned(
+      left: -40,
+      right: -40,
+      top: -40,
+      bottom: -40,
       child: Align(
         alignment: alignment,
         child: DecoratedBox(
@@ -1375,7 +1379,11 @@ class _RewardConfettiSparkle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned.fill(
+    return Positioned(
+      left: -40,
+      right: -40,
+      top: -40,
+      bottom: -40,
       child: Align(
         alignment: alignment,
         child: Icon(
