@@ -1287,24 +1287,50 @@ class _RewardBadge extends StatelessWidget {
     final stickerSize = isCondensed ? 132.0 : 144.0;
     return SizedBox(
       width: isCondensed ? 156 : 168,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          RewardStickerImage(
-            reward: reward,
-            semanticLabel: rewardName,
-            size: stickerSize,
-            framed: false,
+          const _RewardConfettiDot(
+            alignment: Alignment(-0.84, -0.62),
+            size: 6,
+            color: AppColors.primarySoft,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            rewardName,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: AppColors.textPrimary,
+          const _RewardConfettiDot(
+            alignment: Alignment(0.84, -0.68),
+            size: 8,
+            color: AppColors.accentBlueSoft,
+          ),
+          const _RewardConfettiDot(
+            alignment: Alignment(-0.76, 0.60),
+            size: 5,
+            color: AppColors.surfacePink,
+          ),
+          const _RewardConfettiSparkle(
+            alignment: Alignment(0.80, 0.52),
+            color: AppColors.orange,
+          ),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RewardStickerImage(
+                  reward: reward,
+                  semanticLabel: rewardName,
+                  size: stickerSize,
+                  framed: false,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  rewardName,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
