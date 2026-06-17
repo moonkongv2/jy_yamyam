@@ -425,6 +425,7 @@ class _ResultScreenState extends State<ResultScreen> {
                 },
               ),
             ),
+          ),
           SafeArea(
             child: Align(
               alignment: Alignment.topRight,
