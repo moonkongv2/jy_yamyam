@@ -198,6 +198,6 @@ class _StickerCard extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ));
   }
 }
