@@ -56,7 +56,7 @@ class EnUserGuideTexts implements UserGuideTextSet {
   List<String> get completionItems => const [
     'When you confirm the meal is finished, it is recorded as complete.',
     'A completed meal earns 1 vehicle sticker for the selected vehicle.',
-    'If the timer arrives first and the meal is not finished, tap “Not yet.” The meal is recorded as incomplete.',
+    'If the planned time ends and the meal is not finished, tap “Not yet.” The meal is recorded as incomplete.',
     'Incomplete meals are saved in history but do not earn stickers.',
     'The child-facing result keeps a next-try tone instead of harsh failure wording.',
   ];

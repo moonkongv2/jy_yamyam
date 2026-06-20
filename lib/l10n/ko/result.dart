@@ -9,15 +9,15 @@ class ResultTexts implements ResultTextSet {
   String get recordSaved => '오늘의 기록을 저장했어';
 
   String title(bool mealCompleted) =>
-      mealCompleted ? '식사 완주 성공!' : '아쉽지만 조금 늦었어';
+      mealCompleted ? '식사 시간을 잘 마무리했어!' : '조금 더 시간이 필요했어';
 
   String primaryMessage(bool mealCompleted, {String? vehicleId}) =>
       mealCompleted
-      ? '오늘의 냠냠코스를 끝까지 잘 마쳤어.'
-      : _failedPrimaryMessagesByVehicle[vehicleId] ?? '오토바이가 먼저 지나갔어.';
+      ? '오늘 식사를 정해둔 흐름 안에서 마무리했어.'
+      : _failedPrimaryMessagesByVehicle[vehicleId] ?? '오늘은 식사에 시간이 조금 더 필요했어.';
 
   String secondaryMessage(bool mealCompleted) =>
-      mealCompleted ? '지나가기 전에 식사를 잘 마쳐서 선물을 받았어!' : '다음 냠냠코스에서 다시 도전해보자.';
+      mealCompleted ? '식사를 잘 마쳐서 차량 스티커를 받았어!' : '다음 식사 시간은 조금 조절해보자.';
 
   String get parentTipLabel => '부모님 응원 팁';
 
@@ -31,14 +31,14 @@ class ResultTexts implements ResultTextSet {
       mealCompleted ? '성공 결과 부모님 응원 팁 보기' : '미완료 결과 부모님 응원 팁 보기';
 
   String helpButtonLabel(bool mealCompleted) =>
-      mealCompleted ? '성공과 격려 안내' : '미완료와 다음 도전 안내';
+      mealCompleted ? '식사 마무리와 격려 안내' : '다음 식사 조절 안내';
 
   String helpTitle(bool mealCompleted) =>
-      mealCompleted ? '성공과 격려 안내' : '미완료와 다음 도전 안내';
+      mealCompleted ? '식사 마무리와 격려 안내' : '다음 식사 조절 안내';
 
   List<String> helpBodyParagraphs(bool mealCompleted) => mealCompleted
-      ? const ['식사를 마쳤다고 확인하면 성공으로 기록돼요.']
-      : const ['타이머가 먼저 도착했는데 아직 식사가 끝나지 않았으면 미완료로 기록돼요.'];
+      ? const ['식사를 마쳤다고 확인하면 완료로 기록돼요.']
+      : const ['정해둔 시간이 끝났을 때 식사가 끝나지 않았으면 미완료로 기록돼요.'];
 
   List<String> helpBulletItems(bool mealCompleted) => mealCompleted
       ? const [
@@ -54,12 +54,12 @@ class ResultTexts implements ResultTextSet {
 
   List<String> resultHelpMeaningItems(bool mealCompleted) => mealCompleted
       ? const [
-          '식사를 마쳤다고 확인되어 성공으로 기록돼요.',
+          '식사를 마쳤다고 확인되어 완료로 기록돼요.',
           '완료한 식사는 선택한 빠방의 차량 스티커 1개를 받아요.',
           '보상 목표가 있으면 차량 스티커가 목표 칸을 채울 수 있어요.',
         ]
       : const [
-          '타이머가 먼저 도착했지만 아직 식사가 끝나지 않아 미완료로 기록돼요.',
+          '정해둔 시간이 끝났지만 아직 식사가 끝나지 않아 미완료로 기록돼요.',
           '미완료 기록은 식사 기록에 남지만 스티커는 지급되지 않아요.',
           '미완료는 벌이 아니라 다음 도전을 위한 기록이에요.',
         ];
@@ -68,7 +68,7 @@ class ResultTexts implements ResultTextSet {
 
   List<String> resultHelpSayItems(bool mealCompleted) => mealCompleted
       ? const [
-          '끝까지 먹어보려고 한 게 정말 좋았어.',
+          '정해둔 시간 동안 먹어보려고 한 게 정말 좋았어.',
           '오늘 냠냠코스를 끝까지 해낸 게 정말 멋져.',
           '스티커도 좋지만, 식사를 마친 게 제일 멋져.',
         ]

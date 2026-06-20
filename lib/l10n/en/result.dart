@@ -8,18 +8,19 @@ class EnResultTexts implements ResultTextSet {
   String get rewardLoading => 'Getting your reward ready...';
   String get recordSaved => "Today's record is saved.";
 
-  String title(bool mealCompleted) =>
-      mealCompleted ? 'Ride complete!' : 'Almost there!';
+  String title(bool mealCompleted) => mealCompleted
+      ? 'Mealtime wrapped up well!'
+      : 'A little more time was needed';
 
   String primaryMessage(bool mealCompleted, {String? vehicleId}) =>
       mealCompleted
-      ? 'You finished today\'s mealtime ride.'
+      ? 'You finished the meal within the planned flow.'
       : _failedPrimaryMessagesByVehicle[vehicleId] ??
             'The motorcycle passed by...';
 
   String secondaryMessage(bool mealCompleted) => mealCompleted
-      ? 'You finished before the rider passed by and earned a reward!'
-      : "Let's try again on the next ride.";
+      ? 'You finished your meal well and earned a vehicle sticker!'
+      : "Let's adjust the next mealtime a little.";
 
   String get parentTipLabel => 'Parent tips';
 
@@ -35,19 +36,19 @@ class EnResultTexts implements ResultTextSet {
       : 'View parent tips for an incomplete meal';
 
   String helpButtonLabel(bool mealCompleted) => mealCompleted
-      ? 'Success and encouragement tips'
-      : 'Incomplete result and next-try tips';
+      ? 'Mealtime wrap-up and encouragement tips'
+      : 'Next mealtime adjustment tips';
 
   String helpTitle(bool mealCompleted) => mealCompleted
-      ? 'Success and encouragement tips'
-      : 'Incomplete result and next-try tips';
+      ? 'Mealtime wrap-up and encouragement tips'
+      : 'Next mealtime adjustment tips';
 
   List<String> helpBodyParagraphs(bool mealCompleted) => mealCompleted
       ? const [
           'When you confirm the meal is finished, it’s recorded as complete.',
         ]
       : const [
-          'If the timer arrives first and the meal is not finished, it is saved as incomplete.',
+          'If the planned time ends and the meal is not finished, it is saved as incomplete.',
         ];
 
   List<String> helpBulletItems(bool mealCompleted) => mealCompleted
@@ -65,12 +66,12 @@ class EnResultTexts implements ResultTextSet {
 
   List<String> resultHelpMeaningItems(bool mealCompleted) => mealCompleted
       ? const [
-          'When you confirm the meal is finished, it’s recorded as complete.',
+          'When you confirm the meal is finished, it is recorded as complete.',
           'A completed meal earns one vehicle sticker for the selected vehicle.',
           'If a reward goal is active, the vehicle sticker can fill one goal slot.',
         ]
       : const [
-          'The rider arrived first, so the meal was recorded as incomplete.',
+          'The planned time ended while the meal was still unfinished, so it was recorded as incomplete.',
           'Incomplete meals stay in meal history, but no sticker is awarded.',
           'An incomplete result is a record for the next try, not a punishment.',
         ];
@@ -79,7 +80,7 @@ class EnResultTexts implements ResultTextSet {
 
   List<String> resultHelpSayItems(bool mealCompleted) => mealCompleted
       ? const [
-          'I liked how you kept trying until the end.',
+          'I really liked how you tried to eat during the planned time.',
           'You stuck with today’s ride all the way to the end.',
           'The sticker is fun, but finishing your meal is the biggest win.',
         ]
