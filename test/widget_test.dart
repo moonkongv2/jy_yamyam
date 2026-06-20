@@ -3196,10 +3196,11 @@ void main() {
     await tester.tap(find.text('직접 만든 아바타 사용'));
     await tester.pump();
 
-    await _scrollAvatarPromptIntoView(tester);
+    await _scrollAvatarPromptToggleIntoView(tester);
     expect(find.text('이미지 생성 가이드'), findsOneWidget);
-    expect(find.text('프롬프트 복사'), findsOneWidget);
-    expect(find.text('프롬프트 복사하기'), findsOneWidget);
+    expect(find.text('아바타 생성 프롬프트'), findsOneWidget);
+    expect(find.byKey(const ValueKey('avatarPromptText')), findsNothing);
+    expect(find.text('프롬프트 복사하기'), findsNothing);
   });
 
   testWidgets('Avatar setup screen shows guide text and prompt copy button', (
@@ -3210,7 +3211,7 @@ void main() {
     await tester.tap(find.text('직접 만든 아바타 사용'));
     await tester.pump();
 
-    await _scrollAvatarPromptIntoView(tester);
+    await _expandAvatarPrompt(tester);
     expect(find.text('아이 얼굴이 잘 보이는 정면 사진을 사용해 주세요.'), findsOneWidget);
     expect(find.text('얼굴이 크고 선명할수록 좋아요.'), findsOneWidget);
     expect(find.text('텍스트, 로고, 워터마크는 없어야 해요.'), findsOneWidget);
@@ -3234,10 +3235,15 @@ void main() {
     await tester.tap(find.text('Use custom avatar'));
     await tester.pump();
 
-    await _scrollAvatarPromptIntoView(tester);
+    await _scrollAvatarPromptToggleIntoView(tester);
     expect(find.text('Image generation guide'), findsOneWidget);
-    expect(find.text('Copy prompt'), findsWidgets);
-    expect(find.text('프롬프트 복사'), findsNothing);
+    expect(find.text('Avatar generation prompt'), findsOneWidget);
+    expect(find.text('Open prompt'), findsNothing);
+    expect(find.text('Copy prompt'), findsNothing);
+    expect(find.byKey(const ValueKey('avatarPromptCopyButton')), findsNothing);
+
+    await _expandAvatarPrompt(tester);
+    expect(find.text('Copy prompt'), findsOneWidget);
   });
 
   testWidgets('Avatar setup fire truck prompt includes firefighter guidance', (
@@ -3250,7 +3256,7 @@ void main() {
 
     await tester.tap(find.text('직접 만든 아바타 사용'));
     await tester.pump();
-    await _scrollAvatarPromptIntoView(tester);
+    await _expandAvatarPrompt(tester);
     expect(_avatarPromptText(tester), contains('소방관'));
   });
 
@@ -3264,7 +3270,7 @@ void main() {
 
     await tester.tap(find.text('직접 만든 아바타 사용'));
     await tester.pump();
-    await _scrollAvatarPromptIntoView(tester);
+    await _expandAvatarPrompt(tester);
     expect(_avatarPromptText(tester), contains('경찰'));
   });
 
@@ -3285,7 +3291,7 @@ void main() {
 
     await _tapVisible(tester, _vehicleChoiceFinder('fire_truck'));
     await tester.pump();
-    await _scrollAvatarPromptIntoView(tester);
+    await _expandAvatarPrompt(tester);
 
     expect(changedConfig?.vehicleId, 'fire_truck');
     expect(_avatarPromptText(tester), contains('소방관'));
@@ -8298,14 +8304,24 @@ Future<void> _pumpAvatarSetupScreen(
   await tester.pump();
 }
 
-Future<void> _scrollAvatarPromptIntoView(WidgetTester tester) async {
+Future<void> _scrollAvatarPromptToggleIntoView(WidgetTester tester) async {
+  final promptToggle = find.byKey(const ValueKey('avatarPromptToggle'));
   for (var index = 0; index < 4; index += 1) {
-    if (find.byKey(const ValueKey('avatarPromptText')).evaluate().isNotEmpty) {
+    if (promptToggle.evaluate().isNotEmpty) {
+      await tester.ensureVisible(promptToggle);
+      await tester.pumpAndSettle();
       return;
     }
     await tester.drag(find.byType(ListView), const Offset(0, -500));
     await tester.pumpAndSettle();
   }
+  fail('Avatar prompt toggle was not found.');
+}
+
+Future<void> _expandAvatarPrompt(WidgetTester tester) async {
+  await _scrollAvatarPromptToggleIntoView(tester);
+  await tester.tap(find.byKey(const ValueKey('avatarPromptToggle')));
+  await tester.pumpAndSettle();
 }
 
 Future<void> _scrollAvatarVehicleSelectionIntoView(WidgetTester tester) async {
