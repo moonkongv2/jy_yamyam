@@ -108,7 +108,6 @@ abstract interface class AvatarSetupTextSet {
   String get verticalPositionLabel;
   String get rotationLabel;
   String get resetPositionButton;
-  String get adjustmentUnavailable;
   String get confirmAvatarButton;
   String get guideTitle;
   List<String> get guideItems;
