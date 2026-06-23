@@ -3188,10 +3188,11 @@ void main() {
 
     expect(find.text('우리 아이 라이더 만들기'), findsOneWidget);
     expect(
-      find.text('외부 AI 서비스에서 아이 사진을 귀여운 라이더 캐릭터로 만든 뒤 업로드해 주세요.'),
+      find.text('외부 AI 서비스에서 냠냠 라이더에 사용할 아이 라이더 이미지를 만든 뒤 업로드해 주세요.'),
       findsOneWidget,
     );
     expect(find.text('기본 이미지 미리보기'), findsOneWidget);
+    await _dismissAvatarGuideIfVisible(tester);
 
     await tester.tap(find.text('직접 만든 라이더 사용'));
     await tester.pump();
@@ -3372,7 +3373,7 @@ void main() {
     expect(find.widgetWithText(FilledButton, '다시 업로드'), findsOneWidget);
     await _scrollAvatarCompositeIntoView(tester);
     expect(find.text('합성 미리보기'), findsOneWidget);
-    expect(find.text('이 모습으로 냠냠라이더를 탈까요?'), findsOneWidget);
+    expect(find.text('이 모습으로 냠냠 라이더를 탈까요?'), findsOneWidget);
   });
 
   testWidgets('Avatar setup initializes from custom config', (tester) async {
@@ -8288,6 +8289,7 @@ Future<void> _pumpAvatarSetupScreen(
   ValueChanged<MealTimerConfig>? onConfigChanged,
   AvatarImagePicker? imagePicker,
   LocalAvatarImageService? avatarImageService,
+  bool dismissInitialGuide = true,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -8307,6 +8309,19 @@ Future<void> _pumpAvatarSetupScreen(
     ),
   );
   await tester.pump();
+  if (dismissInitialGuide) {
+    await _dismissAvatarGuideIfVisible(tester);
+  }
+}
+
+Future<void> _dismissAvatarGuideIfVisible(WidgetTester tester) async {
+  await tester.pumpAndSettle();
+  final guideTitle = find.text('우리 아이 라이더 만들기 안내');
+  if (guideTitle.evaluate().isEmpty) {
+    return;
+  }
+  Navigator.of(tester.element(guideTitle)).pop();
+  await tester.pumpAndSettle();
 }
 
 Future<void> _scrollAvatarPromptToggleIntoView(WidgetTester tester) async {
