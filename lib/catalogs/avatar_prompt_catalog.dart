@@ -5,7 +5,9 @@ abstract final class AvatarPromptCatalog {
 첨부한 아이 사진을 참고해서 아이의 주요 얼굴 특징은 유지해 주세요.
 귀엽고 친근한 캐릭터 스타일로 만들어 주세요.
 정사각형 1:1 헤드샷 구도로, 얼굴 중앙에 배치해 주세요.
-머리 전체 + 얼굴 + 목 일부가 보이게 하고, 어깨/몸통은 최소화해 주세요.
+머리카락 끝부터 턱 끝까지 머리 전체와 얼굴만 딱 잘라낸 이미지로 만들어 주세요.
+목, 어깨, 몸통, 옷, 손, 전신, 차량 이미지는 절대 포함하지 마세요.
+머리 일부가 잘리지 않게 하고, 얼굴 외곽에는 최소한의 여백만 남겨 주세요.
 모바일 앱에 어울리는 단순하고 선명한 캐릭터풍 또는 부드러운 3D 캐릭터풍으로 만들어 주세요.
 투명 배경을 권장합니다.
 투명 배경이 어렵다면 단순한 흰색 또는 밝은 단색 배경으로 만들어 주세요.
@@ -16,8 +18,9 @@ abstract final class AvatarPromptCatalog {
   static const _englishBasePrompt = '''
 Use the attached child photo as reference and keep the child's main facial features.
 Create a cute, friendly character-style square 1:1 headshot.
-Place the face in the center, showing the full head, face, and a small part of the neck.
-Minimize shoulders and torso.
+Create a tight cutout of only the full head and face, from the top of the hair to the bottom of the chin.
+Do not include the neck, shoulders, torso, clothes, hands, full body, or vehicle image.
+Do not crop off any part of the head, and leave only minimal padding around the face.
 Use a simple, clear character style or a soft 3D character style suitable for a mobile app.
 A transparent background is recommended.
 If transparency is difficult, use a simple white or bright solid background.
