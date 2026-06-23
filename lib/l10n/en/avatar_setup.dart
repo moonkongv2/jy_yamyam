@@ -33,17 +33,11 @@ class EnAvatarSetupTexts implements AvatarSetupTextSet {
   String get resetPositionButton => 'Reset position';
   String get confirmAvatarButton => 'Use this rider';
   String get guideTitle => 'Rider image guide';
-  List<String> get guideItems => const [
-    "Use a front-facing photo where your child's face is easy to see.",
-    'A large, clear face works best.',
-    'Avoid photos where hats, masks, hands, or other objects cover the face.',
-    'A square 1:1 result works best.',
-    'Use a transparent or simple background.',
-    'Do not include text, logos, or watermarks.',
-  ];
+  String get guideIntro =>
+      'The app does not cut out faces itself. Prepare a rider image for the vehicle with one of the methods below.';
   String get promptCopyTitle => 'Rider image prompt';
   String get promptHelperText =>
-      'This rider image prompt matches the selected vehicle. Paste it into an external AI service.';
+      'When using an AI service, copy the vehicle-specific prompt below and paste it into the external AI service.';
   String get promptExpandLabel => 'Open prompt';
   String get promptCollapseLabel => 'Close prompt';
   String get promptToggleSemanticLabel =>
