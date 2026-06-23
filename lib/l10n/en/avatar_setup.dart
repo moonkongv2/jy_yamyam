@@ -7,7 +7,7 @@ class EnAvatarSetupTexts implements AvatarSetupTextSet {
 
   String get title => "Create Your Child's Rider Image";
   String get intro =>
-      "Use an external AI service to create a rider image for Yamyam Rider, then upload the finished image here.";
+      "Create a rider image for Yamyam Rider, then upload the finished image here.";
   String get selectedVehicleTitle => 'Selected vehicle';
   String get currentAvatarModeTitle => 'Rider image mode';
   String get defaultImageMode => 'Use default image';

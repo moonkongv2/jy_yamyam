@@ -6,7 +6,7 @@ class AvatarSetupTexts implements AvatarSetupTextSet {
   const AvatarSetupTexts();
 
   String get title => '우리 아이 라이더 만들기';
-  String get intro => '외부 AI 서비스에서 냠냠 라이더에 사용할 아이 라이더 이미지를 만든 뒤 업로드해 주세요.';
+  String get intro => '냠냠 라이더에 사용할 아이 라이더 이미지를 만든 뒤 업로드해 주세요.';
   String get selectedVehicleTitle => '현재 선택한 차량';
   String get currentAvatarModeTitle => '현재 라이더 모드';
   String get defaultImageMode => '기본 이미지 사용';
