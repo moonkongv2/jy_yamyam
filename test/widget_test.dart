@@ -1736,7 +1736,7 @@ void main() {
         vehicleId: 'police_car',
         languageCode: 'en',
       ),
-      'The police car passed by... did you finish your meal?',
+      'Time is up. Did you finish your meal?',
     );
   });
 
@@ -3787,7 +3787,7 @@ void main() {
     expect(find.text('Parent Guide'), findsWidgets);
     expect(find.textContaining('parents and other caregivers'), findsOneWidget);
     expect(
-      find.text('Review ingredients, cheer videos, and sticker rules.'),
+      find.text('Review ingredients, motivation videos, and sticker rules.'),
       findsOneWidget,
     );
     expect(find.text('What is Yamyam Rider?'), findsOneWidget);
@@ -7076,7 +7076,7 @@ void main() {
 
     expect(find.text("Today's Yamyam Ride"), findsOneWidget);
     expect(find.text("We're off!"), findsOneWidget);
-    expect(find.text('Mealtime left'), findsOneWidget);
+    expect(find.text('Time left'), findsOneWidget);
     expect(find.text('출발했어요!'), findsNothing);
   });
 
@@ -7746,7 +7746,7 @@ void main() {
     await tester.drag(find.byType(ListView), const Offset(0, -700));
     await tester.pumpAndSettle();
 
-    expect(find.text('Create Reward Promise'), findsOneWidget);
+    expect(find.text('Create Reward Goal'), findsOneWidget);
   });
 
   testWidgets(
@@ -7769,11 +7769,11 @@ void main() {
       await tester.drag(find.byType(ListView), const Offset(0, -700));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Create Reward Promise'));
+      await tester.tap(find.text('Create Reward Goal'));
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField), 'ice cream');
       await tester.pump();
-      await tester.tap(find.text('Save Promise'));
+      await tester.tap(find.text('Save Goal'));
       await tester.pumpAndSettle();
 
       expect(find.byType(RewardGoalScreen), findsOneWidget);
@@ -7784,7 +7784,7 @@ void main() {
 
       expect(find.byType(HomeScreen), findsOneWidget);
       expect(find.text('ice cream · 0/5'), findsOneWidget);
-      expect(find.text('Create Reward Promise'), findsNothing);
+      expect(find.text('Create Reward Goal'), findsNothing);
     },
   );
 
@@ -7916,7 +7916,7 @@ void main() {
     await tester.pump();
     await tester.enterText(find.byType(TextField), 'ice cream');
     await tester.pump();
-    await tester.tap(find.text('Save Promise'));
+    await tester.tap(find.text('Save Goal'));
     await tester.pumpAndSettle();
 
     final snapshot = await service.loadSnapshot();
@@ -7943,23 +7943,23 @@ void main() {
 
     await tester.drag(find.byType(ListView), const Offset(0, -700));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Use Reward'));
+    await tester.ensureVisible(find.text('Give Reward'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Use Reward'));
+    await tester.tap(find.text('Give Reward'));
     await tester.pumpAndSettle();
     expect(find.text('Use this reward?'), findsOneWidget);
 
-    await tester.tap(find.text('Keep Promise'));
+    await tester.tap(find.text('Keep Goal'));
     await tester.pumpAndSettle();
     expect((await service.loadSnapshot()).earnedRewardGoals, hasLength(1));
 
     await tester.drag(find.byType(ListView), const Offset(0, -700));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Use Reward'));
+    await tester.ensureVisible(find.text('Give Reward'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Use Reward'));
+    await tester.tap(find.text('Give Reward'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Use Reward').last);
+    await tester.tap(find.text('Give Reward').last);
     await tester.pumpAndSettle();
 
     final snapshot = await service.loadSnapshot();

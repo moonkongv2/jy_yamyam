@@ -6,7 +6,8 @@ class EnUserGuideTexts implements UserGuideTextSet {
   const EnUserGuideTexts();
 
   String get title => 'Parent Guide';
-  String get subtitle => 'Review ingredients, cheer videos, and sticker rules.';
+  String get subtitle =>
+      'Review ingredients, motivation videos, and sticker rules.';
   String get introTitle => 'Parent Guide';
   String get introBody =>
       'Use this guide to understand the meal flow and app rules before starting a Yamyam ride. This guide is for parents and other caregivers helping with mealtime.';
@@ -45,17 +46,17 @@ class EnUserGuideTexts implements UserGuideTextSet {
   List<String> get motivationItems => const [
     'Motivation videos are short cheers that can appear during a meal.',
     'They do not affect rewards, success, or incomplete results.',
-    'For courses up to 30 minutes, videos appear around 10%, 20%, and other 10% progress steps by default.',
+    'For courses up to 30 minutes, videos appear at every 10% progress step by default, such as 10%, 20%, and 30%.',
     'Very short custom courses may skip some steps so videos do not overlap too often.',
     'Long courses or custom interval mode may use time-based scheduling.',
     'You can choose 3, 5, or 10 minute intervals.',
     'If sound is off, the video may appear without voice playback.',
   ];
 
-  String get completionTitle => 'Complete, incomplete, and vehicle stickers';
+  String get completionTitle => 'Complete, incomplete, and stickers';
   List<String> get completionItems => const [
     'When you confirm the meal is finished, it is recorded as complete.',
-    'A completed meal earns 1 vehicle sticker for the selected vehicle.',
+    'A completed meal earns 1 sticker for the selected vehicle.',
     'If the planned time ends and the meal is not finished, tap “Not yet.” The meal is recorded as incomplete.',
     'Incomplete meals are saved in history but do not earn stickers.',
     'The child-facing result keeps a next-try tone instead of harsh failure wording.',
@@ -63,9 +64,9 @@ class EnUserGuideTexts implements UserGuideTextSet {
 
   String get historyRewardsTitle => 'Meal history and reward goals';
   List<String> get historyRewardsItems => const [
-    'Meal history shows target time, actual time, and completion status. It also shows earned vehicle stickers and manually chosen ingredients.',
-    'Earned vehicle stickers collect in the vehicle sticker collection screen.',
-    'If reward goals are active, vehicle stickers can fill goal slots.',
+    'Meal history shows target time, actual time, and completion status. It also shows earned stickers and manually chosen ingredients.',
+    'Earned stickers collect in the sticker collection screen.',
+    'If reward goals are active, stickers can fill goal slots.',
   ];
 
   String get exitResumeTitle => 'Leaving and resuming during a timer';

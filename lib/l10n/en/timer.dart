@@ -12,7 +12,7 @@ class EnTimerTexts implements TimerTextSet {
   String get progressAlmostThere => 'Almost there!';
   String get progressArrived => 'You arrived!';
   String get completeDialogTitle => 'Did you finish your meal?';
-  String get completeDialogMessage => 'Finish this mealtime ride?';
+  String get completeDialogMessage => 'End this mealtime ride?';
   String get exitDialogTitle => 'Leave this ride?';
   String get exitDialogMessage =>
       "If you leave now, this mealtime ride won't be saved.";
@@ -20,7 +20,7 @@ class EnTimerTexts implements TimerTextSet {
   String get exitDialogConfirmButton => 'Leave';
   String get pauseButton => 'Pause';
   String get completeMealButton => 'Meal done';
-  String get runningArrivalLabel => 'Mealtime left';
+  String get runningArrivalLabel => 'Time left';
   String get pausedTimeLabel => 'Taking a break';
   String get arrivedTimeLabel => 'Arrived';
   String get idleTimeLabel => 'Getting ready';
@@ -33,7 +33,7 @@ class EnTimerTexts implements TimerTextSet {
   String get previewGo => 'Go! 🌟';
 
   String arrivalDialogMessage(String vehicleLabel) {
-    return 'The ${vehicleLabel.toLowerCase()} passed by... did you finish your meal?';
+    return 'Time is up. Did you finish your meal?';
   }
 
   String remainingTime(String remaining) => 'Time left $remaining';

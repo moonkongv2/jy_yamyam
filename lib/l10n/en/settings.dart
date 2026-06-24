@@ -19,7 +19,7 @@ class EnSettingsTexts implements SettingsTextSet {
     'They do not decide success, incomplete results, or sticker rewards.',
   ];
   List<String> get motivationVideoHelpBulletItems => const [
-    'For courses up to 30 minutes, videos appear around 10%, 20%, and other 10% progress steps by default.',
+    'For courses up to 30 minutes, videos appear at every 10% progress step by default, such as 10%, 20%, and 30%.',
     'Very short custom courses may skip some steps so videos do not overlap too often.',
     'Courses longer than 30 minutes or custom interval mode may use time-based scheduling.',
     'Custom intervals can be set to 3, 5, or 10 minutes.',

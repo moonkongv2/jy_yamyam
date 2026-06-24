@@ -14,12 +14,12 @@ class EnResultTexts implements ResultTextSet {
 
   String primaryMessage(bool mealCompleted, {String? vehicleId}) =>
       mealCompleted
-      ? 'You finished the meal within the planned flow.'
+      ? 'You finished your meal within the planned time.'
       : _failedPrimaryMessagesByVehicle[vehicleId] ??
-            'The motorcycle passed by...';
+            'This meal needed a little more time today.';
 
   String secondaryMessage(bool mealCompleted) => mealCompleted
-      ? 'You finished your meal well and earned a vehicle sticker!'
+      ? 'You did a great job finishing your meal and earned a sticker!'
       : "Let's adjust the next mealtime a little.";
 
   String get parentTipLabel => 'Parent tips';
@@ -53,8 +53,8 @@ class EnResultTexts implements ResultTextSet {
 
   List<String> helpBulletItems(bool mealCompleted) => mealCompleted
       ? const [
-          'A completed meal earns 1 vehicle sticker for the selected vehicle.',
-          'If a reward goal is active, the vehicle sticker can fill one goal slot.',
+          'A completed meal earns 1 sticker for the selected vehicle.',
+          'If a reward goal is active, the sticker can fill one goal slot.',
         ]
       : const [
           'Incomplete meals stay in meal history, but no sticker is awarded.',
@@ -67,8 +67,8 @@ class EnResultTexts implements ResultTextSet {
   List<String> resultHelpMeaningItems(bool mealCompleted) => mealCompleted
       ? const [
           'When you confirm the meal is finished, it is recorded as complete.',
-          'A completed meal earns one vehicle sticker for the selected vehicle.',
-          'If a reward goal is active, the vehicle sticker can fill one goal slot.',
+          'A completed meal earns one sticker for the selected vehicle.',
+          'If a reward goal is active, the sticker can fill one goal slot.',
         ]
       : const [
           'The planned time ended while the meal was still unfinished, so it was recorded as incomplete.',
@@ -80,7 +80,7 @@ class EnResultTexts implements ResultTextSet {
 
   List<String> resultHelpSayItems(bool mealCompleted) => mealCompleted
       ? const [
-          'I really liked how you tried to eat during the planned time.',
+          'I really liked how you kept trying during your mealtime.',
           'You stuck with today’s ride all the way to the end.',
           'The sticker is fun, but finishing your meal is the biggest win.',
         ]
@@ -120,16 +120,16 @@ class EnResultTexts implements ResultTextSet {
 }
 
 const _failedPrimaryMessagesByVehicle = {
-  'motorcycle': 'The motorcycle passed by...',
-  'fire_truck': 'The fire truck headed out...',
-  'police_car': 'The police car passed by...',
-  'excavator': 'The excavator moved on...',
-  'airplane': 'The airplane flew away...',
-  'bus': 'The bus pulled away...',
-  'supercar': 'The supercar sped ahead...',
-  'train': 'The train left first...',
-  't_rex': 'The T-rex stomped by...',
-  'shark': 'The shark swam away...',
-  'brachio': 'The brachio walked on...',
-  'pteranodon': 'The pteranodon flew away...',
+  'motorcycle': 'This meal needed a little more time today.',
+  'fire_truck': 'This meal needed a little more time today.',
+  'police_car': 'This meal needed a little more time today.',
+  'excavator': 'This meal needed a little more time today.',
+  'airplane': 'This meal needed a little more time today.',
+  'bus': 'This meal needed a little more time today.',
+  'supercar': 'This meal needed a little more time today.',
+  'train': 'This meal needed a little more time today.',
+  't_rex': 'This meal needed a little more time today.',
+  'shark': 'This meal needed a little more time today.',
+  'brachio': 'This meal needed a little more time today.',
+  'pteranodon': 'This meal needed a little more time today.',
 };
