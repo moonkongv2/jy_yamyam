@@ -2553,6 +2553,13 @@ void main() {
 
     expect(find.byKey(const ValueKey('appHelpSheet')), findsOneWidget);
     expect(find.textContaining('직접 고른 식재료'), findsWidgets);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('appHelpSheet')),
+        matching: find.byType(Image),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Course ingredient off starts timer without picker', (
@@ -3889,6 +3896,13 @@ void main() {
 
     expect(find.byKey(const ValueKey('appHelpSheet')), findsOneWidget);
     expect(find.textContaining('직접 고른 식재료'), findsWidgets);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('appHelpSheet')),
+        matching: find.byType(Image),
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('Settings screen updates course ingredient mode', (tester) async {

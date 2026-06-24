@@ -9,6 +9,8 @@ import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
 import 'app/app_help_sheet.dart';
 
+const _ingredientGuideImageAssetPath = 'assets/images/ingredient_markers.png';
+
 sealed class MealIngredientPickerResult {
   const MealIngredientPickerResult();
 }
@@ -83,6 +85,7 @@ class _MealIngredientPickerSheetState extends State<MealIngredientPickerSheet> {
     showAppHelpSheet(
       context: context,
       title: texts.helpTitle,
+      imageAssetPath: _ingredientGuideImageAssetPath,
       bodyParagraphs: texts.helpBodyParagraphs,
       bulletItems: texts.helpBulletItems,
     );
