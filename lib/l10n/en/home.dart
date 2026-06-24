@@ -6,7 +6,6 @@ class EnHomeTexts implements HomeTextSet {
   const EnHomeTexts();
 
   String get subtitle => "Ready for today's mealtime ride?";
-  String get heroMissionTitle => "Today's Yamyam Mission";
   String get heroMissionSubtitle => 'Your rider is waiting for a tasty finish';
   String get todayVehicleTitle => "Today's vehicle";
   String get morningCourse => '15-min Ride';
@@ -44,6 +43,8 @@ class EnHomeTexts implements HomeTextSet {
   String activeTimerSubtitle(String remainingTime) => '$remainingTime left';
   String normalCourse(int minutes) => '$minutes-min Regular Ride';
   String alternateCourse(int minutes) => '$minutes-min Ride';
+  String heroMissionTitle(String childName) =>
+      "${_englishPossessive(childName)} Yamyam Mission";
   String alternateCourseSubtitle(int minutes) {
     return switch (minutes) {
       15 => 'A light warm-up',
@@ -57,4 +58,11 @@ class EnHomeTexts implements HomeTextSet {
   String mealCount(int count) => '$count';
   String stickerKindCount(int count) => '$count';
   String stickerCount(int count) => '$count';
+}
+
+String _englishPossessive(String name) {
+  if (name.endsWith('s') || name.endsWith('S')) {
+    return "$name'";
+  }
+  return "$name's";
 }

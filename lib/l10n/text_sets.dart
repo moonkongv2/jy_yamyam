@@ -15,7 +15,6 @@ abstract interface class CommonTextSet {
 
 abstract interface class HomeTextSet {
   String get subtitle;
-  String get heroMissionTitle;
   String get heroMissionSubtitle;
   String get todayVehicleTitle;
   String get morningCourse;
@@ -46,6 +45,7 @@ abstract interface class HomeTextSet {
   String get activeTimerStartNewButton;
   String get activeTimerArrivedSubtitle;
 
+  String heroMissionTitle(String childName);
   String recentCustomMinutes(int minutes);
   String minuteLabel(int minutes);
   String activeTimerSubtitle(String remainingTime);

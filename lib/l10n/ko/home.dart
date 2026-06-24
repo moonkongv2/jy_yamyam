@@ -6,7 +6,6 @@ class HomeTexts implements HomeTextSet {
   const HomeTexts();
 
   String get subtitle => '오늘도 냠냠 코스를 달려볼까?';
-  String get heroMissionTitle => '오늘의 냠냠 미션';
   String get heroMissionSubtitle => '라이더가 맛있는 완주를 기다리고 있어요';
   String get todayVehicleTitle => '오늘의 빠방';
   String get morningCourse => '15분 코스';
@@ -42,6 +41,8 @@ class HomeTexts implements HomeTextSet {
   String activeTimerSubtitle(String remainingTime) => '남은 시간 $remainingTime';
   String normalCourse(int minutes) => '$minutes분 보통 코스';
   String alternateCourse(int minutes) => '$minutes분 코스';
+  String heroMissionTitle(String childName) =>
+      '${_casualKoreanName(childName)}의 냠냠 미션';
   String alternateCourseSubtitle(int minutes) {
     return switch (minutes) {
       15 => '가볍게 워밍업',

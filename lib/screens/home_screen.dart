@@ -667,6 +667,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                 );
                 final heroCard = _HeroMissionCard(
+                  childName: childName,
                   ctaLabel:
                       '${texts.home.normalCourse(defaultMealMinutes)} ${texts.common.start}',
                   vehicle: selectedVehicle,
@@ -1275,6 +1276,7 @@ class _MinuteAdjustButton extends StatelessWidget {
 
 class _HeroMissionCard extends StatelessWidget {
   const _HeroMissionCard({
+    required this.childName,
     required this.ctaLabel,
     required this.vehicle,
     required this.avatar,
@@ -1282,6 +1284,7 @@ class _HeroMissionCard extends StatelessWidget {
     required this.onStart,
   });
 
+  final String childName;
   final String ctaLabel;
   final VehicleDefinition vehicle;
   final VehicleAvatarPresentation avatar;
@@ -1329,7 +1332,7 @@ class _HeroMissionCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        texts.home.heroMissionTitle,
+                        texts.home.heroMissionTitle(childName),
                         style: textTheme.titleLarge?.copyWith(
                           color: AppColors.textStrong,
                           fontWeight: FontWeight.w800,
