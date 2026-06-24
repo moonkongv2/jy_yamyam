@@ -3057,7 +3057,7 @@ void main() {
       await tester.pump();
     }
 
-    expect(find.text('오늘의 냠냠 미션'), findsOneWidget);
+    expect(find.text('지율이의 냠냠 미션'), findsOneWidget);
     expect(find.text('오늘의 빠방'), findsOneWidget);
     expect(find.text('아이 얼굴 탑승 중'), findsOneWidget);
     expect(
@@ -4277,11 +4277,47 @@ void main() {
         2;
     expect((thirdRowCenterX - firstRowCenterX).abs(), lessThan(1.0));
 
-    final missionTitleTop = tester.getTopLeft(find.text('오늘의 냠냠 미션')).dy;
+    final missionTitleTop = tester.getTopLeft(find.text('지율이의 냠냠 미션')).dy;
     final vehicleTitleTop = tester.getTopLeft(find.text('오늘의 빠방')).dy;
     final firstCourseTop = tester.getTopLeft(find.text('15분 코스')).dy;
     expect(missionTitleTop, lessThan(vehicleTitleTop));
     expect(vehicleTitleTop, lessThan(firstCourseTop));
+  });
+
+  testWidgets('Home mission title handles long child names on narrow screens', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+    await tester.binding.setSurfaceSize(const Size(320, 720));
+
+    const childName = '아주무지긴아이이름테스트지유나';
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        supportedLocales: const [Locale('ko'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        home: HomeScreen(
+          config: MealTimerConfig.defaults().copyWith(childName: childName),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final missionTitle = find.text('$childName의 냠냠 미션');
+    expect(missionTitle, findsOneWidget);
+    final titleWidget = tester.widget<Text>(missionTitle);
+    expect(titleWidget.maxLines, 2);
+    expect(titleWidget.overflow, TextOverflow.ellipsis);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets(
