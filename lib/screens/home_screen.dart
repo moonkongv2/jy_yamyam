@@ -1333,6 +1333,9 @@ class _HeroMissionCard extends StatelessWidget {
                     children: [
                       Text(
                         texts.home.heroMissionTitle(childName),
+                        softWrap: true,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: textTheme.titleLarge?.copyWith(
                           color: AppColors.textStrong,
                           fontWeight: FontWeight.w800,
