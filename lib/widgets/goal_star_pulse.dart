@@ -36,11 +36,11 @@ class _GoalStarPulseState extends State<GoalStarPulse>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
     );
     _scaleAnimation = Tween<double>(
       begin: 1,
-      end: 1.07,
+      end: 1.18,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
@@ -90,15 +90,15 @@ class _GoalStarPulseState extends State<GoalStarPulse>
               alignment: Alignment.center,
               children: [
                 Transform.scale(
-                  scale: 1 + (pulseValue * 0.16),
+                  scale: 1 + (pulseValue * 0.62),
                   child: Opacity(
-                    opacity: 0.16 - (pulseValue * 0.07),
+                    opacity: 0.42 - (pulseValue * 0.36),
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: const Color(0xFFFFDC71),
-                          width: widget.size * 0.045,
+                          width: widget.size * 0.075,
                         ),
                       ),
                       child: SizedBox.square(dimension: widget.size * 0.82),

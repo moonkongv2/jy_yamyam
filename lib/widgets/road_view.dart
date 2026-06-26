@@ -122,7 +122,7 @@ class RoadView extends StatelessWidget {
         final visualStyle = RoadCourseVisualStyle.forCourseKind(
           vehicle.courseKind,
         );
-        final goalStarSize = isLandscape ? 96.0 : 78.0;
+        final goalStarSize = isLandscape ? 68.0 : 56.0;
 
         return DecoratedBox(
           decoration: BoxDecoration(
@@ -164,6 +164,7 @@ class RoadView extends StatelessWidget {
                           clearProgress: clearProgress,
                           geometry: geometry,
                           markerSize: isLandscape ? 50 : 33,
+                          goalStarSize: goalStarSize,
                         ),
                       _RoadMarker(
                         position: roadPointForGeometryProgress(geometry, 0),
@@ -232,17 +233,35 @@ Offset _goalStarCenterForGeometry({
   required double size,
 }) {
   final endpoint = roadPointForGeometryProgress(geometry, 1);
-  final horizontalDirection = endpoint.dx < geometry.roadBounds.center.dx
-      ? 1.0
-      : -1.0;
-  final target =
-      endpoint + Offset(horizontalDirection * size * 1.55, -size * 0.34);
+  final tangent = roadTangentForGeometryProgress(geometry, 1).vector;
+  final direction = _normalizedOffset(tangent, const Offset(0, -1));
+  final normalA = Offset(-direction.dy, direction.dx);
+  final normalB = Offset(direction.dy, -direction.dx);
+  final awayFromCenter = _normalizedOffset(
+    endpoint - geometry.roadBounds.center,
+    normalA,
+  );
+  final outwardNormal =
+      normalA.dx * awayFromCenter.dx + normalA.dy * awayFromCenter.dy >=
+          normalB.dx * awayFromCenter.dx + normalB.dy * awayFromCenter.dy
+      ? normalA
+      : normalB;
+  final target = endpoint + (outwardNormal * size * 0.24);
   final margin = size / 2 + 6;
 
   return Offset(
     target.dx.clamp(margin, geometry.canvasSize.width - margin).toDouble(),
     target.dy.clamp(margin, geometry.canvasSize.height - margin).toDouble(),
   );
+}
+
+Offset _normalizedOffset(Offset offset, Offset fallback) {
+  final distance = offset.distance;
+  if (distance <= 0.0001) {
+    return fallback;
+  }
+
+  return offset / distance;
 }
 
 class _GoalStarMarker extends StatelessWidget {
@@ -471,12 +490,14 @@ class _RoadIngredientLayer extends StatelessWidget {
     required this.clearProgress,
     required this.geometry,
     required this.markerSize,
+    required this.goalStarSize,
   });
 
   final List<MealIngredientDefinition> ingredients;
   final double clearProgress;
   final RoadCourseGeometry geometry;
   final double markerSize;
+  final double goalStarSize;
 
   @override
   Widget build(BuildContext context) {
@@ -489,7 +510,13 @@ class _RoadIngredientLayer extends StatelessWidget {
               ingredient: ingredients[index],
               index: index,
               markerSize: markerSize,
-              progress: (index + 1) / (ingredients.length + 1),
+              progress: _ingredientSlotProgress(
+                index: index,
+                slotCount: ingredients.length,
+                geometry: geometry,
+                markerSize: markerSize,
+                goalStarSize: goalStarSize,
+              ),
               clearProgress: clearProgress,
               geometry: geometry,
             ),
@@ -497,6 +524,30 @@ class _RoadIngredientLayer extends StatelessWidget {
       ),
     );
   }
+}
+
+double _ingredientSlotProgress({
+  required int index,
+  required int slotCount,
+  required RoadCourseGeometry geometry,
+  required double markerSize,
+  required double goalStarSize,
+}) {
+  final roadLength = roadMetricForGeometry(geometry).length;
+  if (roadLength <= 0 || slotCount <= 0) {
+    return 0;
+  }
+
+  final startReserve = markerSize * 0.8;
+  final finishReserve = goalStarSize + (markerSize * 1.6);
+  final availableLength = math.max(
+    0.0,
+    roadLength - startReserve - finishReserve,
+  );
+  final slotDistance =
+      startReserve + (availableLength * (index + 1) / (slotCount + 1));
+
+  return (slotDistance / roadLength).clamp(0.0, 1.0).toDouble();
 }
 
 class _RoadIngredientMarker extends StatelessWidget {

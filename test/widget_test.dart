@@ -4641,6 +4641,125 @@ void main() {
     );
   });
 
+  testWidgets('Road view anchors finish star near the route endpoint', (
+    tester,
+  ) async {
+    Future<void> expectStarNearEndpoint({
+      required Size roadSize,
+      required Duration courseDuration,
+      required double cameraProgress,
+    }) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: roadSize.width,
+              height: roadSize.height,
+              child: RoadView(
+                cameraProgress: cameraProgress,
+                vehicleProgress: 0.35,
+                vehicle: VehicleCatalog.fireTruck,
+                showVehicle: false,
+                courseDuration: courseDuration,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final geometry = createRoadCourseGeometry(
+        viewportSize: roadSize,
+        duration: courseDuration,
+      );
+      final cameraOffsetY = roadCameraOffsetForGeometryProgress(
+        geometry: geometry,
+        progress: cameraProgress,
+      );
+      final roadRect = tester.getRect(find.byType(RoadView));
+      final starCenter =
+          tester.getCenter(find.byType(GoalStarPulse)) -
+          roadRect.topLeft +
+          Offset(0, cameraOffsetY);
+      final starRect = tester.getRect(find.byType(GoalStarPulse));
+      final endpoint = roadPointForGeometryProgress(geometry, 1);
+      final endpointInViewport =
+          roadRect.topLeft + endpoint - Offset(0, cameraOffsetY);
+      final starSize = roadSize.width > roadSize.height ? 68.0 : 56.0;
+
+      expect((starCenter - endpoint).distance, lessThan(starSize * 0.7));
+      expect(starRect.inflate(2).contains(endpointInViewport), isTrue);
+    }
+
+    await expectStarNearEndpoint(
+      roadSize: const Size(420, 640),
+      courseDuration: const Duration(minutes: 5),
+      cameraProgress: 0,
+    );
+    await expectStarNearEndpoint(
+      roadSize: const Size(800, 400),
+      courseDuration: const Duration(minutes: 5),
+      cameraProgress: 0,
+    );
+    await expectStarNearEndpoint(
+      roadSize: const Size(420, 640),
+      courseDuration: const Duration(minutes: 60),
+      cameraProgress: 1,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets(
+    'GoalStarPulse has a stronger pulse and respects reduced motion',
+    (tester) async {
+      double maxTransformScale() {
+        var maxScale = 0.0;
+        final transforms = tester.widgetList<Transform>(
+          find.descendant(
+            of: find.byType(GoalStarPulse),
+            matching: find.byType(Transform),
+          ),
+        );
+
+        for (final transform in transforms) {
+          final scale = transform.transform.storage[0];
+          if (scale > maxScale) {
+            maxScale = scale;
+          }
+        }
+
+        return maxScale;
+      }
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: Center(child: GoalStarPulse(size: 100))),
+        ),
+      );
+      await tester.pump();
+      expect(maxTransformScale(), closeTo(1, 0.001));
+
+      await tester.pump(const Duration(milliseconds: 1200));
+      expect(maxTransformScale(), greaterThan(1.55));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: MediaQuery(
+              data: MediaQueryData(disableAnimations: true),
+              child: Center(child: GoalStarPulse(size: 100)),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 1200));
+      expect(maxTransformScale(), closeTo(1, 0.001));
+    },
+  );
+
   testWidgets('Road view passes each vehicle course kind to the road painter', (
     tester,
   ) async {
@@ -4782,6 +4901,39 @@ void main() {
         find.byKey(ValueKey('roadIngredientMarker_$index')),
         findsOneWidget,
       );
+    }
+  });
+
+  testWidgets('RoadView keeps dense ingredient markers clear of finish star', (
+    tester,
+  ) async {
+    final ingredients = MealIngredientCatalog.courseSlotsFor(['carrot', 'egg']);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 420,
+            height: 640,
+            child: RoadView(
+              progress: 0,
+              vehicle: VehicleCatalog.fireTruck,
+              showVehicle: false,
+              ingredients: ingredients,
+              ingredientClearProgress: 0,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final starRect = tester.getRect(find.byType(GoalStarPulse));
+    for (var index = 0; index < ingredients.length; index += 1) {
+      final ingredientRect = tester.getRect(
+        find.byKey(ValueKey('roadIngredientMarker_$index')),
+      );
+      expect(ingredientRect.overlaps(starRect), isFalse);
     }
   });
 
