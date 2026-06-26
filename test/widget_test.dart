@@ -50,6 +50,7 @@ import 'package:jy_yamyam/utils/motivation_video_schedule.dart'
     as motivation_schedule;
 import 'package:jy_yamyam/widgets/app/app_bouncy_button.dart';
 import 'package:jy_yamyam/widgets/avatar/avatar_composite_preview.dart';
+import 'package:jy_yamyam/widgets/goal_star_pulse.dart';
 import 'package:jy_yamyam/widgets/road_painter.dart';
 import 'package:jy_yamyam/widgets/road_view.dart';
 import 'package:jy_yamyam/widgets/reward_sticker_image.dart';
@@ -4602,7 +4603,8 @@ void main() {
     expect(find.byIcon(Icons.star_rounded), findsNothing);
     expect(find.byIcon(Icons.restaurant_rounded), findsNothing);
     expect(find.byIcon(Icons.emoji_events_rounded), findsNothing);
-    expect(find.byIcon(Icons.flag_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.flag_rounded), findsNothing);
+    expect(find.byType(GoalStarPulse), findsOneWidget);
 
     const roadSize = Size(420, 640);
     final roadBounds = createRoadBounds(roadSize);
@@ -6712,7 +6714,7 @@ void main() {
       isTrue,
     );
     expect(
-      roadRect.contains(tester.getCenter(find.byIcon(Icons.flag_rounded))),
+      roadRect.contains(tester.getCenter(find.byType(GoalStarPulse))),
       isTrue,
     );
     expect(

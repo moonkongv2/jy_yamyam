@@ -14,14 +14,16 @@ import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
+import 'goal_star_pulse.dart';
 import 'road_painter.dart';
 import 'vehicle_widget.dart';
 
 class RoadView extends StatelessWidget {
   const RoadView({
     super.key,
-    required this.cameraProgress,
-    required this.vehicleProgress,
+    double? progress,
+    double? cameraProgress,
+    double? vehicleProgress,
     required this.vehicle,
     this.avatar = VehicleAvatarPresentation.defaultImage,
     this.avatarImageBuilder,
@@ -34,8 +36,11 @@ class RoadView extends StatelessWidget {
     this.ingredientClearProgress,
     this.isRoadMotionActive = false,
     this.courseDuration = const Duration(minutes: 5),
-  });
+  }) : cameraProgress = cameraProgress ?? progress ?? 0,
+       vehicleProgress = vehicleProgress ?? progress ?? 0,
+       progress = vehicleProgress ?? progress ?? 0;
 
+  final double progress;
   final double cameraProgress;
   final double vehicleProgress;
   final VehicleDefinition vehicle;
@@ -95,7 +100,9 @@ class RoadView extends StatelessWidget {
             ? viewportSize.height * 0.18
             : videoMargin;
         final clampedCameraProgress = cameraProgress.clamp(0.0, 1.0).toDouble();
-        final clampedVehicleProgress = vehicleProgress.clamp(0.0, 1.0).toDouble();
+        final clampedVehicleProgress = vehicleProgress
+            .clamp(0.0, 1.0)
+            .toDouble();
         final cameraOffsetY = roadCameraOffsetForGeometryProgress(
           geometry: geometry,
           progress: clampedCameraProgress,
@@ -108,12 +115,14 @@ class RoadView extends StatelessWidget {
           cameraOffsetY: cameraOffsetY,
           isLandscape: isLandscape,
         );
-        final clearProgress = (ingredientClearProgress ?? clampedVehicleProgress)
-            .clamp(0.0, 1.0)
-            .toDouble();
+        final clearProgress =
+            (ingredientClearProgress ?? clampedVehicleProgress)
+                .clamp(0.0, 1.0)
+                .toDouble();
         final visualStyle = RoadCourseVisualStyle.forCourseKind(
           vehicle.courseKind,
         );
+        final goalStarSize = isLandscape ? 96.0 : 78.0;
 
         return DecoratedBox(
           decoration: BoxDecoration(
@@ -163,12 +172,14 @@ class RoadView extends StatelessWidget {
                         isActive: true,
                         size: isLandscape ? 42 : 36,
                       ),
-                      _RoadMarker(
-                        position: roadPointForGeometryProgress(geometry, 1),
-                        icon: Icons.flag_rounded,
-                        label: texts.common.complete,
-                        isActive: clampedVehicleProgress >= 1,
-                        size: isLandscape ? 42 : 36,
+                      _GoalStarMarker(
+                        position: _goalStarCenterForGeometry(
+                          geometry: geometry,
+                          size: goalStarSize,
+                        ),
+                        size: goalStarSize,
+                        isPulsing: isRoadMotionActive,
+                        semanticLabel: _finishPointSemanticLabel(context),
                       ),
                       if (showVehicle)
                         _PositionedRoadVehicle(
@@ -206,6 +217,61 @@ class RoadView extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+String _finishPointSemanticLabel(BuildContext context) {
+  return Localizations.localeOf(context).languageCode == 'ko'
+      ? '도착 지점'
+      : 'finish point';
+}
+
+Offset _goalStarCenterForGeometry({
+  required RoadCourseGeometry geometry,
+  required double size,
+}) {
+  final endpoint = roadPointForGeometryProgress(geometry, 1);
+  final horizontalDirection = endpoint.dx < geometry.roadBounds.center.dx
+      ? 1.0
+      : -1.0;
+  final target =
+      endpoint + Offset(horizontalDirection * size * 1.55, -size * 0.34);
+  final margin = size / 2 + 6;
+
+  return Offset(
+    target.dx.clamp(margin, geometry.canvasSize.width - margin).toDouble(),
+    target.dy.clamp(margin, geometry.canvasSize.height - margin).toDouble(),
+  );
+}
+
+class _GoalStarMarker extends StatelessWidget {
+  const _GoalStarMarker({
+    required this.position,
+    required this.size,
+    required this.isPulsing,
+    required this.semanticLabel,
+  });
+
+  final Offset position;
+  final double size;
+  final bool isPulsing;
+  final String semanticLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: position.dx - (size / 2),
+      top: position.dy - (size / 2),
+      width: size,
+      height: size,
+      child: IgnorePointer(
+        child: GoalStarPulse(
+          size: size,
+          isPulsing: isPulsing,
+          semanticLabel: semanticLabel,
+        ),
+      ),
     );
   }
 }
@@ -598,14 +664,18 @@ class RoadMotivationVideoLayer extends StatelessWidget {
 class RoadVehicleLayer extends StatelessWidget {
   const RoadVehicleLayer({
     super.key,
-    required this.cameraProgress,
-    required this.vehicleProgress,
+    double? progress,
+    double? cameraProgress,
+    double? vehicleProgress,
     required this.vehicle,
     this.avatar = VehicleAvatarPresentation.defaultImage,
     this.avatarImageBuilder,
     this.courseDuration = const Duration(minutes: 5),
-  });
+  }) : cameraProgress = cameraProgress ?? progress ?? 0,
+       vehicleProgress = vehicleProgress ?? progress ?? 0,
+       progress = vehicleProgress ?? progress ?? 0;
 
+  final double progress;
   final double cameraProgress;
   final double vehicleProgress;
   final VehicleDefinition vehicle;
@@ -639,8 +709,12 @@ class RoadVehicleLayer extends StatelessWidget {
                 ),
               )
               .toDouble();
-          final clampedCameraProgress = cameraProgress.clamp(0.0, 1.0).toDouble();
-          final clampedVehicleProgress = vehicleProgress.clamp(0.0, 1.0).toDouble();
+          final clampedCameraProgress = cameraProgress
+              .clamp(0.0, 1.0)
+              .toDouble();
+          final clampedVehicleProgress = vehicleProgress
+              .clamp(0.0, 1.0)
+              .toDouble();
           final cameraOffsetY = roadCameraOffsetForGeometryProgress(
             geometry: geometry,
             progress: clampedCameraProgress,
@@ -698,7 +772,7 @@ _RoadVehiclePlacement _roadVehiclePlacementForGeometryProgress({
     geometry,
     progress,
   );
-  
+
   final roadPosition = roadPointForGeometryProgress(geometry, progress);
   final anchorOffset = _vehicleRoadAnchorOffset(
     vehicle: vehicle,
@@ -712,7 +786,8 @@ _RoadVehiclePlacement _roadVehiclePlacementForGeometryProgress({
     geometry: geometry,
     progress: progress,
   );
-  final baselineViewportRoadPosition = roadPosition - Offset(0, baselineCameraOffsetY);
+  final baselineViewportRoadPosition =
+      roadPosition - Offset(0, baselineCameraOffsetY);
   final baselineVehiclePosition = baselineViewportRoadPosition + anchorOffset;
   final baselineBoundedOffset = _boundedVehicleOffset(
     size: geometry.viewportSize,
@@ -724,7 +799,7 @@ _RoadVehiclePlacement _roadVehiclePlacementForGeometryProgress({
     baselineVehiclePosition.dy - (vehicleSize / 2),
   );
   final correction = baselineBoundedOffset - baselineRawOffset;
-  
+
   // Calculate actual raw position (with current camera)
   final actualViewportRoadPosition = roadPosition - Offset(0, cameraOffsetY);
   final actualVehiclePosition = actualViewportRoadPosition + anchorOffset;
@@ -732,7 +807,7 @@ _RoadVehiclePlacement _roadVehiclePlacementForGeometryProgress({
     actualVehiclePosition.dx - (vehicleSize / 2),
     actualVehiclePosition.dy - (vehicleSize / 2),
   );
-  
+
   final viewportOffset = actualRawOffset + correction;
 
   return _RoadVehiclePlacement(
