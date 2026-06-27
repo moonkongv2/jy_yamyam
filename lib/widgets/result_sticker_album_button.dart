@@ -40,7 +40,12 @@ class _ResultStickerAlbumButtonState extends State<ResultStickerAlbumButton>
     _scaleAnimation = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.2), weight: 1),
       TweenSequenceItem(
-          tween: Tween(begin: 1.2, end: 1.0).chain(CurveTween(curve: Curves.elasticOut)), weight: 3),
+        tween: Tween(
+          begin: 1.2,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.elasticOut)),
+        weight: 3,
+      ),
     ]).animate(_bounceController);
 
     if (widget.badgeJustUpdated) {
@@ -79,7 +84,7 @@ class _ResultStickerAlbumButtonState extends State<ResultStickerAlbumButton>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.black.withOpacity(0.1),
+                    color: AppColors.black.withValues(alpha: 0.1),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -107,9 +112,9 @@ class _ResultStickerAlbumButtonState extends State<ResultStickerAlbumButton>
                 child: Text(
                   '${widget.collectedCount}/${widget.totalCount}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.textStrong,
-                      ),
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textStrong,
+                  ),
                 ),
               ),
             ),

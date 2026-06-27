@@ -18,7 +18,6 @@ import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/app/app_help_sheet.dart';
 import '../widgets/flying_sticker_animation.dart';
-import '../widgets/meal_message_card.dart';
 import '../widgets/result_sticker_album_button.dart';
 import '../widgets/result_sticker_album_sheet.dart';
 import '../widgets/reward_sticker_image.dart';
@@ -455,7 +454,8 @@ class _ResultScreenState extends State<ResultScreen> {
                       isNewSticker = item != null && item.count == 1;
                     }
 
-                    int displayCount = recordedSession.collectedStickerTypeCount;
+                    int displayCount =
+                        recordedSession.collectedStickerTypeCount;
                     bool badgeJustUpdated = false;
                     if (hasAward && !_flyingAnimationFinished) {
                       if (isNewSticker) {
