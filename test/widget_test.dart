@@ -4668,15 +4668,15 @@ void main() {
       );
       await tester.pump();
 
+      final roadRect = tester.getRect(find.byType(RoadView));
       final geometry = createRoadCourseGeometry(
-        viewportSize: roadSize,
+        viewportSize: roadRect.size,
         duration: courseDuration,
       );
       final cameraOffsetY = roadCameraOffsetForGeometryProgress(
         geometry: geometry,
         progress: cameraProgress,
       );
-      final roadRect = tester.getRect(find.byType(RoadView));
       final starCenter =
           tester.getCenter(find.byType(GoalStarPulse)) -
           roadRect.topLeft +
@@ -4685,9 +4685,10 @@ void main() {
       final endpoint = roadPointForGeometryProgress(geometry, 1);
       final endpointInViewport =
           roadRect.topLeft + endpoint - Offset(0, cameraOffsetY);
-      final starSize = roadSize.width > roadSize.height ? 68.0 : 56.0;
+      final starSize = roadRect.width > roadRect.height ? 68.0 : 56.0;
+      final expectedStarCenter = endpoint - Offset(0, starSize * 0.08);
 
-      expect((starCenter - endpoint).distance, lessThan(starSize * 0.7));
+      expect((starCenter - expectedStarCenter).distance, lessThan(1));
       expect(starRect.inflate(2).contains(endpointInViewport), isTrue);
     }
 

@@ -233,35 +233,15 @@ Offset _goalStarCenterForGeometry({
   required double size,
 }) {
   final endpoint = roadPointForGeometryProgress(geometry, 1);
-  final tangent = roadTangentForGeometryProgress(geometry, 1).vector;
-  final direction = _normalizedOffset(tangent, const Offset(0, -1));
-  final normalA = Offset(-direction.dy, direction.dx);
-  final normalB = Offset(direction.dy, -direction.dx);
-  final awayFromCenter = _normalizedOffset(
-    endpoint - geometry.roadBounds.center,
-    normalA,
-  );
-  final outwardNormal =
-      normalA.dx * awayFromCenter.dx + normalA.dy * awayFromCenter.dy >=
-          normalB.dx * awayFromCenter.dx + normalB.dy * awayFromCenter.dy
-      ? normalA
-      : normalB;
-  final target = endpoint + (outwardNormal * size * 0.24);
+  final opticalCenterOffsetY = size * 0.08;
   final margin = size / 2 + 6;
 
   return Offset(
-    target.dx.clamp(margin, geometry.canvasSize.width - margin).toDouble(),
-    target.dy.clamp(margin, geometry.canvasSize.height - margin).toDouble(),
+    endpoint.dx.clamp(margin, geometry.canvasSize.width - margin).toDouble(),
+    (endpoint.dy - opticalCenterOffsetY)
+        .clamp(margin, geometry.canvasSize.height - margin)
+        .toDouble(),
   );
-}
-
-Offset _normalizedOffset(Offset offset, Offset fallback) {
-  final distance = offset.distance;
-  if (distance <= 0.0001) {
-    return fallback;
-  }
-
-  return offset / distance;
 }
 
 class _GoalStarMarker extends StatelessWidget {
