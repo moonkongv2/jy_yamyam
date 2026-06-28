@@ -55,6 +55,7 @@ import 'package:jy_yamyam/widgets/goal_star_pulse.dart';
 import 'package:jy_yamyam/widgets/road_painter.dart';
 import 'package:jy_yamyam/widgets/road_view.dart';
 import 'package:jy_yamyam/widgets/reward_sticker_image.dart';
+import 'package:jy_yamyam/widgets/result_sticker_album_button.dart';
 import 'package:jy_yamyam/widgets/result_sticker_album_sheet.dart';
 import 'package:jy_yamyam/widgets/timer_control_bar.dart';
 import 'package:jy_yamyam/widgets/vehicle_selection_card.dart';
@@ -896,7 +897,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('식사 완주 성공!'), findsOneWidget);
+    expect(find.text('식사 시간을 잘 마무리했어!'), findsOneWidget);
     expect(
       _assetImage('assets/images/result_success_bg_portrait.png'),
       findsOneWidget,
@@ -950,7 +951,7 @@ void main() {
 
     expect(find.byKey(const ValueKey('appHelpSheet')), findsOneWidget);
     expect(find.text('아이에게 이렇게 말해보세요'), findsWidgets);
-    expect(find.text('끝까지 먹어보려고 한 게 정말 좋았어.'), findsOneWidget);
+    expect(find.text('정해둔 시간 동안 먹어보려고 한 게 정말 좋았어.'), findsOneWidget);
     expect(find.text('빨리 먹어서 잘했어.'), findsOneWidget);
     expect(find.textContaining('스티커 1개'), findsOneWidget);
   });
@@ -1191,6 +1192,8 @@ void main() {
       find.byKey(const ValueKey('incompleteResultGuardianTipButton')),
       findsOneWidget,
     );
+    expect(find.widgetWithText(FilledButton, '다시 출발'), findsOneWidget);
+    expect(find.widgetWithText(OutlinedButton, '홈으로'), findsOneWidget);
     expect(find.text('버스가 먼저 출발했어.'), findsOneWidget);
     expect(
       _assetImage('assets/images/result_failed_bg_landscape.png'),
@@ -1243,17 +1246,52 @@ void main() {
     final restartButton = find.widgetWithText(FilledButton, '다시 출발');
     final homeButton = find.widgetWithText(OutlinedButton, '홈으로');
 
-    expect(find.text('식사 완주 성공!'), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('completedResultGuardianTipButton')),
-      findsOneWidget,
+    final title = find.text('식사 시간을 잘 마무리했어!');
+    final secondaryMessage = find.text('식사를 잘 마쳐서 차량 스티커를 받았어!');
+    final guardianTipButton = find.byKey(
+      const ValueKey('completedResultGuardianTipButton'),
     );
+    final rewardBox = find.byKey(const ValueKey('compactLandscapeRewardBox'));
+    final messageBox = find.byKey(const ValueKey('compactLandscapeMessageBox'));
+    final stickerAlbumButton = find.byType(ResultStickerAlbumButton);
+
+    expect(title, findsOneWidget);
+    expect(guardianTipButton, findsOneWidget);
+    expect(rewardBox, findsOneWidget);
+    expect(messageBox, findsOneWidget);
     expect(
       _assetImage('assets/images/result_success_bg_landscape.png'),
       findsOneWidget,
     );
     expect(restartButton, findsOneWidget);
     expect(homeButton, findsOneWidget);
+    expect(stickerAlbumButton, findsOneWidget);
+    expect(
+      tester.getRect(title).bottom,
+      lessThan(tester.getRect(guardianTipButton).top),
+    );
+    expect(
+      tester.getRect(guardianTipButton).bottom,
+      greaterThan(tester.getRect(secondaryMessage).bottom),
+    );
+    expect(
+      tester.getRect(guardianTipButton).bottom,
+      lessThan(tester.getRect(restartButton).top),
+    );
+    final rewardRect = tester.getRect(rewardBox);
+    final messageRect = tester.getRect(messageBox);
+    final restartRect = tester.getRect(restartButton);
+    final homeRect = tester.getRect(homeButton);
+    final tipRect = tester.getRect(guardianTipButton);
+
+    expect(restartRect.left, closeTo(rewardRect.left, 0.1));
+    expect(homeRect.right, closeTo(messageRect.right, 0.1));
+    expect(
+      tester.getSize(restartButton).width,
+      closeTo(tester.getSize(homeButton).width, 0.1),
+    );
+    expect(tipRect.left, closeTo(messageRect.left, 0.1));
+    expect(tipRect.right, closeTo(messageRect.right, 0.1));
     expect(cardRect.contains(tester.getCenter(restartButton)), isTrue);
     expect(cardRect.contains(tester.getCenter(homeButton)), isTrue);
     expect(
