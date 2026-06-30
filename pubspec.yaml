@@ -44,6 +44,7 @@ dependencies:
   wakelock_plus: ^1.6.1
   audioplayers: ^6.7.0
   flutter_svg: ^2.3.0
+  in_app_purchase: ^3.3.0
 
 dev_dependencies:
   flutter_test:
