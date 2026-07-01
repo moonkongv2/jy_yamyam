@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'controllers/vehicle_pack_purchase_controller.dart';
 import 'l10n/app_texts.dart';
 import 'models/meal_timer_config.dart';
+import 'models/purchase_entitlement.dart';
 import 'navigation/app_route_observer.dart';
 import 'screens/child_name_setup_screen.dart';
 import 'screens/first_run_onboarding_screen.dart';
@@ -20,6 +22,8 @@ class YamyamRiderApp extends StatefulWidget {
     required this.mealProgressService,
     required this.initialConfig,
     required this.initialHasSeenFirstRunOnboarding,
+    this.initialPurchaseEntitlement = const PurchaseEntitlement.locked(),
+    this.purchaseController,
     this.activeSessionStore = const ActiveMealTimerSessionStore(),
     this.showSplashOnStart = true,
   });
@@ -28,6 +32,8 @@ class YamyamRiderApp extends StatefulWidget {
   final LocalMealProgressService mealProgressService;
   final MealTimerConfig initialConfig;
   final bool initialHasSeenFirstRunOnboarding;
+  final PurchaseEntitlement initialPurchaseEntitlement;
+  final VehiclePackPurchaseController? purchaseController;
   final ActiveMealTimerSessionStore activeSessionStore;
   final bool showSplashOnStart;
 
@@ -37,9 +43,49 @@ class YamyamRiderApp extends StatefulWidget {
 
 class _YamyamRiderAppState extends State<YamyamRiderApp> {
   late MealTimerConfig _config = widget.initialConfig;
+  late PurchaseEntitlement _purchaseEntitlement =
+      widget.purchaseController?.entitlement ??
+      widget.initialPurchaseEntitlement;
   late bool _showSplash = widget.showSplashOnStart;
   late bool _hasSeenFirstRunOnboarding =
       widget.initialHasSeenFirstRunOnboarding;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.purchaseController?.addListener(_syncPurchaseEntitlement);
+  }
+
+  @override
+  void didUpdateWidget(covariant YamyamRiderApp oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.purchaseController != widget.purchaseController) {
+      oldWidget.purchaseController?.removeListener(_syncPurchaseEntitlement);
+      widget.purchaseController?.addListener(_syncPurchaseEntitlement);
+      _purchaseEntitlement =
+          widget.purchaseController?.entitlement ??
+          widget.initialPurchaseEntitlement;
+    } else if (widget.purchaseController == null &&
+        oldWidget.initialPurchaseEntitlement !=
+            widget.initialPurchaseEntitlement) {
+      _purchaseEntitlement = widget.initialPurchaseEntitlement;
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.purchaseController?.removeListener(_syncPurchaseEntitlement);
+    super.dispose();
+  }
+
+  void _syncPurchaseEntitlement() {
+    final entitlement = widget.purchaseController?.entitlement;
+    if (entitlement == null || entitlement == _purchaseEntitlement) {
+      return;
+    }
+
+    setState(() => _purchaseEntitlement = entitlement);
+  }
 
   Future<void> _saveConfig(MealTimerConfig config) async {
     setState(() => _config = config);
@@ -71,29 +117,62 @@ class _YamyamRiderAppState extends State<YamyamRiderApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      onGenerateTitle: (context) => AppTexts.of(context).common.appTitle,
-      supportedLocales: AppTexts.supportedLocales,
-      navigatorObservers: [appRouteObserver],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
-      theme: AppTheme.light(),
-      home: _showSplash
-          ? SplashScreen(onFinished: _finishSplash)
-          : _shouldShowFirstRunOnboarding
-          ? FirstRunOnboardingScreen(onCompleted: _completeFirstRunOnboarding)
-          : _hasChildName
-          ? HomeScreen(
-              config: _config,
-              mealProgressService: widget.mealProgressService,
-              activeSessionStore: widget.activeSessionStore,
-              onConfigChanged: _saveConfig,
-            )
-          : ChildNameSetupScreen(onNameSaved: _saveChildName),
+    return PurchaseEntitlementScope(
+      entitlement: _purchaseEntitlement,
+      purchaseController: widget.purchaseController,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        onGenerateTitle: (context) => AppTexts.of(context).common.appTitle,
+        supportedLocales: AppTexts.supportedLocales,
+        navigatorObservers: [appRouteObserver],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        theme: AppTheme.light(),
+        home: _showSplash
+            ? SplashScreen(onFinished: _finishSplash)
+            : _shouldShowFirstRunOnboarding
+            ? FirstRunOnboardingScreen(onCompleted: _completeFirstRunOnboarding)
+            : _hasChildName
+            ? HomeScreen(
+                config: _config,
+                mealProgressService: widget.mealProgressService,
+                activeSessionStore: widget.activeSessionStore,
+                onConfigChanged: _saveConfig,
+              )
+            : ChildNameSetupScreen(onNameSaved: _saveChildName),
+      ),
     );
+  }
+}
+
+class PurchaseEntitlementScope extends InheritedWidget {
+  const PurchaseEntitlementScope({
+    super.key,
+    required this.entitlement,
+    required this.purchaseController,
+    required super.child,
+  });
+
+  final PurchaseEntitlement entitlement;
+  final VehiclePackPurchaseController? purchaseController;
+
+  static PurchaseEntitlementScope of(BuildContext context) {
+    final scope = maybeOf(context);
+    assert(scope != null, 'No PurchaseEntitlementScope found in context.');
+    return scope!;
+  }
+
+  static PurchaseEntitlementScope? maybeOf(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<PurchaseEntitlementScope>();
+  }
+
+  @override
+  bool updateShouldNotify(PurchaseEntitlementScope oldWidget) {
+    return oldWidget.entitlement != entitlement ||
+        oldWidget.purchaseController != purchaseController;
   }
 }
