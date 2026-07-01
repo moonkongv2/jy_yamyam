@@ -14,6 +14,7 @@ import 'services/active_meal_timer_session_store.dart';
 import 'services/local_meal_progress_service.dart';
 import 'services/local_settings_service.dart';
 import 'theme/app_theme.dart';
+import 'widgets/purchases/purchase_entitlement_scope.dart';
 
 class YamyamRiderApp extends StatefulWidget {
   const YamyamRiderApp({
@@ -145,34 +146,5 @@ class _YamyamRiderAppState extends State<YamyamRiderApp> {
             : ChildNameSetupScreen(onNameSaved: _saveChildName),
       ),
     );
-  }
-}
-
-class PurchaseEntitlementScope extends InheritedWidget {
-  const PurchaseEntitlementScope({
-    super.key,
-    required this.entitlement,
-    required this.purchaseController,
-    required super.child,
-  });
-
-  final PurchaseEntitlement entitlement;
-  final VehiclePackPurchaseController? purchaseController;
-
-  static PurchaseEntitlementScope of(BuildContext context) {
-    final scope = maybeOf(context);
-    assert(scope != null, 'No PurchaseEntitlementScope found in context.');
-    return scope!;
-  }
-
-  static PurchaseEntitlementScope? maybeOf(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<PurchaseEntitlementScope>();
-  }
-
-  @override
-  bool updateShouldNotify(PurchaseEntitlementScope oldWidget) {
-    return oldWidget.entitlement != entitlement ||
-        oldWidget.purchaseController != purchaseController;
   }
 }

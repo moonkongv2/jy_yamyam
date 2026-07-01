@@ -11,6 +11,7 @@ import '../l10n/app_texts.dart';
 import '../models/active_meal_timer_session.dart';
 import '../models/meal_progress_snapshot.dart';
 import '../models/meal_timer_config.dart';
+import '../models/purchase_entitlement.dart';
 import '../models/vehicle_avatar_presentation.dart';
 import '../navigation/app_route_observer.dart';
 import '../models/reward_goal.dart';
@@ -23,10 +24,12 @@ import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
 import '../utils/duration_format.dart';
+import '../utils/vehicle_entitlement_config.dart';
 import '../widgets/app/app_bouncy_button.dart';
 import '../widgets/app/app_metric_tile.dart';
 import '../widgets/avatar/avatar_composite_preview.dart';
 import '../widgets/meal_ingredient_picker_sheet.dart';
+import '../widgets/purchases/purchase_entitlement_scope.dart';
 import '../widgets/reward_sticker_image.dart';
 import '../widgets/vehicle_selection_card.dart';
 import 'avatar_setup_screen.dart';
@@ -39,6 +42,9 @@ import 'timer_screen.dart';
 const _homeLogoAssetPath = 'assets/images/logo_eng.png';
 const _settingsIconAssetPath = 'assets/images/icon_setting_rgba.png';
 const _activeSessionMaxAge = Duration(hours: 24);
+const _unscopedPurchaseEntitlement = PurchaseEntitlement(
+  vehiclePackUnlocked: true,
+);
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -112,6 +118,32 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   DateTime _now() => widget.now?.call() ?? DateTime.now();
 
+  PurchaseEntitlement get _listenedPurchaseEntitlement {
+    return PurchaseEntitlementScope.maybeOf(context)?.entitlement ??
+        _unscopedPurchaseEntitlement;
+  }
+
+  PurchaseEntitlement get _readPurchaseEntitlement {
+    return PurchaseEntitlementScope.read(context)?.entitlement ??
+        _unscopedPurchaseEntitlement;
+  }
+
+  MealTimerConfig _configWithEffectiveVehicle(MealTimerConfig config) {
+    return configWithEffectiveVehicle(
+      config,
+      entitlement: _readPurchaseEntitlement,
+    );
+  }
+
+  ActiveMealTimerSession _sessionWithEffectiveVehicle(
+    ActiveMealTimerSession session,
+  ) {
+    return sessionWithEffectiveVehicle(
+      session,
+      entitlement: _readPurchaseEntitlement,
+    );
+  }
+
   Future<ActiveMealTimerSession?> _loadActiveSession() async {
     var session = await widget.activeSessionStore.load();
     if (session != null && _isStaleActiveSession(session, now: _now())) {
@@ -160,7 +192,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   String? _selectedVehicleCustomAvatarPathForConfig(MealTimerConfig config) {
-    final avatar = config.avatarPresentationForVehicle(config.vehicleId);
+    final effectiveConfig = _configWithEffectiveVehicle(config);
+    final avatar = effectiveConfig.avatarPresentationForVehicle(
+      effectiveConfig.vehicleId,
+    );
     if (!avatar.isCustom) {
       return null;
     }
@@ -248,7 +283,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       return;
     }
 
-    final config = _config.copyWith(
+    final config = _configWithEffectiveVehicle(_config).copyWith(
       duration: Duration(minutes: minutes),
       courseIngredientIds: courseIngredientSelection.courseIngredientIds,
       selectedCourseIngredientIds:
@@ -322,11 +357,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Future<void> _resumeActiveTimer(ActiveMealTimerSession session) async {
+    final effectiveSession = _sessionWithEffectiveVehicle(session);
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => TimerScreen(
-          config: session.config,
-          restoredSession: session,
+          config: effectiveSession.config,
+          restoredSession: effectiveSession,
           mealProgressService: widget.mealProgressService,
           activeSessionStore: widget.activeSessionStore,
           onConfigChanged: _updateTimerRuntimeConfig,
@@ -577,8 +613,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     final childName = _config.childName.trim().isEmpty
         ? texts.common.defaultChildName
         : _config.childName.trim();
-    final selectedVehicle = VehicleCatalog.findById(_config.vehicleId);
-    final selectedVehicleAvatar = _config.avatarPresentationForVehicle(
+    final effectiveConfig = configWithEffectiveVehicle(
+      _config,
+      entitlement: _listenedPurchaseEntitlement,
+    );
+    final selectedVehicle = VehicleCatalog.findById(effectiveConfig.vehicleId);
+    final selectedVehicleAvatar = effectiveConfig.avatarPresentationForVehicle(
       selectedVehicle.id,
     );
     final isUsingCustomAvatar =
@@ -645,12 +685,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               builder: (context, constraints) {
                 final vehicleCard = VehicleSelectionCard(
                   title: texts.home.todayVehicleTitle,
-                  selectedVehicleId: _config.vehicleId,
+                  selectedVehicleId: effectiveConfig.vehicleId,
                   onVehicleSelected: (vehicleId) {
                     _updateConfig(_config.copyWith(vehicleId: vehicleId));
                   },
                   avatar: selectedVehicleAvatar,
-                  avatarForVehicle: _config.avatarPresentationForVehicle,
+                  avatarForVehicle:
+                      effectiveConfig.avatarPresentationForVehicle,
                   avatarImageBuilder: widget.avatarImageBuilder,
                   showSelectedPreview: true,
                   compact: true,

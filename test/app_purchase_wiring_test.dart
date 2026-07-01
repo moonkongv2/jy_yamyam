@@ -10,6 +10,7 @@ import 'package:jy_yamyam/services/active_meal_timer_session_store.dart';
 import 'package:jy_yamyam/services/local_meal_progress_service.dart';
 import 'package:jy_yamyam/services/local_purchase_entitlement_store.dart';
 import 'package:jy_yamyam/services/local_settings_service.dart';
+import 'package:jy_yamyam/widgets/purchases/purchase_entitlement_scope.dart';
 
 import 'fakes/fake_iap_purchase_client.dart';
 
