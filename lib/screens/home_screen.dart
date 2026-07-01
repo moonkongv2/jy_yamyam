@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import '../catalogs/meal_ingredient_catalog.dart';
 import '../catalogs/meal_course_catalog.dart';
 import '../catalogs/vehicle_catalog.dart';
+import '../catalogs/vehicle_unlock_catalog.dart';
 import '../l10n/app_texts.dart';
 import '../models/active_meal_timer_session.dart';
 import '../models/meal_progress_snapshot.dart';
@@ -607,6 +608,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     );
   }
 
+  void _handleLockedVehiclePressed(String vehicleId) {
+    // Guardian-gated purchase entry is wired in the purchase UI commits.
+  }
+
   @override
   Widget build(BuildContext context) {
     final texts = AppTexts.of(context);
@@ -633,6 +638,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     final alternateCourseMinutes = MealCourseCatalog.presetMinutes
         .where((minutes) => minutes != defaultMealMinutes)
         .toList();
+    final lockedVehicleIds = VehicleUnlockCatalog.lockedVehicleIds(
+      _listenedPurchaseEntitlement,
+    ).toSet();
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -686,9 +694,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 final vehicleCard = VehicleSelectionCard(
                   title: texts.home.todayVehicleTitle,
                   selectedVehicleId: effectiveConfig.vehicleId,
+                  lockedVehicleIds: lockedVehicleIds,
+                  lockedSemanticLabel: _lockedVehicleSemanticLabel(context),
                   onVehicleSelected: (vehicleId) {
                     _updateConfig(_config.copyWith(vehicleId: vehicleId));
                   },
+                  onLockedVehiclePressed: _handleLockedVehiclePressed,
                   avatar: selectedVehicleAvatar,
                   avatarForVehicle:
                       effectiveConfig.avatarPresentationForVehicle,
@@ -884,6 +895,10 @@ String? _quickCourseEmoji(int minutes) {
     35 => '🌈',
     _ => null,
   };
+}
+
+String _lockedVehicleSemanticLabel(BuildContext context) {
+  return Localizations.localeOf(context).languageCode == 'ko' ? '잠김' : 'Locked';
 }
 
 class _ActiveTimerResumeCard extends StatelessWidget {

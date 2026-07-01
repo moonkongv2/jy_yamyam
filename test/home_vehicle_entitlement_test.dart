@@ -106,6 +106,73 @@ void main() {
     expect(timerScreen.restoredSession?.config.vehicleId, 'motorcycle');
     await _disposeCurrentTree(tester);
   });
+
+  testWidgets('Home shows locked vehicles and blocks locked selection', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    MealTimerConfig? changedConfig;
+
+    await _pumpHome(
+      tester,
+      config: MealTimerConfig.defaults().copyWith(childName: '지율'),
+      entitlement: const PurchaseEntitlement.locked(),
+      onConfigChanged: (config) => changedConfig = config,
+    );
+
+    expect(
+      find.byKey(const ValueKey('vehicleChoiceLockBadge.bus')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('vehicleChoiceLockBadge.fire_truck')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('vehicleChoiceLockBadge.motorcycle')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('vehicleChoiceLockBadge.supercar')),
+      findsNothing,
+    );
+
+    final busChoice = find.byKey(const ValueKey('vehicleChoice.bus'));
+    await tester.ensureVisible(busChoice);
+    await tester.pump();
+    await tester.tap(busChoice);
+    await tester.pump();
+    expect(changedConfig, isNull);
+
+    final supercarChoice = find.byKey(const ValueKey('vehicleChoice.supercar'));
+    await tester.ensureVisible(supercarChoice);
+    await tester.pump();
+    await tester.tap(supercarChoice);
+    await tester.pump();
+    expect(changedConfig?.vehicleId, 'supercar');
+  });
+
+  testWidgets(
+    'Home does not show vehicle locks when vehicle pack is unlocked',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+
+      await _pumpHome(
+        tester,
+        config: MealTimerConfig.defaults().copyWith(childName: '지율'),
+        entitlement: const PurchaseEntitlement(vehiclePackUnlocked: true),
+      );
+
+      expect(
+        find.byKey(const ValueKey('vehicleChoiceLockBadge.bus')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('vehicleChoiceLockBadge.fire_truck')),
+        findsNothing,
+      );
+    },
+  );
 }
 
 Future<void> _pumpHome(
