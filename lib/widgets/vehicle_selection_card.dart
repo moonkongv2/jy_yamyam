@@ -24,6 +24,9 @@ class VehicleSelectionCard extends StatelessWidget {
     this.avatarImageBuilder,
     this.showSelectedPreview = false,
     this.compact = false,
+    this.lockedVehicleIds = const {},
+    this.onLockedVehiclePressed,
+    this.lockedSemanticLabel = 'Locked',
     this.footer,
   });
 
@@ -37,6 +40,9 @@ class VehicleSelectionCard extends StatelessWidget {
   avatarImageBuilder;
   final bool showSelectedPreview;
   final bool compact;
+  final Set<String> lockedVehicleIds;
+  final ValueChanged<String>? onLockedVehiclePressed;
+  final String lockedSemanticLabel;
   final Widget? footer;
 
   @override
@@ -124,10 +130,18 @@ class VehicleSelectionCard extends StatelessWidget {
                         size: itemSize,
                         vehicle: vehicle,
                         isSelected: selectedVehicle.id == vehicle.id,
-                        onTap: () => onVehicleSelected(vehicle.id),
+                        isLocked: lockedVehicleIds.contains(vehicle.id),
+                        onTap: () {
+                          if (lockedVehicleIds.contains(vehicle.id)) {
+                            onLockedVehiclePressed?.call(vehicle.id);
+                            return;
+                          }
+                          onVehicleSelected(vehicle.id);
+                        },
                         avatar: avatar,
                         resolvedAvatar: avatarForVehicle?.call(vehicle.id),
                         avatarImageBuilder: avatarImageBuilder,
+                        lockedSemanticLabel: lockedSemanticLabel,
                       ),
                   ],
                 );
@@ -209,18 +223,22 @@ class _VehicleChoiceButton extends StatelessWidget {
     required this.size,
     required this.vehicle,
     required this.isSelected,
+    required this.isLocked,
     required this.onTap,
     required this.avatar,
     required this.resolvedAvatar,
+    required this.lockedSemanticLabel,
     this.avatarImageBuilder,
   });
 
   final double size;
   final VehicleDefinition vehicle;
   final bool isSelected;
+  final bool isLocked;
   final VoidCallback onTap;
   final VehicleAvatarPresentation avatar;
   final VehicleAvatarPresentation? resolvedAvatar;
+  final String lockedSemanticLabel;
   final Widget Function(BuildContext context, String imagePath)?
   avatarImageBuilder;
 
@@ -245,9 +263,11 @@ class _VehicleChoiceButton extends StatelessWidget {
       width: size,
       height: size,
       child: Semantics(
-        label: vehicle.labelForLanguage(
-          Localizations.localeOf(context).languageCode,
-        ),
+        label: isLocked
+            ? '${vehicle.labelForLanguage(Localizations.localeOf(context).languageCode)}, $lockedSemanticLabel'
+            : vehicle.labelForLanguage(
+                Localizations.localeOf(context).languageCode,
+              ),
         button: true,
         selected: isSelected,
         child: Material(
@@ -274,6 +294,36 @@ class _VehicleChoiceButton extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (isLocked) ...[
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      key: ValueKey('vehicleChoiceLockOverlay.${vehicle.id}'),
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withValues(alpha: 0.54),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    right: 6,
+                    bottom: 6,
+                    child: DecoratedBox(
+                      key: ValueKey('vehicleChoiceLockBadge.${vehicle.id}'),
+                      decoration: BoxDecoration(
+                        color: AppColors.brown700.withValues(alpha: 0.88),
+                        borderRadius: AppRadius.pill,
+                        boxShadow: AppShadows.buttonSoft,
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.lock_rounded,
+                          color: AppColors.white,
+                          size: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
                 if (isSelected)
                   Positioned(
                     right: 6,

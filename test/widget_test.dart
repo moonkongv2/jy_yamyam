@@ -4472,6 +4472,57 @@ void main() {
     );
   });
 
+  testWidgets('Vehicle selection card separates locked vehicle taps', (
+    tester,
+  ) async {
+    String? selectedVehicleId;
+    String? lockedVehicleId;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('ko'),
+        home: Scaffold(
+          body: SizedBox(
+            width: 420,
+            child: VehicleSelectionCard(
+              title: '차량 선택',
+              selectedVehicleId: 'motorcycle',
+              lockedVehicleIds: const {'bus'},
+              lockedSemanticLabel: '잠김',
+              onVehicleSelected: (vehicleId) {
+                selectedVehicleId = vehicleId;
+              },
+              onLockedVehiclePressed: (vehicleId) {
+                lockedVehicleId = vehicleId;
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      find.byKey(const ValueKey('vehicleChoiceLockOverlay.bus')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('vehicleChoiceLockBadge.bus')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('vehicleChoice.bus')));
+    await tester.pump();
+
+    expect(selectedVehicleId, isNull);
+    expect(lockedVehicleId, 'bus');
+
+    await tester.tap(find.byKey(const ValueKey('vehicleChoice.supercar')));
+    await tester.pump();
+
+    expect(selectedVehicleId, 'supercar');
+    expect(lockedVehicleId, 'bus');
+  });
+
   testWidgets('Selected vehicle on home is saved to preferences', (
     tester,
   ) async {
