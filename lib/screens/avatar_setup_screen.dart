@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -19,7 +20,9 @@ import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/avatar/avatar_composite_preview.dart';
 import '../widgets/avatar/rider_guide_bottom_sheet.dart';
+import '../widgets/purchases/guardian_gate_sheet.dart';
 import '../widgets/purchases/purchase_entitlement_scope.dart';
+import '../widgets/purchases/vehicle_pack_purchase_sheet.dart';
 import '../widgets/vehicle_selection_card.dart';
 
 const _unscopedPurchaseEntitlement = PurchaseEntitlement(
@@ -330,7 +333,29 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
   }
 
   void _handleLockedVehiclePressed(String vehicleId) {
-    // Guardian-gated purchase entry is wired in the purchase UI commits.
+    final purchaseController = PurchaseEntitlementScope.read(
+      context,
+    )?.purchaseController;
+    if (purchaseController == null) {
+      return;
+    }
+
+    unawaited(
+      showGuardianGateSheet(
+        context,
+        onPassed: () {
+          if (!mounted) {
+            return;
+          }
+          unawaited(
+            showVehiclePackPurchaseSheet(
+              context,
+              purchaseController: purchaseController,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override

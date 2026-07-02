@@ -30,7 +30,9 @@ import '../widgets/app/app_bouncy_button.dart';
 import '../widgets/app/app_metric_tile.dart';
 import '../widgets/avatar/avatar_composite_preview.dart';
 import '../widgets/meal_ingredient_picker_sheet.dart';
+import '../widgets/purchases/guardian_gate_sheet.dart';
 import '../widgets/purchases/purchase_entitlement_scope.dart';
+import '../widgets/purchases/vehicle_pack_purchase_sheet.dart';
 import '../widgets/reward_sticker_image.dart';
 import '../widgets/vehicle_selection_card.dart';
 import 'avatar_setup_screen.dart';
@@ -609,7 +611,29 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   void _handleLockedVehiclePressed(String vehicleId) {
-    // Guardian-gated purchase entry is wired in the purchase UI commits.
+    final purchaseController = PurchaseEntitlementScope.read(
+      context,
+    )?.purchaseController;
+    if (purchaseController == null) {
+      return;
+    }
+
+    unawaited(
+      showGuardianGateSheet(
+        context,
+        onPassed: () {
+          if (!mounted) {
+            return;
+          }
+          unawaited(
+            showVehiclePackPurchaseSheet(
+              context,
+              purchaseController: purchaseController,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
