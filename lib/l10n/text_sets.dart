@@ -212,6 +212,43 @@ abstract interface class SettingsTextSet {
   String motivationVideoIntervalSegmentLabel(int minutes);
 }
 
+abstract interface class PurchaseTextSet {
+  String get lockedVehicleSemanticLabel;
+  String get vehiclePackTitle;
+  String get vehiclePackOneTimePurchase;
+  String get vehiclePackPriceTitle;
+  String get vehiclePackLoadingPrice;
+  String get vehiclePackOfflineTitle;
+  String get vehiclePackOfflineBody;
+  String get vehiclePackIncludedVehiclesTitle;
+  String get vehiclePackLoadingProductMessage;
+  String get vehiclePackPendingMessage;
+  String get vehiclePackSuccessMessage;
+  String get vehiclePackRestoreSuccessMessage;
+  String get vehiclePackErrorMessage;
+  String get vehiclePackStoreUnavailableMessage;
+  String get vehiclePackProductNotFoundMessage;
+  String get vehiclePackCanceledMessage;
+  String get vehiclePackRestoreButton;
+  String get vehiclePackUnlockedButton;
+  String get vehiclePackGuardianNote;
+  String get guardianGateTitle;
+  String get guardianGateSubtitle;
+  String get guardianGatePrompt;
+  String get guardianGateChallenge;
+  String get guardianGateAnswerHint;
+  String get guardianGateErrorMessage;
+  String get guardianGateCancelButton;
+  String get guardianGateContinueButton;
+  String get settingsVehiclePackLockedBody;
+  String get settingsVehiclePackUnlockedBody;
+  String get settingsVehiclePackUnavailableBody;
+  String get settingsVehiclePackUnlockButton;
+  String get settingsVehiclePackRestoreButton;
+
+  String vehiclePackBuyButton(String price);
+}
+
 abstract interface class UserGuideTextSet {
   String get title;
   String get subtitle;

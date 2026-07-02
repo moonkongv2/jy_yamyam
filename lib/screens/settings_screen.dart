@@ -520,9 +520,7 @@ class _SettingsVehiclePackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final texts = _SettingsPurchaseTexts.forLocale(
-      Localizations.localeOf(context),
-    );
+    final texts = AppTexts.of(context).purchases;
     final textTheme = Theme.of(context).textTheme;
     final isUnlocked = entitlement.vehiclePackUnlocked;
 
@@ -544,7 +542,7 @@ class _SettingsVehiclePackCard extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    texts.title,
+                    texts.vehiclePackTitle,
                     style: textTheme.titleMedium?.copyWith(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
@@ -555,7 +553,9 @@ class _SettingsVehiclePackCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              isUnlocked ? texts.unlockedBody : texts.lockedBody,
+              isUnlocked
+                  ? texts.settingsVehiclePackUnlockedBody
+                  : texts.settingsVehiclePackLockedBody,
               style: textTheme.bodyMedium?.copyWith(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
@@ -565,7 +565,7 @@ class _SettingsVehiclePackCard extends StatelessWidget {
             if (purchaseController == null) ...[
               const SizedBox(height: 10),
               Text(
-                texts.unavailableBody,
+                texts.settingsVehiclePackUnavailableBody,
                 style: textTheme.bodySmall?.copyWith(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w700,
@@ -579,7 +579,7 @@ class _SettingsVehiclePackCard extends StatelessWidget {
                 key: const ValueKey('settingsVehiclePackUnlockButton'),
                 onPressed: onUnlockPressed,
                 icon: const Icon(Icons.lock_open_rounded),
-                label: Text(texts.unlockButton),
+                label: Text(texts.settingsVehiclePackUnlockButton),
               ),
               const SizedBox(height: 8),
             ],
@@ -587,52 +587,11 @@ class _SettingsVehiclePackCard extends StatelessWidget {
               key: const ValueKey('settingsVehiclePackRestoreButton'),
               onPressed: onRestorePressed,
               icon: const Icon(Icons.restore_rounded),
-              label: Text(texts.restoreButton),
+              label: Text(texts.settingsVehiclePackRestoreButton),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _SettingsPurchaseTexts {
-  const _SettingsPurchaseTexts({
-    required this.title,
-    required this.lockedBody,
-    required this.unlockedBody,
-    required this.unavailableBody,
-    required this.unlockButton,
-    required this.restoreButton,
-  });
-
-  final String title;
-  final String lockedBody;
-  final String unlockedBody;
-  final String unavailableBody;
-  final String unlockButton;
-  final String restoreButton;
-
-  static _SettingsPurchaseTexts forLocale(Locale locale) {
-    if (locale.languageCode == 'ko') {
-      return const _SettingsPurchaseTexts(
-        title: '차량팩',
-        lockedBody: '오토바이와 슈퍼카는 무료로 사용할 수 있어요. 차량팩을 열면 나머지 차량도 사용할 수 있어요.',
-        unlockedBody: '차량팩이 열려 있어요. 모든 차량을 사용할 수 있어요.',
-        unavailableBody: '구매 기능을 준비하는 중이에요.',
-        unlockButton: '보호자 구매',
-        restoreButton: '구매 복원',
-      );
-    }
-
-    return const _SettingsPurchaseTexts(
-      title: 'Vehicle Pack',
-      lockedBody:
-          'Motorcycle and Supercar are free. Unlock the vehicle pack to use the other vehicles.',
-      unlockedBody: 'The vehicle pack is unlocked. All vehicles are available.',
-      unavailableBody: 'Purchase features are still getting ready.',
-      unlockButton: 'Guardian Purchase',
-      restoreButton: 'Restore Purchase',
     );
   }
 }

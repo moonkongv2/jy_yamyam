@@ -898,7 +898,7 @@ String? _quickCourseEmoji(int minutes) {
 }
 
 String _lockedVehicleSemanticLabel(BuildContext context) {
-  return Localizations.localeOf(context).languageCode == 'ko' ? '잠김' : 'Locked';
+  return AppTexts.of(context).purchases.lockedVehicleSemanticLabel;
 }
 
 class _ActiveTimerResumeCard extends StatelessWidget {

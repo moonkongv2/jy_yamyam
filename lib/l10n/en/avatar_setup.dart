@@ -55,7 +55,8 @@ class EnAvatarSetupTexts implements AvatarSetupTextSet {
   String get selectedImageFallback => 'Selected rider image';
   String get privacyNote =>
       "This app does not create AI images or upload your child's photo itself.\n"
-      'Create the image with an external AI service you choose, then upload only the finished rider image to Yamyam Rider.\n'
+      'Photo or image selection opens only when a guardian starts it, and the selected rider image is saved on this device only.\n'
+      'Create the image with an external AI service you choose, then add only the finished rider image to Yamyam Rider.\n'
       'Check the photo and privacy policies before using an external service.';
 
   String get guidePopupTitle => "Create Your Child's Rider";
@@ -72,9 +73,9 @@ class EnAvatarSetupTexts implements AvatarSetupTextSet {
   String get guidePopupPrivacyTitle =>
       '🔒 Why doesn\'t the app process images automatically?';
   String get guidePopupPrivacyBody =>
-      'To precisely cut out or convert faces within the app, the original photo would technically need to be sent to an external server. To strictly protect your child\'s photos and privacy, we block server transmissions entirely and ask parents to prepare the rider image themselves.';
+      'The app does not cut out or transform photos itself, so it does not send the original photo to an external server for processing. Photo or image selection opens only when a guardian starts it, and the selected rider image is saved on this device only.';
   String get guidePopupSafetyTitle => '🛡️ Your privacy is protected!';
   String get guidePopupSafetyBody =>
-      'The rider image you prepare and add to this app is stored only on your device. It is never sent to an external server, so your personal information stays safe.';
+      'The rider image you prepare and add to this app is stored on your device. It is used locally without a server, login, ads, or analytics.';
   String get guidePopupConfirmButton => 'Confirm';
 }

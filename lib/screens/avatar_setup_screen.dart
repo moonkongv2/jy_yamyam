@@ -515,7 +515,7 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
 }
 
 String _lockedVehicleSemanticLabel(BuildContext context) {
-  return Localizations.localeOf(context).languageCode == 'ko' ? '잠김' : 'Locked';
+  return AppTexts.of(context).purchases.lockedVehicleSemanticLabel;
 }
 
 class _AvatarCompositePreviewCard extends StatelessWidget {
