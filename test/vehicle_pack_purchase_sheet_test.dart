@@ -93,7 +93,10 @@ void main() {
     harness.client.buyNonConsumableError = Exception('Billing failed.');
     await tester.tap(find.byKey(const ValueKey('vehiclePackBuyButton')));
     await tester.pumpAndSettle();
-    expect(find.textContaining('구매를 완료하지 못했어요.'), findsOneWidget);
+    expect(find.text('구매를 완료하지 못했어요. 잠시 후 다시 시도해 주세요.'), findsOneWidget);
+    expect(find.textContaining('Billing failed'), findsNothing);
+    expect(find.textContaining('IAPError'), findsNothing);
+    expect(find.textContaining('storekit'), findsNothing);
 
     harness.client.emitPurchases([
       fakePurchaseDetails(status: PurchaseStatus.canceled),

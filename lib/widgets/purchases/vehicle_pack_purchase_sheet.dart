@@ -195,7 +195,6 @@ class _VehiclePackPurchaseSheetState extends State<VehiclePackPurchaseSheet> {
             _StatusMessage(
               status: state.status,
               isUnlocked: state.vehiclePackUnlocked,
-              errorMessage: state.errorMessage,
               texts: texts,
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -324,13 +323,11 @@ class _StatusMessage extends StatelessWidget {
   const _StatusMessage({
     required this.status,
     required this.isUnlocked,
-    required this.errorMessage,
     required this.texts,
   });
 
   final VehiclePackPurchaseStatus status;
   final bool isUnlocked;
-  final String? errorMessage;
   final _VehiclePackPurchaseTexts texts;
 
   @override
@@ -397,10 +394,7 @@ class _StatusMessage extends StatelessWidget {
       VehiclePackPurchaseStatus.purchasePending => texts.pendingMessage,
       VehiclePackPurchaseStatus.purchaseCompleted => texts.successMessage,
       VehiclePackPurchaseStatus.restoreCompleted => texts.restoreSuccessMessage,
-      VehiclePackPurchaseStatus.error =>
-        errorMessage == null
-            ? texts.errorMessage
-            : texts.errorWithDetail(errorMessage!),
+      VehiclePackPurchaseStatus.error => texts.errorMessage,
       VehiclePackPurchaseStatus.canceled => texts.canceledMessage,
     };
   }
@@ -436,7 +430,6 @@ class _VehiclePackPurchaseTexts {
     required this.unlockedButton,
     required this.guardianNote,
     required this.buyButton,
-    required this.errorWithDetail,
   });
 
   final String title;
@@ -458,7 +451,6 @@ class _VehiclePackPurchaseTexts {
   final String unlockedButton;
   final String guardianNote;
   final String Function(String price) buyButton;
-  final String Function(String detail) errorWithDetail;
 
   static _VehiclePackPurchaseTexts forLocale(Locale locale) {
     if (locale.languageCode == 'ko') {
@@ -482,7 +474,6 @@ class _VehiclePackPurchaseTexts {
         unlockedButton: '이미 열림',
         guardianNote: '구매와 복원은 보호자 확인 후 진행되는 보호자용 기능입니다.',
         buyButton: (price) => '보호자 구매 $price',
-        errorWithDetail: (detail) => '구매를 완료하지 못했어요. $detail',
       );
     }
 
@@ -508,8 +499,6 @@ class _VehiclePackPurchaseTexts {
       guardianNote:
           'Purchases and restore are guardian-only actions after guardian check.',
       buyButton: (price) => 'Guardian Purchase $price',
-      errorWithDetail: (detail) =>
-          'The purchase could not be completed. $detail',
     );
   }
 }
