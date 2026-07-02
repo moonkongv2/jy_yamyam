@@ -25,6 +25,7 @@ The app is designed around one simple goal: make mealtime pacing feel like a coz
 - In-app parent guide and contextual help for ingredients, motivation videos, results, rewards, and history
 - Local active timer session restore, meal history, progress summary, vehicle stickers, and reward goal tracking
 - Vehicle sticker collection and reward goal screens
+- One-time vehicle pack in-app purchase flow with guardian gate and local entitlement cache
 - Korean and English localization
 - Shared kid-friendly UI system with colors, radius, shadows, spacing, motion, cards, and bouncy buttons
 
@@ -89,6 +90,7 @@ assets/
 - `image_picker`, `path_provider`, and `image` for custom avatar image import and normalization
 - `wakelock_plus` for the keep-screen-awake timer setting
 - `flutter_launcher_icons` for launcher icon generation
+- `in_app_purchase` for the one-time vehicle pack purchase and restore flow
 - Cal Sans bundled font
 
 ## Project Structure
@@ -230,6 +232,7 @@ dart run flutter_launcher_icons
 - Vehicle assets should keep consistent canvas size, padding, and visual scale because they are also used as reward stickers.
 - UI polish should use the shared design tokens in `lib/theme/` and reusable app widgets in `lib/widgets/app/`.
 - Launcher icon assets live under `assets/icons/`; regenerate platform icons with `dart run flutter_launcher_icons` after changing them.
+- First-release IAP setup and store-review notes are tracked in `docs/release_iap_checklist.md`.
 
 ## Status
 
