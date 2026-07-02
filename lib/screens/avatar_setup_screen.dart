@@ -5,8 +5,10 @@ import 'package:flutter/services.dart';
 
 import '../catalogs/avatar_prompt_catalog.dart';
 import '../catalogs/vehicle_catalog.dart';
+import '../catalogs/vehicle_unlock_catalog.dart';
 import '../l10n/app_texts.dart';
 import '../models/meal_timer_config.dart';
+import '../models/purchase_entitlement.dart';
 import '../models/vehicle.dart';
 import '../models/vehicle_avatar_presentation.dart';
 import '../services/avatar_image_picker.dart';
@@ -17,7 +19,12 @@ import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
 import '../widgets/avatar/avatar_composite_preview.dart';
 import '../widgets/avatar/rider_guide_bottom_sheet.dart';
+import '../widgets/purchases/purchase_entitlement_scope.dart';
 import '../widgets/vehicle_selection_card.dart';
+
+const _unscopedPurchaseEntitlement = PurchaseEntitlement(
+  vehiclePackUnlocked: true,
+);
 
 class AvatarSetupScreen extends StatefulWidget {
   const AvatarSetupScreen({
@@ -317,6 +324,15 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
     widget.onConfigChanged(nextConfig);
   }
 
+  PurchaseEntitlement get _listenedPurchaseEntitlement {
+    return PurchaseEntitlementScope.maybeOf(context)?.entitlement ??
+        _unscopedPurchaseEntitlement;
+  }
+
+  void _handleLockedVehiclePressed(String vehicleId) {
+    // Guardian-gated purchase entry is wired in the purchase UI commits.
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -340,6 +356,9 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
         !hasPreviewAvatarImage;
     final shouldShowCompositePreview =
         _avatarMode == AvatarImageMode.custom && hasPreviewAvatarImage;
+    final lockedVehicleIds = VehicleUnlockCatalog.lockedVehicleIds(
+      _listenedPurchaseEntitlement,
+    ).toSet();
 
     return Scaffold(
       backgroundColor: AppColors.cream,
@@ -409,7 +428,10 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
                 title: texts.vehicleSelectionTitle,
                 subtitle: texts.vehicleSelectionSubtitle,
                 selectedVehicleId: _config.vehicleId,
+                lockedVehicleIds: lockedVehicleIds,
+                lockedSemanticLabel: _lockedVehicleSemanticLabel(context),
                 onVehicleSelected: _handleVehicleSelected,
+                onLockedVehiclePressed: _handleLockedVehiclePressed,
                 avatar: currentEditingAvatar,
                 avatarForVehicle: _avatarPresentationForVehicleChoice,
               ),
@@ -473,7 +495,10 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
                 title: texts.vehicleSelectionTitle,
                 subtitle: texts.vehicleSelectionSubtitle,
                 selectedVehicleId: _config.vehicleId,
+                lockedVehicleIds: lockedVehicleIds,
+                lockedSemanticLabel: _lockedVehicleSemanticLabel(context),
                 onVehicleSelected: _handleVehicleSelected,
+                onLockedVehiclePressed: _handleLockedVehiclePressed,
                 avatar: currentEditingAvatar,
                 avatarForVehicle: _avatarPresentationForVehicleChoice,
               ),
@@ -487,6 +512,10 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
       ),
     );
   }
+}
+
+String _lockedVehicleSemanticLabel(BuildContext context) {
+  return Localizations.localeOf(context).languageCode == 'ko' ? '잠김' : 'Locked';
 }
 
 class _AvatarCompositePreviewCard extends StatelessWidget {
