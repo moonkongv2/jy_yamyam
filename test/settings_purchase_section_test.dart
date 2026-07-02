@@ -14,6 +14,7 @@ import 'package:jy_yamyam/widgets/purchases/purchase_entitlement_scope.dart';
 import 'package:jy_yamyam/widgets/purchases/vehicle_pack_purchase_sheet.dart';
 
 import 'fakes/fake_iap_purchase_client.dart';
+import 'helpers/guardian_gate_test_helpers.dart';
 
 void main() {
   testWidgets('Settings shows locked vehicle pack section', (tester) async {
@@ -56,10 +57,7 @@ void main() {
     expect(find.byType(GuardianGateSheet), findsOneWidget);
     expect(find.byType(VehiclePackPurchaseSheet), findsNothing);
 
-    await tester.enterText(
-      find.byKey(const ValueKey('guardianGateAnswerField')),
-      '13',
-    );
+    await enterCurrentGuardianGateAnswer(tester);
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('guardianGateContinueButton')));
     await tester.pumpAndSettle();
@@ -87,10 +85,7 @@ void main() {
     expect(find.byType(GuardianGateSheet), findsOneWidget);
     expect(harness.client.restorePurchasesCallCount, 0);
 
-    await tester.enterText(
-      find.byKey(const ValueKey('guardianGateAnswerField')),
-      '13',
-    );
+    await enterCurrentGuardianGateAnswer(tester);
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('guardianGateContinueButton')));
     await tester.pumpAndSettle();

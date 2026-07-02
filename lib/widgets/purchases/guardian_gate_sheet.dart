@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -6,11 +8,28 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 
-const _guardianGateExpectedAnswer = '13';
+const _guardianGateChallenges = [
+  GuardianGateChallenge(question: '7 + 5 = ?', answer: '12'),
+  GuardianGateChallenge(question: '8 + 5 = ?', answer: '13'),
+  GuardianGateChallenge(question: '9 + 4 = ?', answer: '13'),
+  GuardianGateChallenge(question: '6 + 8 = ?', answer: '14'),
+  GuardianGateChallenge(question: '5 + 6 = ?', answer: '11'),
+  GuardianGateChallenge(question: '4 + 9 = ?', answer: '13'),
+  GuardianGateChallenge(question: '3 + 8 = ?', answer: '11'),
+  GuardianGateChallenge(question: '7 + 9 = ?', answer: '16'),
+];
+
+class GuardianGateChallenge {
+  const GuardianGateChallenge({required this.question, required this.answer});
+
+  final String question;
+  final String answer;
+}
 
 Future<bool> showGuardianGateSheet(
   BuildContext context, {
   required VoidCallback onPassed,
+  GuardianGateChallenge? challenge,
 }) async {
   final passed = await showModalBottomSheet<bool>(
     context: context,
@@ -20,7 +39,7 @@ Future<bool> showGuardianGateSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (context) => const GuardianGateSheet(),
+    builder: (context) => GuardianGateSheet(challenge: challenge),
   );
   if (passed == true) {
     onPassed();
@@ -30,7 +49,9 @@ Future<bool> showGuardianGateSheet(
 }
 
 class GuardianGateSheet extends StatefulWidget {
-  const GuardianGateSheet({super.key});
+  const GuardianGateSheet({super.key, this.challenge});
+
+  final GuardianGateChallenge? challenge;
 
   @override
   State<GuardianGateSheet> createState() => _GuardianGateSheetState();
@@ -38,6 +59,9 @@ class GuardianGateSheet extends StatefulWidget {
 
 class _GuardianGateSheetState extends State<GuardianGateSheet> {
   final TextEditingController _answerController = TextEditingController();
+  late final GuardianGateChallenge _challenge =
+      widget.challenge ??
+      _guardianGateChallenges[Random().nextInt(_guardianGateChallenges.length)];
   bool _hasError = false;
 
   @override
@@ -47,7 +71,7 @@ class _GuardianGateSheetState extends State<GuardianGateSheet> {
   }
 
   void _submit() {
-    if (_answerController.text.trim() == _guardianGateExpectedAnswer) {
+    if (_answerController.text.trim() == _challenge.answer) {
       Navigator.of(context).pop(true);
       return;
     }
@@ -129,7 +153,8 @@ class _GuardianGateSheetState extends State<GuardianGateSheet> {
                     ),
                     const SizedBox(height: AppSpacing.md),
                     Text(
-                      texts.guardianGateChallenge,
+                      _challenge.question,
+                      key: const ValueKey('guardianGateChallengeText'),
                       textAlign: TextAlign.center,
                       style: textTheme.headlineSmall?.copyWith(
                         color: AppColors.textStrong,

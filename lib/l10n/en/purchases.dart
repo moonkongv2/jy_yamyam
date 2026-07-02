@@ -44,7 +44,6 @@ class EnPurchaseTexts implements PurchaseTextSet {
   String get guardianGateSubtitle =>
       'Vehicle pack purchases and restore are for parents or guardians.';
   String get guardianGatePrompt => 'To continue, enter the answer below.';
-  String get guardianGateChallenge => '8 + 5 = ?';
   String get guardianGateAnswerHint => 'Answer';
   String get guardianGateErrorMessage =>
       'Please check the answer and try again.';

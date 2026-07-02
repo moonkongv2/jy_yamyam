@@ -24,13 +24,20 @@ void main() {
 
   testWidgets('Guardian gate blocks wrong answer', (tester) async {
     var passed = false;
-    await _pumpHost(tester, onPassed: () => passed = true);
+    await _pumpHost(
+      tester,
+      challenge: const GuardianGateChallenge(
+        question: '4 + 6 = ?',
+        answer: '10',
+      ),
+      onPassed: () => passed = true,
+    );
 
     await tester.tap(find.byKey(const ValueKey('openGuardianGateButton')));
     await tester.pumpAndSettle();
     await tester.enterText(
       find.byKey(const ValueKey('guardianGateAnswerField')),
-      '12',
+      '11',
     );
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('guardianGateContinueButton')));
@@ -45,13 +52,21 @@ void main() {
     tester,
   ) async {
     var passed = false;
-    await _pumpHost(tester, onPassed: () => passed = true);
+    await _pumpHost(
+      tester,
+      challenge: const GuardianGateChallenge(
+        question: '4 + 6 = ?',
+        answer: '10',
+      ),
+      onPassed: () => passed = true,
+    );
 
     await tester.tap(find.byKey(const ValueKey('openGuardianGateButton')));
     await tester.pumpAndSettle();
+    expect(find.text('4 + 6 = ?'), findsOneWidget);
     await tester.enterText(
       find.byKey(const ValueKey('guardianGateAnswerField')),
-      '13',
+      '10',
     );
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('guardianGateContinueButton')));
@@ -82,6 +97,7 @@ void main() {
 Future<void> _pumpHost(
   WidgetTester tester, {
   Locale locale = const Locale('ko'),
+  GuardianGateChallenge? challenge,
   required VoidCallback onPassed,
 }) async {
   await tester.pumpWidget(
@@ -99,8 +115,11 @@ Future<void> _pumpHost(
             body: Center(
               child: FilledButton(
                 key: const ValueKey('openGuardianGateButton'),
-                onPressed: () =>
-                    showGuardianGateSheet(context, onPassed: onPassed),
+                onPressed: () => showGuardianGateSheet(
+                  context,
+                  challenge: challenge,
+                  onPassed: onPassed,
+                ),
                 child: const Text('Open'),
               ),
             ),

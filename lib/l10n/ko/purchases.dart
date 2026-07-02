@@ -32,7 +32,6 @@ class PurchaseTexts implements PurchaseTextSet {
   String get guardianGateTitle => '보호자 확인';
   String get guardianGateSubtitle => '차량팩 구매와 복원은 보호자만 진행할 수 있어요.';
   String get guardianGatePrompt => '계속하려면 아래 문제의 답을 입력해 주세요.';
-  String get guardianGateChallenge => '8 + 5 = ?';
   String get guardianGateAnswerHint => '답 입력';
   String get guardianGateErrorMessage => '답을 다시 확인해 주세요.';
   String get guardianGateCancelButton => '닫기';

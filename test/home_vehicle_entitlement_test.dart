@@ -20,6 +20,7 @@ import 'package:jy_yamyam/widgets/purchases/vehicle_pack_intro_sheet.dart';
 import 'package:jy_yamyam/widgets/purchases/vehicle_pack_purchase_sheet.dart';
 
 import 'fakes/fake_iap_purchase_client.dart';
+import 'helpers/guardian_gate_test_helpers.dart';
 
 void main() {
   testWidgets(
@@ -228,10 +229,7 @@ void main() {
     expect(find.byType(VehiclePackIntroSheet), findsNothing);
     expect(find.byType(GuardianGateSheet), findsOneWidget);
 
-    await tester.enterText(
-      find.byKey(const ValueKey('guardianGateAnswerField')),
-      '13',
-    );
+    await enterCurrentGuardianGateAnswer(tester);
     await tester.pump();
     await tester.tap(find.byKey(const ValueKey('guardianGateContinueButton')));
     await tester.pumpAndSettle();

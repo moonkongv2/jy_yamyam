@@ -240,7 +240,6 @@ abstract interface class PurchaseTextSet {
   String get guardianGateTitle;
   String get guardianGateSubtitle;
   String get guardianGatePrompt;
-  String get guardianGateChallenge;
   String get guardianGateAnswerHint;
   String get guardianGateErrorMessage;
   String get guardianGateCancelButton;
