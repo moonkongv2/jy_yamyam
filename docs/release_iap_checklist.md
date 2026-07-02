@@ -12,6 +12,23 @@ Policy references were checked on 2026-07-03:
 - Google Play Families policies: https://support.google.com/googleplay/android-developer/answer/9893335
 - Google Play Billing: https://developer.android.com/google/play/billing
 
+## Verification Status
+
+Checked on 2026-07-03:
+
+- `flutter analyze`: passed.
+- Focused IAP and vehicle entitlement tests: passed.
+- `VehicleSelectionCard` locked tap widget test: passed.
+- Full `flutter test`: not green yet because of existing broad `test/widget_test.dart` failures outside the IAP vehicle pack scope.
+
+Known full-suite failure areas to resolve before release:
+
+- Outdated result screen copy expectations.
+- Timer preview sequence tests leaving pending fake timers.
+- Outdated English locale copy expectations.
+- Existing avatar setup guide visibility/scroll expectation.
+- Reward goal confirmation copy expectation.
+
 ## Product
 
 - Product ID: `vehicle_pack`
