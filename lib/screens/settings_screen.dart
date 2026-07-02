@@ -1,12 +1,19 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../catalogs/meal_course_catalog.dart';
 import '../constants/child_name_limits.dart';
+import '../controllers/vehicle_pack_purchase_controller.dart';
 import '../l10n/app_texts.dart';
 import '../l10n/text_sets.dart';
 import '../models/meal_timer_config.dart';
+import '../models/purchase_entitlement.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app/app_help_sheet.dart';
+import '../widgets/purchases/guardian_gate_sheet.dart';
+import '../widgets/purchases/purchase_entitlement_scope.dart';
+import '../widgets/purchases/vehicle_pack_purchase_sheet.dart';
 import 'user_guide_screen.dart';
 
 const _ingredientGuideImageAssetPath = 'assets/images/ingredient_markers.png';
@@ -111,9 +118,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _openVehiclePackPurchaseSheet(VehiclePackPurchaseController controller) {
+    unawaited(
+      showGuardianGateSheet(
+        context,
+        onPassed: () {
+          unawaited(
+            showVehiclePackPurchaseSheet(
+              context,
+              purchaseController: controller,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _restoreVehiclePackPurchase(VehiclePackPurchaseController controller) {
+    unawaited(
+      showGuardianGateSheet(
+        context,
+        onPassed: () {
+          unawaited(
+            showVehiclePackPurchaseSheet(
+              context,
+              purchaseController: controller,
+            ),
+          );
+          unawaited(controller.restorePurchases());
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final texts = AppTexts.of(context);
+    final purchaseScope = PurchaseEntitlementScope.maybeOf(context);
     final motivationVideoIntervalMinutes =
         _normalizedMotivationVideoIntervalMinutes(
           _config.motivationVideoInterval,
@@ -148,6 +189,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 20),
+          if (purchaseScope != null) ...[
+            _SettingsVehiclePackCard(
+              entitlement: purchaseScope.entitlement,
+              purchaseController: purchaseScope.purchaseController,
+              onUnlockPressed: purchaseScope.purchaseController == null
+                  ? null
+                  : () => _openVehiclePackPurchaseSheet(
+                      purchaseScope.purchaseController!,
+                    ),
+              onRestorePressed: purchaseScope.purchaseController == null
+                  ? null
+                  : () => _restoreVehiclePackPurchase(
+                      purchaseScope.purchaseController!,
+                    ),
+            ),
+            const SizedBox(height: 20),
+          ],
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -443,6 +501,138 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 20),
         ],
       ),
+    );
+  }
+}
+
+class _SettingsVehiclePackCard extends StatelessWidget {
+  const _SettingsVehiclePackCard({
+    required this.entitlement,
+    required this.purchaseController,
+    required this.onUnlockPressed,
+    required this.onRestorePressed,
+  });
+
+  final PurchaseEntitlement entitlement;
+  final VehiclePackPurchaseController? purchaseController;
+  final VoidCallback? onUnlockPressed;
+  final VoidCallback? onRestorePressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final texts = _SettingsPurchaseTexts.forLocale(
+      Localizations.localeOf(context),
+    );
+    final textTheme = Theme.of(context).textTheme;
+    final isUnlocked = entitlement.vehiclePackUnlocked;
+
+    return Card(
+      key: const ValueKey('settingsVehiclePackCard'),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  isUnlocked
+                      ? Icons.lock_open_rounded
+                      : Icons.lock_outline_rounded,
+                  color: AppColors.brown700,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    texts.title,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              isUnlocked ? texts.unlockedBody : texts.lockedBody,
+              style: textTheme.bodyMedium?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+                height: 1.35,
+              ),
+            ),
+            if (purchaseController == null) ...[
+              const SizedBox(height: 10),
+              Text(
+                texts.unavailableBody,
+                style: textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w700,
+                  height: 1.3,
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            if (!isUnlocked) ...[
+              FilledButton.icon(
+                key: const ValueKey('settingsVehiclePackUnlockButton'),
+                onPressed: onUnlockPressed,
+                icon: const Icon(Icons.lock_open_rounded),
+                label: Text(texts.unlockButton),
+              ),
+              const SizedBox(height: 8),
+            ],
+            OutlinedButton.icon(
+              key: const ValueKey('settingsVehiclePackRestoreButton'),
+              onPressed: onRestorePressed,
+              icon: const Icon(Icons.restore_rounded),
+              label: Text(texts.restoreButton),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsPurchaseTexts {
+  const _SettingsPurchaseTexts({
+    required this.title,
+    required this.lockedBody,
+    required this.unlockedBody,
+    required this.unavailableBody,
+    required this.unlockButton,
+    required this.restoreButton,
+  });
+
+  final String title;
+  final String lockedBody;
+  final String unlockedBody;
+  final String unavailableBody;
+  final String unlockButton;
+  final String restoreButton;
+
+  static _SettingsPurchaseTexts forLocale(Locale locale) {
+    if (locale.languageCode == 'ko') {
+      return const _SettingsPurchaseTexts(
+        title: '차량팩',
+        lockedBody: '오토바이와 슈퍼카는 무료로 사용할 수 있어요. 차량팩을 열면 나머지 차량도 사용할 수 있어요.',
+        unlockedBody: '차량팩이 열려 있어요. 모든 차량을 사용할 수 있어요.',
+        unavailableBody: '구매 기능을 준비하는 중이에요.',
+        unlockButton: '보호자 구매',
+        restoreButton: '구매 복원',
+      );
+    }
+
+    return const _SettingsPurchaseTexts(
+      title: 'Vehicle Pack',
+      lockedBody:
+          'Motorcycle and Supercar are free. Unlock the vehicle pack to use the other vehicles.',
+      unlockedBody: 'The vehicle pack is unlocked. All vehicles are available.',
+      unavailableBody: 'Purchase features are still getting ready.',
+      unlockButton: 'Guardian Purchase',
+      restoreButton: 'Restore Purchase',
     );
   }
 }
