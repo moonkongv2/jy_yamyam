@@ -22,6 +22,7 @@ import '../widgets/avatar/avatar_composite_preview.dart';
 import '../widgets/avatar/rider_guide_bottom_sheet.dart';
 import '../widgets/purchases/guardian_gate_sheet.dart';
 import '../widgets/purchases/purchase_entitlement_scope.dart';
+import '../widgets/purchases/vehicle_pack_intro_sheet.dart';
 import '../widgets/purchases/vehicle_pack_purchase_sheet.dart';
 import '../widgets/vehicle_selection_card.dart';
 
@@ -333,6 +334,10 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
   }
 
   void _handleLockedVehiclePressed(String vehicleId) {
+    unawaited(_showLockedVehiclePurchaseFlow(vehicleId));
+  }
+
+  Future<void> _showLockedVehiclePurchaseFlow(String vehicleId) async {
     final purchaseController = PurchaseEntitlementScope.read(
       context,
     )?.purchaseController;
@@ -340,22 +345,58 @@ class _AvatarSetupScreenState extends State<AvatarSetupScreen> {
       return;
     }
 
-    unawaited(
-      showGuardianGateSheet(
-        context,
-        onPassed: () {
-          if (!mounted) {
-            return;
-          }
-          unawaited(
-            showVehiclePackPurchaseSheet(
-              context,
-              purchaseController: purchaseController,
-            ),
-          );
-        },
-      ),
+    final shouldContinue = await showVehiclePackIntroSheet(context);
+    if (!mounted || !shouldContinue) {
+      return;
+    }
+
+    await showGuardianGateSheet(
+      context,
+      onPassed: () {
+        if (!mounted) {
+          return;
+        }
+        unawaited(_showVehiclePackPurchaseForLockedVehicle(vehicleId));
+      },
     );
+  }
+
+  Future<void> _showVehiclePackPurchaseForLockedVehicle(
+    String vehicleId,
+  ) async {
+    final purchaseController = PurchaseEntitlementScope.read(
+      context,
+    )?.purchaseController;
+    if (purchaseController == null) {
+      return;
+    }
+
+    var selectedUnlockedVehicle = false;
+    void selectVehicleIfUnlocked() {
+      if (selectedUnlockedVehicle || !mounted) {
+        return;
+      }
+      if (!VehicleUnlockCatalog.isUnlocked(
+        vehicleId,
+        entitlement: purchaseController.entitlement,
+      )) {
+        return;
+      }
+
+      selectedUnlockedVehicle = true;
+      _handleVehicleSelected(vehicleId);
+    }
+
+    purchaseController.addListener(selectVehicleIfUnlocked);
+    try {
+      await showVehiclePackPurchaseSheet(
+        context,
+        purchaseController: purchaseController,
+      );
+      selectVehicleIfUnlocked();
+    } finally {
+      purchaseController.removeListener(selectVehicleIfUnlocked);
+    }
   }
 
   @override

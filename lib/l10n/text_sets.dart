@@ -214,6 +214,11 @@ abstract interface class SettingsTextSet {
 
 abstract interface class PurchaseTextSet {
   String get lockedVehicleSemanticLabel;
+  String get vehiclePackIntroTitle;
+  String get vehiclePackIntroBody;
+  String get vehiclePackIntroGuardianNote;
+  String get vehiclePackIntroContinueButton;
+  String get vehiclePackIntroCloseButton;
   String get vehiclePackTitle;
   String get vehiclePackOneTimePurchase;
   String get vehiclePackPriceTitle;

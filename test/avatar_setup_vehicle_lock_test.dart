@@ -10,6 +10,7 @@ import 'package:jy_yamyam/screens/avatar_setup_screen.dart';
 import 'package:jy_yamyam/services/local_purchase_entitlement_store.dart';
 import 'package:jy_yamyam/widgets/purchases/guardian_gate_sheet.dart';
 import 'package:jy_yamyam/widgets/purchases/purchase_entitlement_scope.dart';
+import 'package:jy_yamyam/widgets/purchases/vehicle_pack_intro_sheet.dart';
 import 'package:jy_yamyam/widgets/purchases/vehicle_pack_purchase_sheet.dart';
 
 import 'fakes/fake_iap_purchase_client.dart';
@@ -106,8 +107,17 @@ void main() {
       await _tapVehicleChoice(tester, 'bus');
       await tester.pumpAndSettle();
 
-      expect(find.byType(GuardianGateSheet), findsOneWidget);
+      expect(find.byType(VehiclePackIntroSheet), findsOneWidget);
+      expect(find.byType(GuardianGateSheet), findsNothing);
       expect(find.byType(VehiclePackPurchaseSheet), findsNothing);
+
+      await tester.tap(
+        find.byKey(const ValueKey('vehiclePackIntroContinueButton')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(VehiclePackIntroSheet), findsNothing);
+      expect(find.byType(GuardianGateSheet), findsOneWidget);
 
       await tester.enterText(
         find.byKey(const ValueKey('guardianGateAnswerField')),

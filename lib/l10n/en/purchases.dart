@@ -6,6 +6,13 @@ class EnPurchaseTexts implements PurchaseTextSet {
   const EnPurchaseTexts();
 
   String get lockedVehicleSemanticLabel => 'Locked';
+  String get vehiclePackIntroTitle => 'This ride is in the Vehicle Pack';
+  String get vehiclePackIntroBody =>
+      'Unlock the Vehicle Pack to use all locked rides.';
+  String get vehiclePackIntroGuardianNote =>
+      'A parent or guardian can view the pack details after a quick check.';
+  String get vehiclePackIntroContinueButton => 'Continue with a Guardian';
+  String get vehiclePackIntroCloseButton => 'Close';
   String get vehiclePackTitle => 'Vehicle Pack';
   String get vehiclePackOneTimePurchase =>
       'Buy once to keep using the extra vehicles.';

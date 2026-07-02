@@ -6,6 +6,11 @@ class PurchaseTexts implements PurchaseTextSet {
   const PurchaseTexts();
 
   String get lockedVehicleSemanticLabel => '잠김';
+  String get vehiclePackIntroTitle => '차량팩 빠방이에요';
+  String get vehiclePackIntroBody => '차량팩을 열면 잠긴 빠방을 모두 사용할 수 있어요.';
+  String get vehiclePackIntroGuardianNote => '보호자 확인 후 차량팩 정보를 볼 수 있어요.';
+  String get vehiclePackIntroContinueButton => '보호자와 계속하기';
+  String get vehiclePackIntroCloseButton => '닫기';
   String get vehiclePackTitle => '차량팩';
   String get vehiclePackOneTimePurchase => '한 번 구매하면 추가 차량을 계속 사용할 수 있어요.';
   String get vehiclePackPriceTitle => '가격';

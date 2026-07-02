@@ -16,6 +16,7 @@ import 'package:jy_yamyam/services/local_purchase_entitlement_store.dart';
 import 'package:jy_yamyam/widgets/app/app_bouncy_button.dart';
 import 'package:jy_yamyam/widgets/purchases/guardian_gate_sheet.dart';
 import 'package:jy_yamyam/widgets/purchases/purchase_entitlement_scope.dart';
+import 'package:jy_yamyam/widgets/purchases/vehicle_pack_intro_sheet.dart';
 import 'package:jy_yamyam/widgets/purchases/vehicle_pack_purchase_sheet.dart';
 
 import 'fakes/fake_iap_purchase_client.dart';
@@ -185,6 +186,7 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
+    MealTimerConfig? changedConfig;
     final productDetails = fakeProductDetails();
     final client = FakeIapPurchaseClient(
       productDetailsResponse: ProductDetailsResponse(
@@ -197,6 +199,7 @@ void main() {
       purchaseClient: client,
       entitlementStore: const LocalPurchaseEntitlementStore(),
     );
+    controller.startListening();
     addTearDown(controller.dispose);
 
     await _pumpHome(
@@ -204,6 +207,7 @@ void main() {
       config: MealTimerConfig.defaults().copyWith(childName: '지율'),
       entitlement: const PurchaseEntitlement.locked(),
       purchaseController: controller,
+      onConfigChanged: (config) => changedConfig = config,
     );
 
     final busChoice = find.byKey(const ValueKey('vehicleChoice.bus'));
@@ -212,8 +216,17 @@ void main() {
     await tester.tap(busChoice);
     await tester.pumpAndSettle();
 
-    expect(find.byType(GuardianGateSheet), findsOneWidget);
+    expect(find.byType(VehiclePackIntroSheet), findsOneWidget);
+    expect(find.byType(GuardianGateSheet), findsNothing);
     expect(find.byType(VehiclePackPurchaseSheet), findsNothing);
+
+    await tester.tap(
+      find.byKey(const ValueKey('vehiclePackIntroContinueButton')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(VehiclePackIntroSheet), findsNothing);
+    expect(find.byType(GuardianGateSheet), findsOneWidget);
 
     await tester.enterText(
       find.byKey(const ValueKey('guardianGateAnswerField')),
@@ -226,6 +239,13 @@ void main() {
     expect(find.byType(GuardianGateSheet), findsNothing);
     expect(find.byType(VehiclePackPurchaseSheet), findsOneWidget);
     expect(find.byKey(const ValueKey('vehiclePackBuyButton')), findsOneWidget);
+
+    client.emitPurchases([
+      fakePurchaseDetails(status: PurchaseStatus.purchased),
+    ]);
+    await tester.pumpAndSettle();
+
+    expect(changedConfig?.vehicleId, 'bus');
   });
 }
 
