@@ -127,6 +127,12 @@ Local StoreKit testing does not replace App Store sandbox or TestFlight testing.
 Before release, still create the real App Store Connect non-consumable product
 with the same `vehicle_pack` product ID and test against Apple's sandbox store.
 
+If the purchase sheet shows the generic purchase failure message while loading
+the price, stop the app and run it from Xcode with the `Runner` scheme. A plain
+`flutter run` launch may not attach the StoreKit configuration, which makes the
+simulator query the real App Store environment where `vehicle_pack` does not
+exist yet.
+
 ## Platform Project TODOs
 
 Current Android and iOS IDs still look like Flutter placeholders. Do not submit
