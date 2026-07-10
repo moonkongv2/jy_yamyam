@@ -106,6 +106,27 @@ Suggested product metadata:
 - Korean description: `한 번 구매하면 잠긴 빠방을 모두 사용할 수 있어요.`
 - English description: `Unlock all locked rider vehicles with one purchase.`
 
+## Local StoreKit Testing
+
+The repo includes `ios/Runner/VehiclePack.storekit` for local iOS simulator
+testing before the App Store Connect product is available.
+
+Use it only for local development:
+
+1. Open `ios/Runner.xcworkspace` in Xcode.
+2. Select the `Runner` scheme.
+3. Open `Edit Scheme...` > `Run` > `Options`.
+4. Set `StoreKit Configuration` to `VehiclePack.storekit`.
+5. Run the app on an iOS simulator.
+6. Tap a locked vehicle, pass the guardian gate, and verify the purchase sheet loads the `vehicle_pack` test product.
+7. Complete a local StoreKit purchase and verify the selected premium vehicle unlocks.
+8. Restart the app and verify the local entitlement cache keeps premium vehicles unlocked.
+9. Use the post-gate restore button and Settings restore flow to verify restore handling.
+
+Local StoreKit testing does not replace App Store sandbox or TestFlight testing.
+Before release, still create the real App Store Connect non-consumable product
+with the same `vehicle_pack` product ID and test against Apple's sandbox store.
+
 ## Platform Project TODOs
 
 Current Android and iOS IDs still look like Flutter placeholders. Do not submit
