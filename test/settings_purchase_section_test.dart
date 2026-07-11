@@ -79,7 +79,7 @@ void main() {
     expect(find.byKey(const ValueKey('vehiclePackBuyButton')), findsOneWidget);
   });
 
-  testWidgets('Settings restore CTA requires gate and starts restore', (
+  testWidgets('Settings restore CTA requires gate before showing restore UI', (
     tester,
   ) async {
     final harness = _SettingsPurchaseHarness(
@@ -104,6 +104,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(VehiclePackPurchaseSheet), findsOneWidget);
+    expect(harness.client.restorePurchasesCallCount, 0);
+    expect(
+      find.byKey(const ValueKey('vehiclePackRestoreButton')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('vehiclePackRestoreButton')));
+    await tester.pumpAndSettle();
+
     expect(harness.client.restorePurchasesCallCount, 1);
     expect(find.text('복원할 차량팩 구매 내역을 찾지 못했어요.'), findsOneWidget);
   });
@@ -118,10 +127,7 @@ void main() {
 
     await _pumpSettings(tester, harness);
 
-    expect(
-      find.text('차량팩 열림. 모든 차량을 사용할 수 있어요.'),
-      findsNothing,
-    );
+    expect(find.text('차량팩 열림. 모든 차량을 사용할 수 있어요.'), findsNothing);
 
     await _scrollToVehiclePackCard(tester);
 
@@ -129,10 +135,7 @@ void main() {
       find.byKey(const ValueKey('settingsUnlockedVehiclePackCard')),
       findsWidgets,
     );
-    expect(
-      find.text('차량팩 열림. 모든 차량을 사용할 수 있어요.'),
-      findsOneWidget,
-    );
+    expect(find.text('차량팩 열림. 모든 차량을 사용할 수 있어요.'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('settingsVehiclePackUnlockButton')),
       findsNothing,

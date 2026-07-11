@@ -145,7 +145,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               purchaseController: controller,
             ),
           );
-          unawaited(controller.restorePurchases());
         },
       ),
     );
