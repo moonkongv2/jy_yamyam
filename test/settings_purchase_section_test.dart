@@ -104,7 +104,17 @@ void main() {
 
     await _pumpSettings(tester, harness);
 
-    expect(find.text('차량팩이 열려 있어요. 모든 차량을 사용할 수 있어요.'), findsOneWidget);
+    await tester.drag(find.byType(ListView), const Offset(0, -900));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('settingsUnlockedVehiclePackCard')),
+      findsWidgets,
+    );
+    expect(
+      find.text('차량팩이 열려 있어요. 모든 차량을 사용할 수 있어요.'),
+      findsOneWidget,
+    );
     expect(
       find.byKey(const ValueKey('settingsVehiclePackUnlockButton')),
       findsNothing,

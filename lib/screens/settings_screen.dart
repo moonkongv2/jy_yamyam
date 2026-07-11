@@ -189,7 +189,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          if (purchaseScope != null) ...[
+          if (purchaseScope != null &&
+              !purchaseScope.entitlement.vehiclePackUnlocked) ...[
             _SettingsVehiclePackCard(
               entitlement: purchaseScope.entitlement,
               purchaseController: purchaseScope.purchaseController,
@@ -499,6 +500,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 20),
+          if (purchaseScope != null &&
+              purchaseScope.entitlement.vehiclePackUnlocked) ...[
+            _SettingsVehiclePackCard(
+              cardKey: const ValueKey('settingsUnlockedVehiclePackCard'),
+              entitlement: purchaseScope.entitlement,
+              purchaseController: purchaseScope.purchaseController,
+              onUnlockPressed: null,
+              onRestorePressed: null,
+            ),
+            const SizedBox(height: 20),
+          ],
         ],
       ),
     );
@@ -507,12 +519,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
 class _SettingsVehiclePackCard extends StatelessWidget {
   const _SettingsVehiclePackCard({
+    this.cardKey = const ValueKey('settingsVehiclePackCard'),
     required this.entitlement,
     required this.purchaseController,
     required this.onUnlockPressed,
     required this.onRestorePressed,
   });
 
+  final Key cardKey;
   final PurchaseEntitlement entitlement;
   final VehiclePackPurchaseController? purchaseController;
   final VoidCallback? onUnlockPressed;
@@ -525,7 +539,7 @@ class _SettingsVehiclePackCard extends StatelessWidget {
     final isUnlocked = entitlement.vehiclePackUnlocked;
 
     return Card(
-      key: const ValueKey('settingsVehiclePackCard'),
+      key: cardKey,
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
