@@ -10,6 +10,8 @@ void main() {
     expect(purchases.vehiclePackTitle, '차량팩');
     expect(purchases.guardianGateTitle, '보호자 확인');
     expect(purchases.settingsVehiclePackUnlockButton, '보호자 구매');
+    expect(purchases.settingsVehiclePackLockedBody, contains('보호자 확인'));
+    expect(purchases.settingsVehiclePackUnlockedBody, contains('차량팩 열림'));
     expect(purchases.vehiclePackRestoreButton, '구매 복원');
     expect(purchases.vehiclePackPendingMessage, contains('처리 중'));
     expect(purchases.vehiclePackSuccessMessage, contains('열렸어요'));
@@ -25,6 +27,8 @@ void main() {
     expect(purchases.vehiclePackTitle, 'Vehicle Pack');
     expect(purchases.guardianGateTitle, 'Guardian Check');
     expect(purchases.settingsVehiclePackUnlockButton, 'Guardian Purchase');
+    expect(purchases.settingsVehiclePackLockedBody, contains('guardian'));
+    expect(purchases.settingsVehiclePackUnlockedBody, contains('unlocked'));
     expect(purchases.vehiclePackRestoreButton, 'Restore Purchase');
     expect(purchases.vehiclePackPendingMessage, contains('pending'));
     expect(purchases.vehiclePackSuccessMessage, contains('unlocked'));

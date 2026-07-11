@@ -37,9 +37,9 @@ class PurchaseTexts implements PurchaseTextSet {
   String get guardianGateCancelButton => '닫기';
   String get guardianGateContinueButton => '계속';
   String get settingsVehiclePackLockedBody =>
-      '오토바이와 슈퍼카는 무료로 사용할 수 있어요. 차량팩을 열면 나머지 차량도 사용할 수 있어요.';
+      '오토바이와 슈퍼카는 무료로 사용할 수 있어요. 차량팩 보기와 구매 복원은 보호자 확인 후 진행돼요.';
   String get settingsVehiclePackUnlockedBody =>
-      '차량팩이 열려 있어요. 모든 차량을 사용할 수 있어요.';
+      '차량팩 열림. 모든 차량을 사용할 수 있어요.';
   String get settingsVehiclePackUnavailableBody => '구매 기능을 준비하는 중이에요.';
   String get settingsVehiclePackUnlockButton => '보호자 구매';
   String get settingsVehiclePackRestoreButton => '구매 복원';

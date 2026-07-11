@@ -50,9 +50,9 @@ class EnPurchaseTexts implements PurchaseTextSet {
   String get guardianGateCancelButton => 'Close';
   String get guardianGateContinueButton => 'Continue';
   String get settingsVehiclePackLockedBody =>
-      'Motorcycle and Supercar are free. Unlock the vehicle pack to use the other vehicles.';
+      'Motorcycle and Supercar are free. A guardian can view the pack or restore a purchase after the check.';
   String get settingsVehiclePackUnlockedBody =>
-      'The vehicle pack is unlocked. All vehicles are available.';
+      'Vehicle Pack unlocked. All vehicles are available.';
   String get settingsVehiclePackUnavailableBody =>
       'Purchase features are still getting ready.';
   String get settingsVehiclePackUnlockButton => 'Guardian Purchase';

@@ -114,7 +114,7 @@ void main() {
       findsWidgets,
     );
     expect(
-      find.text('차량팩이 열려 있어요. 모든 차량을 사용할 수 있어요.'),
+      find.text('차량팩 열림. 모든 차량을 사용할 수 있어요.'),
       findsOneWidget,
     );
     expect(
