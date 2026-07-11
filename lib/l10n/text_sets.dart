@@ -229,7 +229,9 @@ abstract interface class PurchaseTextSet {
   String get vehiclePackLoadingProductMessage;
   String get vehiclePackPendingMessage;
   String get vehiclePackSuccessMessage;
+  String get vehiclePackRestoringMessage;
   String get vehiclePackRestoreSuccessMessage;
+  String get vehiclePackRestoreNotFoundMessage;
   String get vehiclePackErrorMessage;
   String get vehiclePackStoreUnavailableMessage;
   String get vehiclePackProductNotFoundMessage;

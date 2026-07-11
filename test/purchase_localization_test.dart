@@ -14,6 +14,8 @@ void main() {
     expect(purchases.settingsVehiclePackUnlockedBody, contains('차량팩 열림'));
     expect(purchases.vehiclePackRestoreButton, '구매 복원');
     expect(purchases.vehiclePackPendingMessage, contains('처리 중'));
+    expect(purchases.vehiclePackRestoringMessage, contains('구매 내역'));
+    expect(purchases.vehiclePackRestoreNotFoundMessage, contains('찾지 못했어요'));
     expect(purchases.vehiclePackSuccessMessage, contains('열렸어요'));
     expect(purchases.vehiclePackErrorMessage, contains('완료하지 못했어요'));
     expect(purchases.vehiclePackCanceledMessage, contains('취소'));
@@ -31,6 +33,11 @@ void main() {
     expect(purchases.settingsVehiclePackUnlockedBody, contains('unlocked'));
     expect(purchases.vehiclePackRestoreButton, 'Restore Purchase');
     expect(purchases.vehiclePackPendingMessage, contains('pending'));
+    expect(purchases.vehiclePackRestoringMessage, contains('purchase history'));
+    expect(
+      purchases.vehiclePackRestoreNotFoundMessage,
+      contains('No Vehicle Pack purchase'),
+    );
     expect(purchases.vehiclePackSuccessMessage, contains('unlocked'));
     expect(
       purchases.vehiclePackErrorMessage,

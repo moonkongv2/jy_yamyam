@@ -21,7 +21,9 @@ class PurchaseTexts implements PurchaseTextSet {
   String get vehiclePackLoadingProductMessage => '스토어에서 차량팩 정보를 불러오는 중이에요.';
   String get vehiclePackPendingMessage => '구매가 처리 중이에요. 잠시만 기다려 주세요.';
   String get vehiclePackSuccessMessage => '차량팩이 열렸어요.';
+  String get vehiclePackRestoringMessage => '구매 내역을 확인하고 있어요.';
   String get vehiclePackRestoreSuccessMessage => '구매 복원이 완료됐어요.';
+  String get vehiclePackRestoreNotFoundMessage => '복원할 차량팩 구매 내역을 찾지 못했어요.';
   String get vehiclePackErrorMessage => '구매를 완료하지 못했어요. 잠시 후 다시 시도해 주세요.';
   String get vehiclePackStoreUnavailableMessage => '지금은 스토어에 연결할 수 없어요.';
   String get vehiclePackProductNotFoundMessage => '스토어에서 차량팩을 찾을 수 없어요.';
