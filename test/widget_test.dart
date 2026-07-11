@@ -114,9 +114,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('ko'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
         home: FirstRunOnboardingScreen(onCompleted: () async {}),
       ),
     );
@@ -142,9 +142,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('ko'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
         home: FirstRunOnboardingScreen(
           onCompleted: () async {
             completedCount += 1;
@@ -180,9 +180,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('ko'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
         home: FirstRunOnboardingScreen(
           onCompleted: () async {
             completedCount += 1;
@@ -735,13 +735,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: ResultScreen(
           result: _mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults(),
@@ -772,13 +768,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: ResultScreen(
           result: _mealResult(completedBeforeArrival: false),
           config: MealTimerConfig.defaults(),
@@ -815,13 +807,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: ResultScreen(
           result: _mealResult(mealCompleted: false),
           config: MealTimerConfig.defaults(),
@@ -874,13 +862,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: ResultScreen(
           result: _mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults(),
@@ -915,13 +899,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: ResultScreen(
           result: _mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults(),
@@ -969,13 +949,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
-          supportedLocales: const [Locale('ko'), Locale('en')],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
           home: ResultScreen(
             result: _mealResult(completedBeforeArrival: true),
             config: MealTimerConfig.defaults().copyWith(vehicleId: 'supercar'),
@@ -1025,13 +1001,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: ResultScreen(
           result: _mealResult(mealCompleted: false),
           config: MealTimerConfig.defaults(),
@@ -1074,13 +1046,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: ResultScreen(
           result: _mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults(),
@@ -1126,13 +1094,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: ResultScreen(
           result: _mealResult(mealCompleted: false),
           config: MealTimerConfig.defaults(),
@@ -1167,13 +1131,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: ResultScreen(
           result: _mealResult(mealCompleted: false),
           config: MealTimerConfig.defaults().copyWith(vehicleId: 'bus'),
@@ -1218,13 +1178,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: ResultScreen(
           result: _mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults(),
@@ -1310,13 +1266,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: ResultScreen(
           result: _mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults().copyWith(
@@ -1345,13 +1297,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: ResultScreen(
           result: _mealResult(mealCompleted: false),
           config: MealTimerConfig.defaults(),
@@ -2042,13 +1990,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
@@ -2090,13 +2034,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
@@ -2144,13 +2084,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
@@ -2206,13 +2142,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
@@ -2266,13 +2198,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: mealProgressService,
@@ -2315,13 +2243,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
@@ -2354,13 +2278,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
@@ -2397,13 +2317,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
@@ -2443,13 +2359,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
@@ -2492,13 +2404,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
@@ -2554,13 +2462,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
@@ -2613,13 +2517,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
@@ -2668,13 +2568,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
@@ -2721,13 +2617,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
@@ -2781,13 +2673,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
-          supportedLocales: const [Locale('ko'), Locale('en')],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
           home: HomeScreen(
             config: MealTimerConfig.defaults().copyWith(childName: '지율'),
             mealProgressService: LocalMealProgressService(),
@@ -2849,13 +2737,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
@@ -2891,13 +2775,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
@@ -2927,13 +2807,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
@@ -2987,13 +2863,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
-          supportedLocales: const [Locale('ko'), Locale('en')],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
           home: HomeScreen(
             config: MealTimerConfig.defaults().copyWith(
               childName: '지율',
@@ -3055,13 +2927,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
@@ -3125,13 +2993,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
@@ -3179,13 +3043,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
@@ -3773,13 +3633,9 @@ void main() {
   testWidgets('Settings screen opens Korean parent guide', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: SettingsScreen(
           config: MealTimerConfig.defaults(),
           onConfigChanged: (_) {},
@@ -3805,14 +3661,10 @@ void main() {
 
   testWidgets('User guide uses English localization', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: Locale('en'),
-        supportedLocales: [Locale('ko'), Locale('en')],
-        localizationsDelegates: [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: UserGuideScreen(),
       ),
     );
@@ -3841,14 +3693,10 @@ void main() {
 
   testWidgets('User guide shows key Korean guide copy', (tester) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: Locale('ko'),
-        supportedLocales: [Locale('ko'), Locale('en')],
-        localizationsDelegates: [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: UserGuideScreen(),
       ),
     );
@@ -3896,13 +3744,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: SettingsScreen(
           config: MealTimerConfig.defaults(),
           onConfigChanged: (_) {},
@@ -3949,13 +3793,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: SettingsScreen(
           config: latestConfig,
           onConfigChanged: (config) => latestConfig = config,
@@ -3998,13 +3838,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: SettingsScreen(
           config: latestConfig,
           onConfigChanged: (config) => latestConfig = config,
@@ -4073,13 +3909,9 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: SettingsScreen(
           config: MealTimerConfig.defaults(),
           onConfigChanged: (_) {},
@@ -4119,13 +3951,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
@@ -4215,13 +4043,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: SettingsScreen(
           config: MealTimerConfig.defaults().copyWith(
             avatarMode: AvatarImageMode.custom,
@@ -4329,13 +4153,9 @@ void main() {
     const childName = '아주무지긴아이이름테스트지유나';
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: childName),
           mealProgressService: LocalMealProgressService(),
@@ -4377,6 +4197,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
           home: Scaffold(
             body: SizedBox(
@@ -4426,13 +4248,9 @@ void main() {
   testWidgets('Vehicle selection card supports compact layout', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: Scaffold(
           body: Center(
             child: SizedBox(
@@ -4472,6 +4290,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: Scaffold(
           body: SizedBox(
@@ -4545,6 +4365,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
@@ -4643,7 +4465,9 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: VehicleWidget(
             vehicle: VehicleDefinition(
@@ -4673,6 +4497,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 420,
@@ -4712,6 +4538,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 420,
@@ -4737,6 +4565,8 @@ void main() {
     }) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           home: Scaffold(
             body: SizedBox(
               width: roadSize.width,
@@ -4821,7 +4651,9 @@ void main() {
       }
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           home: Scaffold(body: Center(child: GoalStarPulse(size: 100))),
         ),
       );
@@ -4832,7 +4664,9 @@ void main() {
       expect(maxTransformScale(), greaterThan(1.55));
 
       await tester.pumpWidget(
-        const MaterialApp(
+        MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           home: Scaffold(
             body: MediaQuery(
               data: MediaQueryData(disableAnimations: true),
@@ -4855,6 +4689,8 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           home: Scaffold(
             body: SizedBox(
               width: 420,
@@ -4897,6 +4733,8 @@ void main() {
     Future<void> pumpRoad(double progress) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           home: Scaffold(
             body: SizedBox(
               width: 420,
@@ -4936,6 +4774,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           home: Scaffold(
             body: SizedBox(
               width: 420,
@@ -4969,6 +4809,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 420,
@@ -4998,6 +4840,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 420,
@@ -5031,6 +4875,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 420,
@@ -5052,6 +4898,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 420,
@@ -5078,6 +4926,8 @@ void main() {
     Future<void> pumpLongRoad(double progress) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           home: Scaffold(
             body: SizedBox(
               width: 420,
@@ -5119,6 +4969,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           home: Scaffold(
             body: SizedBox(
               width: 420,
@@ -5517,6 +5369,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 420,
@@ -5561,6 +5415,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 420,
@@ -5599,6 +5455,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 1200,
@@ -5623,7 +5481,9 @@ void main() {
     expect(videoSize.width / videoSize.height, closeTo(16 / 9, 0.01));
 
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 1200,
@@ -5654,6 +5514,8 @@ void main() {
     Future<void> pumpLongRoadWithVideo(double progress) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           home: Scaffold(
             body: SizedBox(
               width: 420,
@@ -5695,6 +5557,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 1200,
@@ -5727,6 +5591,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 1200,
@@ -5751,7 +5617,9 @@ void main() {
     );
 
     await tester.pumpWidget(
-      const MaterialApp(
+      MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: Scaffold(
           body: SizedBox(
             width: 1200,
@@ -5783,6 +5651,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -5815,6 +5685,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -5851,6 +5723,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -5884,6 +5758,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -5907,6 +5783,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -5933,6 +5811,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -5974,6 +5854,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -6025,6 +5907,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -6071,6 +5955,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults(),
@@ -6116,6 +6002,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults(),
@@ -6161,6 +6049,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -6195,6 +6085,8 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -6231,6 +6123,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -6272,6 +6166,8 @@ void main() {
   testWidgets('Controls are disabled during fast finish drive', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -6307,6 +6203,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -6344,6 +6242,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -6385,6 +6285,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -6423,6 +6325,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -6469,13 +6373,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(seconds: 100),
@@ -6517,13 +6417,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
-          supportedLocales: const [Locale('ko'), Locale('en')],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
           home: TimerScreen(
             config: MealTimerConfig.defaults().copyWith(
               duration: const Duration(minutes: 60),
@@ -6574,13 +6470,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
-          supportedLocales: const [Locale('ko'), Locale('en')],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
           home: TimerScreen(
             config: MealTimerConfig.defaults().copyWith(
               duration: const Duration(minutes: 15),
@@ -6634,13 +6526,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 60),
@@ -6699,13 +6587,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
-          supportedLocales: const [Locale('ko'), Locale('en')],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
           home: TimerScreen(
             config: MealTimerConfig.defaults().copyWith(
               duration: const Duration(minutes: 60),
@@ -6763,13 +6647,9 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
-          supportedLocales: const [Locale('ko'), Locale('en')],
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
           home: TimerScreen(
             config: MealTimerConfig.defaults().copyWith(
               duration: const Duration(minutes: 60),
@@ -6832,13 +6712,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 60),
@@ -6878,6 +6754,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -6930,6 +6808,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -7035,6 +6915,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
@@ -7079,6 +6961,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('en'),
           home: TimerScreen(
             config: MealTimerConfig.defaults(),
@@ -7136,9 +7020,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('en'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('en'),
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(
             motivationVideoUseCustomInterval: true,
@@ -7172,6 +7056,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: TimerScreen(
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
@@ -7200,6 +7086,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         home: TimerScreen(
           config: MealTimerConfig.defaults().copyWith(keepScreenAwake: true),
           mealProgressService: LocalMealProgressService(),
@@ -7225,6 +7113,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           home: TimerScreen(
             config: MealTimerConfig.defaults().copyWith(keepScreenAwake: false),
             mealProgressService: LocalMealProgressService(),
@@ -7258,14 +7148,10 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         navigatorKey: navigatorKey,
         locale: const Locale('ko'),
-        supportedLocales: const [Locale('ko'), Locale('en')],
-        localizationsDelegates: const [
-          GlobalMaterialLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-        ],
         home: const Scaffold(body: Center(child: Text('타이머 열기'))),
       ),
     );
@@ -7342,9 +7228,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('en'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('en'),
         home: TimerScreen(
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
@@ -7365,6 +7251,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: TimerScreen(
           config: MealTimerConfig.defaults(),
@@ -8013,6 +7901,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: 'Jiyul'),
@@ -8036,6 +7926,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('en'),
           home: HomeScreen(
             config: MealTimerConfig.defaults().copyWith(childName: 'Jiyul'),
@@ -8147,9 +8039,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('ko'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
         home: StickerCollectionScreen(
           mealProgressService: LocalMealProgressService(),
         ),
@@ -8178,6 +8070,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: 'Jiyul'),
@@ -8217,9 +8111,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('ko'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
         home: HomeScreen(
           config: MealTimerConfig.defaults().copyWith(childName: '강우'),
           mealProgressService: service,
@@ -8245,6 +8139,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: RewardGoalScreen(mealProgressService: service),
       ),
@@ -8274,6 +8170,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: RewardGoalScreen(mealProgressService: service),
       ),
@@ -8311,9 +8209,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('ko'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
         home: MealHistoryScreen(
           mealProgressService: LocalMealProgressService(),
         ),
@@ -8341,9 +8239,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('ko'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
         home: MealHistoryScreen(mealProgressService: service),
       ),
     );
@@ -8376,9 +8274,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('ko'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
         home: MealHistoryScreen(mealProgressService: service),
       ),
     );
@@ -8408,9 +8306,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('ko'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
         home: MealHistoryScreen(mealProgressService: service),
       ),
     );
@@ -8451,9 +8349,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('ko'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
         home: MealHistoryScreen(mealProgressService: service),
       ),
     );
@@ -8489,9 +8387,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('ko'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
         home: MealHistoryScreen(mealProgressService: service),
       ),
     );
@@ -8522,9 +8420,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        locale: const Locale('ko'),
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
         home: MealHistoryScreen(mealProgressService: service),
       ),
     );
@@ -8572,9 +8470,9 @@ Future<void> _pumpOpenResultStickerAlbumSheet(WidgetTester tester) async {
 
   await tester.pumpWidget(
     MaterialApp(
-      locale: const Locale('ko'),
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       supportedLocales: AppTexts.supportedLocales,
+      locale: const Locale('ko'),
       theme: AppTheme.light(),
       home: Builder(
         builder: (context) {
@@ -8677,13 +8575,9 @@ Future<void> _pumpAvatarSetupScreen(
 }) async {
   await tester.pumpWidget(
     MaterialApp(
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      supportedLocales: AppTexts.supportedLocales,
       locale: locale,
-      supportedLocales: const [Locale('ko'), Locale('en')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
       home: AvatarSetupScreen(
         config: config,
         onConfigChanged: onConfigChanged ?? (_) {},
