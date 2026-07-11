@@ -573,8 +573,8 @@ class _SettingsVehiclePackCard extends StatelessWidget {
                 ),
               ),
             ],
-            const SizedBox(height: 16),
             if (!isUnlocked) ...[
+              const SizedBox(height: 16),
               FilledButton.icon(
                 key: const ValueKey('settingsVehiclePackUnlockButton'),
                 onPressed: onUnlockPressed,
@@ -582,13 +582,13 @@ class _SettingsVehiclePackCard extends StatelessWidget {
                 label: Text(texts.settingsVehiclePackUnlockButton),
               ),
               const SizedBox(height: 8),
+              OutlinedButton.icon(
+                key: const ValueKey('settingsVehiclePackRestoreButton'),
+                onPressed: onRestorePressed,
+                icon: const Icon(Icons.restore_rounded),
+                label: Text(texts.settingsVehiclePackRestoreButton),
+              ),
             ],
-            OutlinedButton.icon(
-              key: const ValueKey('settingsVehiclePackRestoreButton'),
-              onPressed: onRestorePressed,
-              icon: const Icon(Icons.restore_rounded),
-              label: Text(texts.settingsVehiclePackRestoreButton),
-            ),
           ],
         ),
       ),

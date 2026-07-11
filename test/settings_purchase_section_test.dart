@@ -111,7 +111,7 @@ void main() {
     );
     expect(
       find.byKey(const ValueKey('settingsVehiclePackRestoreButton')),
-      findsOneWidget,
+      findsNothing,
     );
   });
 }
