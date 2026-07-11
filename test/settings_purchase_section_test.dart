@@ -24,6 +24,7 @@ void main() {
     addTearDown(harness.dispose);
 
     await _pumpSettings(tester, harness);
+    await _scrollToVehiclePackCard(tester);
 
     expect(
       find.byKey(const ValueKey('settingsVehiclePackCard')),
@@ -48,6 +49,7 @@ void main() {
     addTearDown(harness.dispose);
 
     await _pumpSettings(tester, harness);
+    await _scrollToVehiclePackCard(tester);
 
     await tester.tap(
       find.byKey(const ValueKey('settingsVehiclePackUnlockButton')),
@@ -76,6 +78,7 @@ void main() {
     addTearDown(harness.dispose);
 
     await _pumpSettings(tester, harness);
+    await _scrollToVehiclePackCard(tester);
 
     await tester.tap(
       find.byKey(const ValueKey('settingsVehiclePackRestoreButton')),
@@ -104,8 +107,7 @@ void main() {
 
     await _pumpSettings(tester, harness);
 
-    await tester.drag(find.byType(ListView), const Offset(0, -900));
-    await tester.pumpAndSettle();
+    await _scrollToVehiclePackCard(tester);
 
     expect(
       find.byKey(const ValueKey('settingsUnlockedVehiclePackCard')),
@@ -124,6 +126,11 @@ void main() {
       findsNothing,
     );
   });
+}
+
+Future<void> _scrollToVehiclePackCard(WidgetTester tester) async {
+  await tester.drag(find.byType(ListView), const Offset(0, -900));
+  await tester.pumpAndSettle();
 }
 
 Future<void> _pumpSettings(

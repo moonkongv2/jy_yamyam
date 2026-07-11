@@ -189,24 +189,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          if (purchaseScope != null &&
-              !purchaseScope.entitlement.vehiclePackUnlocked) ...[
-            _SettingsVehiclePackCard(
-              entitlement: purchaseScope.entitlement,
-              purchaseController: purchaseScope.purchaseController,
-              onUnlockPressed: purchaseScope.purchaseController == null
-                  ? null
-                  : () => _openVehiclePackPurchaseSheet(
-                      purchaseScope.purchaseController!,
-                    ),
-              onRestorePressed: purchaseScope.purchaseController == null
-                  ? null
-                  : () => _restoreVehiclePackPurchase(
-                      purchaseScope.purchaseController!,
-                    ),
-            ),
-            const SizedBox(height: 20),
-          ],
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -500,14 +482,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          if (purchaseScope != null &&
-              purchaseScope.entitlement.vehiclePackUnlocked) ...[
+          if (purchaseScope != null) ...[
             _SettingsVehiclePackCard(
-              cardKey: const ValueKey('settingsUnlockedVehiclePackCard'),
+              cardKey: purchaseScope.entitlement.vehiclePackUnlocked
+                  ? const ValueKey('settingsUnlockedVehiclePackCard')
+                  : const ValueKey('settingsVehiclePackCard'),
               entitlement: purchaseScope.entitlement,
               purchaseController: purchaseScope.purchaseController,
-              onUnlockPressed: null,
-              onRestorePressed: null,
+              onUnlockPressed:
+                  purchaseScope.entitlement.vehiclePackUnlocked ||
+                      purchaseScope.purchaseController == null
+                  ? null
+                  : () => _openVehiclePackPurchaseSheet(
+                      purchaseScope.purchaseController!,
+                    ),
+              onRestorePressed:
+                  purchaseScope.entitlement.vehiclePackUnlocked ||
+                      purchaseScope.purchaseController == null
+                  ? null
+                  : () => _restoreVehiclePackPurchase(
+                      purchaseScope.purchaseController!,
+                    ),
             ),
             const SizedBox(height: 20),
           ],
