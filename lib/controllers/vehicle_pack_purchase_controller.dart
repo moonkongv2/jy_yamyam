@@ -16,6 +16,8 @@ enum VehiclePackPurchaseStatus {
   productNotFound,
   purchasePending,
   purchaseCompleted,
+  restoring,
+  restoreNotFound,
   restoreCompleted,
   error,
   canceled,
@@ -190,10 +192,26 @@ class VehiclePackPurchaseController extends ChangeNotifier {
   }
 
   Future<void> restorePurchases({String? applicationUserName}) async {
+    _setState(
+      _state.copyWith(
+        status: VehiclePackPurchaseStatus.restoring,
+        errorMessage: null,
+      ),
+    );
+
     try {
       await _purchaseClient.restorePurchases(
         applicationUserName: applicationUserName,
       );
+      if (_state.status == VehiclePackPurchaseStatus.restoring &&
+          !_state.vehiclePackUnlocked) {
+        _setState(
+          _state.copyWith(
+            status: VehiclePackPurchaseStatus.restoreNotFound,
+            errorMessage: null,
+          ),
+        );
+      }
     } catch (error) {
       _setState(
         _state.copyWith(

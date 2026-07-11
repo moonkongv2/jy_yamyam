@@ -275,16 +275,52 @@ void main() {
     },
   );
 
-  test('Vehicle pack purchase controller starts restore flow', () async {
+  test(
+    'Vehicle pack purchase controller reports restore without purchase updates',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final client = FakeIapPurchaseClient();
+      addTearDown(client.dispose);
+      final store = const LocalPurchaseEntitlementStore();
+      final controller = _controller(client, store: store);
+      addTearDown(controller.dispose);
+
+      await controller.restorePurchases(applicationUserName: 'guardian');
+
+      expect(client.restoreApplicationUserNames, ['guardian']);
+      expect(
+        controller.state.status,
+        VehiclePackPurchaseStatus.restoreNotFound,
+      );
+      expect(controller.state.vehiclePackUnlocked, isFalse);
+      expect(await store.load(), const PurchaseEntitlement.locked());
+    },
+  );
+
+  test('Vehicle pack purchase controller keeps restored state after restore', () async {
     SharedPreferences.setMockInitialValues({});
     final client = FakeIapPurchaseClient();
     addTearDown(client.dispose);
-    final controller = _controller(client);
+    final store = const LocalPurchaseEntitlementStore();
+    final controller = _controller(client, store: store);
     addTearDown(controller.dispose);
+    final purchase = fakePurchaseDetails(
+      purchaseId: 'restore-during-call',
+      status: PurchaseStatus.restored,
+      pendingCompletePurchase: true,
+    );
 
-    await controller.restorePurchases(applicationUserName: 'guardian');
+    controller.startListening();
+    final restore = controller.restorePurchases(applicationUserName: 'guardian');
+    client.emitPurchases([purchase]);
+    await restore;
+    await pumpEventQueue();
 
     expect(client.restoreApplicationUserNames, ['guardian']);
+    expect(controller.state.status, VehiclePackPurchaseStatus.restoreCompleted);
+    expect(controller.state.vehiclePackUnlocked, isTrue);
+    expect((await store.load()).vehiclePackUnlocked, isTrue);
+    expect(client.completedPurchases, [purchase]);
   });
 }
 

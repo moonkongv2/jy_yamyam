@@ -397,6 +397,10 @@ class _StatusMessage extends StatelessWidget {
         texts.vehiclePackPendingMessage,
       VehiclePackPurchaseStatus.purchaseCompleted =>
         texts.vehiclePackSuccessMessage,
+      VehiclePackPurchaseStatus.restoring =>
+        texts.vehiclePackLoadingProductMessage,
+      VehiclePackPurchaseStatus.restoreNotFound =>
+        texts.vehiclePackErrorMessage,
       VehiclePackPurchaseStatus.restoreCompleted =>
         texts.vehiclePackRestoreSuccessMessage,
       VehiclePackPurchaseStatus.error => texts.vehiclePackErrorMessage,
