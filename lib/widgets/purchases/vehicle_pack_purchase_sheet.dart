@@ -112,7 +112,6 @@ class _VehiclePackPurchaseSheetState extends State<VehiclePackPurchaseSheet> {
         state.status == VehiclePackPurchaseStatus.restoring;
     final canBuy =
         !state.vehiclePackUnlocked &&
-        productDetails != null &&
         state.status != VehiclePackPurchaseStatus.purchasePending &&
         state.status != VehiclePackPurchaseStatus.restoring;
     final canRestore =
@@ -214,6 +213,8 @@ class _VehiclePackPurchaseSheetState extends State<VehiclePackPurchaseSheet> {
               label: Text(
                 state.vehiclePackUnlocked
                     ? texts.vehiclePackUnlockedButton
+                    : productDetails == null
+                    ? texts.settingsVehiclePackUnlockButton
                     : texts.vehiclePackBuyButton(priceText),
               ),
             ),

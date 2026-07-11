@@ -158,6 +158,43 @@ void main() {
     expect(harness.client.boughtProducts, [harness.productDetails]);
   });
 
+  testWidgets(
+    'Vehicle pack purchase sheet can retry product loading from CTA',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final client = FakeIapPurchaseClient();
+      addTearDown(client.dispose);
+      final controller = VehiclePackPurchaseController(
+        purchaseClient: client,
+        entitlementStore: const LocalPurchaseEntitlementStore(),
+      );
+      addTearDown(controller.dispose);
+
+      await _pumpController(tester, controller);
+      await tester.pumpAndSettle();
+
+      expect(
+        controller.state.status,
+        VehiclePackPurchaseStatus.productNotFound,
+      );
+      expect(client.queriedProductIdSets.length, 1);
+      expect(
+        tester
+            .widget<FilledButton>(
+              find.byKey(const ValueKey('vehiclePackBuyButton')),
+            )
+            .onPressed,
+        isNotNull,
+      );
+
+      await tester.tap(find.byKey(const ValueKey('vehiclePackBuyButton')));
+      await tester.pumpAndSettle();
+
+      expect(client.queriedProductIdSets.length, 2);
+      expect(client.boughtProducts, isEmpty);
+    },
+  );
+
   testWidgets('Vehicle pack purchase sheet shows error and canceled states', (
     tester,
   ) async {
