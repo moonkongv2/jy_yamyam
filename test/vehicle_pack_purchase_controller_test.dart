@@ -305,31 +305,39 @@ void main() {
     },
   );
 
-  test('Vehicle pack purchase controller keeps restored state after restore', () async {
-    SharedPreferences.setMockInitialValues({});
-    final client = FakeIapPurchaseClient();
-    addTearDown(client.dispose);
-    final store = const LocalPurchaseEntitlementStore();
-    final controller = _controller(client, store: store);
-    addTearDown(controller.dispose);
-    final purchase = fakePurchaseDetails(
-      purchaseId: 'restore-during-call',
-      status: PurchaseStatus.restored,
-      pendingCompletePurchase: true,
-    );
+  test(
+    'Vehicle pack purchase controller keeps restored state after restore',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final client = FakeIapPurchaseClient();
+      addTearDown(client.dispose);
+      final store = const LocalPurchaseEntitlementStore();
+      final controller = _controller(client, store: store);
+      addTearDown(controller.dispose);
+      final purchase = fakePurchaseDetails(
+        purchaseId: 'restore-during-call',
+        status: PurchaseStatus.restored,
+        pendingCompletePurchase: true,
+      );
 
-    controller.startListening();
-    final restore = controller.restorePurchases(applicationUserName: 'guardian');
-    client.emitPurchases([purchase]);
-    await restore;
-    await pumpEventQueue();
+      controller.startListening();
+      final restore = controller.restorePurchases(
+        applicationUserName: 'guardian',
+      );
+      client.emitPurchases([purchase]);
+      await restore;
+      await pumpEventQueue();
 
-    expect(client.restoreApplicationUserNames, ['guardian']);
-    expect(controller.state.status, VehiclePackPurchaseStatus.restoreCompleted);
-    expect(controller.state.vehiclePackUnlocked, isTrue);
-    expect((await store.load()).vehiclePackUnlocked, isTrue);
-    expect(client.completedPurchases, [purchase]);
-  });
+      expect(client.restoreApplicationUserNames, ['guardian']);
+      expect(
+        controller.state.status,
+        VehiclePackPurchaseStatus.restoreCompleted,
+      );
+      expect(controller.state.vehiclePackUnlocked, isTrue);
+      expect((await store.load()).vehiclePackUnlocked, isTrue);
+      expect(client.completedPurchases, [purchase]);
+    },
+  );
 }
 
 VehiclePackPurchaseController _controller(

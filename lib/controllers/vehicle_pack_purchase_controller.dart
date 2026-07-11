@@ -103,7 +103,9 @@ class VehiclePackPurchaseController extends ChangeNotifier {
     );
   }
 
-  Future<void> loadProductDetails({bool preserveStatusOnSuccess = false}) async {
+  Future<void> loadProductDetails({
+    bool preserveStatusOnSuccess = false,
+  }) async {
     final preservedStatus = preserveStatusOnSuccess ? _state.status : null;
     if (!preserveStatusOnSuccess) {
       _setState(

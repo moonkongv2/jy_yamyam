@@ -105,12 +105,13 @@ class _StickerFountainOverlayState extends State<_StickerFountainOverlay>
       animation: _controller,
       builder: (context, _) {
         final screenSize = MediaQuery.of(context).size;
-        final center = widget.position ?? Offset(screenSize.width / 2, screenSize.height / 2);
+        final center =
+            widget.position ??
+            Offset(screenSize.width / 2, screenSize.height / 2);
 
         return Stack(
           children: [
-            for (final particle in _particles)
-              _buildParticle(particle, center),
+            for (final particle in _particles) _buildParticle(particle, center),
           ],
         );
       },
@@ -120,8 +121,10 @@ class _StickerFountainOverlayState extends State<_StickerFountainOverlay>
   Widget _buildParticle(_ParticleData p, Offset center) {
     // Adjust progress accounting for individual delay
     final rawProgress =
-        ((_controller.value - p.delayFraction) / (1.0 - p.delayFraction))
-            .clamp(0.0, 1.0);
+        ((_controller.value - p.delayFraction) / (1.0 - p.delayFraction)).clamp(
+          0.0,
+          1.0,
+        );
 
     if (rawProgress == 0.0) return const SizedBox.shrink();
 
@@ -146,8 +149,7 @@ class _StickerFountainOverlayState extends State<_StickerFountainOverlay>
 
     // Scale: pops in, then shrinks slightly
     final scale = rawProgress < 0.15
-        ? Curves.elasticOut
-            .transform((rawProgress / 0.15).clamp(0.0, 1.0))
+        ? Curves.elasticOut.transform((rawProgress / 0.15).clamp(0.0, 1.0))
         : 1.0 - (rawProgress - 0.15) * 0.3;
 
     return Positioned(

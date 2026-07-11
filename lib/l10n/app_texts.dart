@@ -24,6 +24,42 @@ import 'ko/rewards.dart';
 import 'ko/settings.dart';
 import 'ko/timer.dart';
 import 'ko/user_guide.dart';
+import 'ja/common.dart';
+import 'ja/avatar_setup.dart';
+import 'ja/first_run_onboarding.dart';
+import 'ja/home.dart';
+import 'ja/meal_ingredient.dart';
+import 'ja/meal_history.dart';
+import 'ja/purchases.dart';
+import 'ja/result.dart';
+import 'ja/rewards.dart';
+import 'ja/settings.dart';
+import 'ja/timer.dart';
+import 'ja/user_guide.dart';
+import 'es/common.dart';
+import 'es/avatar_setup.dart';
+import 'es/first_run_onboarding.dart';
+import 'es/home.dart';
+import 'es/meal_ingredient.dart';
+import 'es/meal_history.dart';
+import 'es/purchases.dart';
+import 'es/result.dart';
+import 'es/rewards.dart';
+import 'es/settings.dart';
+import 'es/timer.dart';
+import 'es/user_guide.dart';
+import 'pt_BR/common.dart';
+import 'pt_BR/avatar_setup.dart';
+import 'pt_BR/first_run_onboarding.dart';
+import 'pt_BR/home.dart';
+import 'pt_BR/meal_ingredient.dart';
+import 'pt_BR/meal_history.dart';
+import 'pt_BR/purchases.dart';
+import 'pt_BR/result.dart';
+import 'pt_BR/rewards.dart';
+import 'pt_BR/settings.dart';
+import 'pt_BR/timer.dart';
+import 'pt_BR/user_guide.dart';
 import 'text_sets.dart';
 
 class AppTextBundle {
@@ -57,7 +93,13 @@ class AppTextBundle {
 }
 
 abstract final class AppTexts {
-  static const supportedLocales = [Locale('en'), Locale('ko')];
+  static const supportedLocales = [
+    Locale('en'),
+    Locale('ko'),
+    Locale('ja'),
+    Locale('es'),
+    Locale('pt', 'BR'),
+  ];
 
   static const ko = AppTextBundle(
     avatarSetup: AvatarSetupTexts(),
@@ -89,11 +131,62 @@ abstract final class AppTexts {
     userGuide: EnUserGuideTexts(),
   );
 
+  static const ja = AppTextBundle(
+    avatarSetup: JaAvatarSetupTexts(),
+    common: JaCommonTexts(),
+    firstRunOnboarding: JaFirstRunOnboardingTexts(),
+    home: JaHomeTexts(),
+    mealIngredient: JaMealIngredientTexts(),
+    mealHistory: JaMealHistoryTexts(),
+    purchases: JaPurchaseTexts(),
+    result: JaResultTexts(),
+    rewards: JaRewardTexts(),
+    settings: JaSettingsTexts(),
+    timer: JaTimerTexts(),
+    userGuide: JaUserGuideTexts(),
+  );
+
+  static const es = AppTextBundle(
+    avatarSetup: EsAvatarSetupTexts(),
+    common: EsCommonTexts(),
+    firstRunOnboarding: EsFirstRunOnboardingTexts(),
+    home: EsHomeTexts(),
+    mealIngredient: EsMealIngredientTexts(),
+    mealHistory: EsMealHistoryTexts(),
+    purchases: EsPurchaseTexts(),
+    result: EsResultTexts(),
+    rewards: EsRewardTexts(),
+    settings: EsSettingsTexts(),
+    timer: EsTimerTexts(),
+    userGuide: EsUserGuideTexts(),
+  );
+
+  static const ptBr = AppTextBundle(
+    avatarSetup: PtBrAvatarSetupTexts(),
+    common: PtBrCommonTexts(),
+    firstRunOnboarding: PtBrFirstRunOnboardingTexts(),
+    home: PtBrHomeTexts(),
+    mealIngredient: PtBrMealIngredientTexts(),
+    mealHistory: PtBrMealHistoryTexts(),
+    purchases: PtBrPurchaseTexts(),
+    result: PtBrResultTexts(),
+    rewards: PtBrRewardTexts(),
+    settings: PtBrSettingsTexts(),
+    timer: PtBrTimerTexts(),
+    userGuide: PtBrUserGuideTexts(),
+  );
+
   static AppTextBundle of(BuildContext context) {
     return forLocale(Localizations.localeOf(context));
   }
 
   static AppTextBundle forLocale(Locale locale) {
-    return locale.languageCode == 'ko' ? ko : en;
+    return switch (locale.languageCode) {
+      'ko' => ko,
+      'ja' => ja,
+      'es' => es,
+      'pt' => ptBr,
+      _ => en,
+    };
   }
 }

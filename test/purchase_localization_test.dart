@@ -1,8 +1,82 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:jy_yamyam/catalogs/avatar_prompt_catalog.dart';
+import 'package:jy_yamyam/catalogs/meal_ingredient_catalog.dart';
+import 'package:jy_yamyam/catalogs/vehicle_catalog.dart';
 import 'package:jy_yamyam/l10n/app_texts.dart';
 
 void main() {
+  test(
+    'Supported locales include Japanese, Spanish, and Brazilian Portuguese',
+    () {
+      expect(AppTexts.supportedLocales, contains(const Locale('ja')));
+      expect(AppTexts.supportedLocales, contains(const Locale('es')));
+      expect(AppTexts.supportedLocales, contains(const Locale('pt', 'BR')));
+    },
+  );
+
+  test('AppTexts routes new locales and falls back to English', () {
+    expect(AppTexts.forLocale(const Locale('ja')).common.start, 'スタート');
+    expect(AppTexts.forLocale(const Locale('es')).common.start, 'Empezar');
+    expect(
+      AppTexts.forLocale(const Locale('pt', 'BR')).common.start,
+      'Começar',
+    );
+    expect(AppTexts.forLocale(const Locale('pt')).common.start, 'Começar');
+    expect(AppTexts.forLocale(const Locale('fr')).common.start, 'Start');
+  });
+
+  test('Catalog labels return Japanese, Spanish, and Brazilian Portuguese', () {
+    final vehicle = VehicleCatalog.motorcycle;
+    expect(vehicle.labelForLanguage('ja'), 'オートバイ');
+    expect(vehicle.labelForLanguage('es'), 'Moto');
+    expect(vehicle.labelForLanguage('pt'), 'Moto');
+    expect(vehicle.labelForLanguage('fr'), 'Motorcycle');
+
+    final ingredient = MealIngredientCatalog.carrot;
+    expect(ingredient.labelForLanguage('ja'), 'にんじん');
+    expect(ingredient.labelForLanguage('es'), 'Zanahoria');
+    expect(ingredient.labelForLanguage('pt'), 'Cenoura');
+    expect(ingredient.labelForLanguage('fr'), 'Carrot');
+  });
+
+  test('Avatar prompts are localized and keep vehicle concepts', () {
+    final jaPrompt = AvatarPromptCatalog.promptForVehicle(
+      VehicleCatalog.motorcycle,
+      'ja',
+    );
+    expect(jaPrompt, contains('オートバイ'));
+    expect(jaPrompt, contains('ヘルメット'));
+    expect(jaPrompt, isNot(contains('Use the attached child photo')));
+
+    final esPrompt = AvatarPromptCatalog.promptForVehicle(
+      VehicleCatalog.fireTruck,
+      'es',
+    );
+    expect(esPrompt, contains('bombero'));
+    expect(esPrompt, contains('casco'));
+    expect(esPrompt, isNot(contains('Use the attached child photo')));
+
+    final ptPrompt = AvatarPromptCatalog.promptForVehicle(
+      VehicleCatalog.shark,
+      'pt',
+    );
+    expect(ptPrompt, contains('tubarão'));
+    expect(ptPrompt, contains('oceânico'));
+    expect(ptPrompt, isNot(contains('Use the attached child photo')));
+  });
+
+  test('Avatar prompts fall back to English for unsupported languages', () {
+    final prompt = AvatarPromptCatalog.promptForVehicle(
+      VehicleCatalog.train,
+      'fr',
+    );
+
+    expect(prompt, contains('Use the attached child photo'));
+    expect(prompt, contains('train engineer'));
+  });
+
   test('Purchase localization includes required Korean copy', () {
     final purchases = AppTexts.ko.purchases;
 

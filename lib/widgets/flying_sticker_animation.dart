@@ -66,7 +66,8 @@ class _FlyingStickerAnimationState extends State<FlyingStickerAnimation>
   }
 
   void _calculateTarget() {
-    final renderBox = widget.targetKey.currentContext?.findRenderObject() as RenderBox?;
+    final renderBox =
+        widget.targetKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox != null) {
       _targetOffset = renderBox.localToGlobal(Offset.zero);
       _targetSize = renderBox.size;
@@ -104,7 +105,9 @@ class _FlyingStickerAnimationState extends State<FlyingStickerAnimation>
           width: currentSize,
           height: currentSize,
           child: Opacity(
-            opacity: _flyAnimation.value > 0.9 ? 1.0 - (_flyAnimation.value - 0.9) * 10 : 1.0,
+            opacity: _flyAnimation.value > 0.9
+                ? 1.0 - (_flyAnimation.value - 0.9) * 10
+                : 1.0,
             child: Stack(
               clipBehavior: Clip.none,
               children: [
@@ -183,10 +186,7 @@ class _RewardConfettiDot extends StatelessWidget {
       child: Align(
         alignment: alignment,
         child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           child: SizedBox.square(dimension: size),
         ),
       ),
@@ -209,11 +209,7 @@ class _RewardConfettiSparkle extends StatelessWidget {
       bottom: -40,
       child: Align(
         alignment: alignment,
-        child: Icon(
-          Icons.auto_awesome_rounded,
-          color: color,
-          size: 36,
-        ),
+        child: Icon(Icons.auto_awesome_rounded, color: color, size: 36),
       ),
     );
   }

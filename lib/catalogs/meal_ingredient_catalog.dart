@@ -12,6 +12,9 @@ abstract final class MealIngredientCatalog {
     id: 'carrot',
     labelKo: '당근',
     labelEn: 'Carrot',
+    labelJa: 'にんじん',
+    labelEs: 'Zanahoria',
+    labelPtBr: 'Cenoura',
     emoji: '🥕',
   );
 
@@ -19,6 +22,9 @@ abstract final class MealIngredientCatalog {
     id: 'egg',
     labelKo: '달걀',
     labelEn: 'Egg',
+    labelJa: 'たまご',
+    labelEs: 'Huevo',
+    labelPtBr: 'Ovo',
     emoji: '🍳',
     assetPath: 'assets/images/ingredients/egg.png',
   );
@@ -27,6 +33,9 @@ abstract final class MealIngredientCatalog {
     id: 'meat',
     labelKo: '고기',
     labelEn: 'Meat',
+    labelJa: 'お肉',
+    labelEs: 'Carne',
+    labelPtBr: 'Carne',
     emoji: '🥩',
   );
 
@@ -34,6 +43,9 @@ abstract final class MealIngredientCatalog {
     id: 'onion',
     labelKo: '양파',
     labelEn: 'Onion',
+    labelJa: '玉ねぎ',
+    labelEs: 'Cebolla',
+    labelPtBr: 'Cebola',
     emoji: '🧅',
   );
 
@@ -41,6 +53,9 @@ abstract final class MealIngredientCatalog {
     id: 'cucumber',
     labelKo: '오이',
     labelEn: 'Cucumber',
+    labelJa: 'きゅうり',
+    labelEs: 'Pepino',
+    labelPtBr: 'Pepino',
     emoji: '🥒',
   );
 
@@ -48,6 +63,9 @@ abstract final class MealIngredientCatalog {
     id: 'rice',
     labelKo: '밥',
     labelEn: 'Rice',
+    labelJa: 'ごはん',
+    labelEs: 'Arroz',
+    labelPtBr: 'Arroz',
     emoji: '🍚',
   );
 
@@ -55,6 +73,9 @@ abstract final class MealIngredientCatalog {
     id: 'seaweed',
     labelKo: '김',
     labelEn: 'Seaweed',
+    labelJa: 'のり',
+    labelEs: 'Alga',
+    labelPtBr: 'Alga',
     emoji: '🟩',
     assetPath: 'assets/images/ingredients/seaweed.png',
   );
@@ -63,6 +84,9 @@ abstract final class MealIngredientCatalog {
     id: 'tofu',
     labelKo: '두부',
     labelEn: 'Tofu',
+    labelJa: '豆腐',
+    labelEs: 'Tofu',
+    labelPtBr: 'Tofu',
     emoji: '⬜',
     assetPath: 'assets/images/ingredients/tofu.png',
   );
@@ -71,6 +95,9 @@ abstract final class MealIngredientCatalog {
     id: 'broccoli',
     labelKo: '브로콜리',
     labelEn: 'Broccoli',
+    labelJa: 'ブロッコリー',
+    labelEs: 'Brócoli',
+    labelPtBr: 'Brócolis',
     emoji: '🥦',
   );
 
@@ -78,6 +105,9 @@ abstract final class MealIngredientCatalog {
     id: 'tomato',
     labelKo: '토마토',
     labelEn: 'Tomato',
+    labelJa: 'トマト',
+    labelEs: 'Tomaté',
+    labelPtBr: 'Tomaté',
     emoji: '🍅',
   );
 
@@ -85,6 +115,9 @@ abstract final class MealIngredientCatalog {
     id: 'potato',
     labelKo: '감자',
     labelEn: 'Potato',
+    labelJa: 'じゃがいも',
+    labelEs: 'Patata',
+    labelPtBr: 'Batata',
     emoji: '🥔',
   );
 
@@ -92,6 +125,9 @@ abstract final class MealIngredientCatalog {
     id: 'fish',
     labelKo: '생선',
     labelEn: 'Fish',
+    labelJa: '魚',
+    labelEs: 'Pescado',
+    labelPtBr: 'Peixe',
     emoji: '🐟',
   );
 
@@ -99,6 +135,9 @@ abstract final class MealIngredientCatalog {
     id: 'mushroom',
     labelKo: '버섯',
     labelEn: 'Mushroom',
+    labelJa: 'きのこ',
+    labelEs: 'Champiñón',
+    labelPtBr: 'Cogumelo',
     emoji: '🍄',
   );
 
@@ -106,6 +145,9 @@ abstract final class MealIngredientCatalog {
     id: 'cheese',
     labelKo: '치즈',
     labelEn: 'Cheese',
+    labelJa: 'チーズ',
+    labelEs: 'Queso',
+    labelPtBr: 'Queijo',
     emoji: '🧀',
   );
 
@@ -113,6 +155,9 @@ abstract final class MealIngredientCatalog {
     id: 'apple',
     labelKo: '사과',
     labelEn: 'Apple',
+    labelJa: 'りんご',
+    labelEs: 'Manzana',
+    labelPtBr: 'Maçã',
     emoji: '🍎',
   );
 
@@ -120,6 +165,9 @@ abstract final class MealIngredientCatalog {
     id: 'cabbage',
     labelKo: '배추',
     labelEn: 'Cabbage',
+    labelJa: '白菜',
+    labelEs: 'Col',
+    labelPtBr: 'Repolho',
     emoji: '🥬',
   );
 
@@ -127,6 +175,9 @@ abstract final class MealIngredientCatalog {
     id: 'radish',
     labelKo: '무',
     labelEn: 'Radish',
+    labelJa: '大根',
+    labelEs: 'Rábano',
+    labelPtBr: 'Nabo',
     emoji: '⚪',
     assetPath: 'assets/images/ingredients/radish.png',
   );
@@ -135,6 +186,9 @@ abstract final class MealIngredientCatalog {
     id: 'bean',
     labelKo: '콩',
     labelEn: 'Beans',
+    labelJa: '豆',
+    labelEs: 'Judías',
+    labelPtBr: 'Feijáo',
     emoji: '🫘',
   );
 

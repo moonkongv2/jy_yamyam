@@ -104,10 +104,7 @@ class _StickerCard extends StatelessWidget {
               top: 4,
               child: Transform.rotate(
                 angle: -0.25,
-                child: Opacity(
-                  opacity: 0.6,
-                  child: stickerImage,
-                ),
+                child: Opacity(opacity: 0.6, child: stickerImage),
               ),
             ),
           if (count >= 2)
@@ -116,10 +113,7 @@ class _StickerCard extends StatelessWidget {
               top: -6,
               child: Transform.rotate(
                 angle: 0.18,
-                child: Opacity(
-                  opacity: 0.8,
-                  child: stickerImage,
-                ),
+                child: Opacity(opacity: 0.8, child: stickerImage),
               ),
             ),
           stickerImage,
@@ -152,53 +146,54 @@ class _StickerCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            _buildStickerStack(
-              _isCollected
-                  ? stickerName
-                  : texts.rewards.uncollectedSemanticLabel,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              _isCollected ? stickerName : texts.rewards.lockedSticker,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: _isCollected
-                    ? AppColors.textStrong
-                    : AppColors.textSecondary,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildStickerStack(
+                _isCollected
+                    ? stickerName
+                    : texts.rewards.uncollectedSemanticLabel,
               ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: _isCollected
-                    ? AppColors.surfaceYellow
-                    : AppColors.borderSoft,
-                borderRadius: AppRadius.pill,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.xs,
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                _isCollected ? stickerName : texts.rewards.lockedSticker,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: _isCollected
+                      ? AppColors.textStrong
+                      : AppColors.textSecondary,
                 ),
-                child: Text(
-                  _isCollected
-                      ? texts.rewards.stickerCount(count)
-                      : texts.rewards.lockedStatus,
-                  style: textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: _isCollected
+                      ? AppColors.surfaceYellow
+                      : AppColors.borderSoft,
+                  borderRadius: AppRadius.pill,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: Text(
+                    _isCollected
+                        ? texts.rewards.stickerCount(count)
+                        : texts.rewards.lockedStatus,
+                    style: textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ));
+    );
   }
 }

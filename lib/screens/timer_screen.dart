@@ -798,10 +798,7 @@ class _TimerScreenState extends State<TimerScreen>
     final texts = AppTexts.of(context);
 
     return AnimatedBuilder(
-      animation: Listenable.merge([
-        _controller,
-        _finishDriveController,
-      ]),
+      animation: Listenable.merge([_controller, _finishDriveController]),
       builder: (context, _) {
         final vehicle = VehicleCatalog.findById(_timerConfig.vehicleId);
         final vehicleAvatar = _timerConfig.avatarPresentationForVehicle(
@@ -922,7 +919,7 @@ class _TimerScreenState extends State<TimerScreen>
                         _controller.state == MealTimerState.running,
                     courseDuration: _timerConfig.duration,
                   );
-                  
+
                   final roadView = Stack(
                     fit: StackFit.expand,
                     children: [
@@ -935,10 +932,14 @@ class _TimerScreenState extends State<TimerScreen>
                             alignment: Alignment.center,
                             child: AnimatedSwitcher(
                               duration: const Duration(milliseconds: 300),
-                              transitionBuilder: (child, animation) => FadeTransition(
-                                opacity: animation,
-                                child: ScaleTransition(scale: animation, child: child),
-                              ),
+                              transitionBuilder: (child, animation) =>
+                                  FadeTransition(
+                                    opacity: animation,
+                                    child: ScaleTransition(
+                                      scale: animation,
+                                      child: child,
+                                    ),
+                                  ),
                               child: Text(
                                 previewMessageText,
                                 key: ValueKey(previewMessageText),
@@ -1060,9 +1061,7 @@ class _TimerScreenState extends State<TimerScreen>
                           progress: displayProgress,
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        Expanded(
-                          child: roadView,
-                        ),
+                        Expanded(child: roadView),
                         if (remainingTimeCard != null) ...[
                           const SizedBox(height: AppSpacing.md),
                           remainingTimeCard,
@@ -2012,8 +2011,4 @@ class _RemainingTimeCard extends StatelessWidget {
   }
 }
 
-enum _PreviewMessageState {
-  none,
-  ready,
-  go,
-}
+enum _PreviewMessageState { none, ready, go }

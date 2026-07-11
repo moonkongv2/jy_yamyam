@@ -28,6 +28,46 @@ Do not include text, logos, or watermarks.
 Avoid full-body images, multiple people, or complex backgrounds.
 ''';
 
+  static const _japaneseBasePrompt = '''
+添付した子どもの写真を参考にし、子どもの主な顔の特徴を保ってください。
+かわいく親しみやすいキャラクタースタイルにしてください。
+正方形1:1のヘッドショット構図で、顔を中央に配置してください。
+髪の上端からあごの下まで、頭全体と顔だけをきれいに切り抜いた画像にしてください。
+首、肩、胴体、服、手、全身、車両画像は絶対に含めないでください。
+頭の一部が切れないようにし、顔の外側には最小限の余白だけを残してください。
+モバイルアプリに合う、シンプルで鮮明なキャラクター風、またはやわらかい3Dキャラクター風にしてください。
+透明背景を推奨します。
+透明背景が難しい場合は、シンプルな白または明るい単色背景にしてください。
+文字、ロゴ、透かしは入れないでください。
+全身、複数人、複雑な背景は避けてください。
+''';
+
+  static const _spanishBasePrompt = '''
+Usa la foto adjunta del niño o niña como referencia y conserva sus principales rasgos faciales.
+Crea un retrato cuadrado 1:1 de estilo personaje, tierno y amigable.
+Haz un recorte ajustado solo de la cabeza completa y la cara, desde la parte superior del cabello hasta la parte inferior de la barbilla.
+No incluyas cuello, hombros, torso, ropa, manos, cuerpo completo ni imagen de vehículo.
+No cortes ninguna parte de la cabeza y deja solo un margen mínimo alrededor de la cara.
+Usa un estilo de personaje simple y claro, o un estilo 3D suave adecuado para una app móvil.
+Se recomienda fondo transparente.
+Si el fondo transparente es difícil, usa un fondo blanco simple o un color claro liso.
+No incluyas texto, logotipos ni marcas de agua.
+Evita imágenes de cuerpo completo, varias personas o fondos complejos.
+''';
+
+  static const _portugueseBasePrompt = '''
+Use a foto anexada da criança como referência e preserve as principais características faciais dela.
+Crie um retrato quadrado 1:1 em estilo de personagem, fofo e amigável.
+Faça um recorte justo apenas da cabeça completa e do rosto, do topo do cabelo até a parte inferior do queixo.
+Não inclua pescoço, ombros, tronco, roupas, mãos, corpo inteiro nem imagem de veículo.
+Não corte nenhuma parte da cabeça e deixe apenas uma margem mínima ao redor do rosto.
+Use um estilo de personagem simples e claro, ou um estilo 3D suave adequado para um app móvel.
+Fundo transparente é recomendado.
+Se o fundo transparente for difícil, use um fundo branco simples ou uma cor clara sólida.
+Não inclua texto, logotipos nem marcas d'água.
+Evite imagens de corpo inteiro, várias pessoas ou fundos complexos.
+''';
+
   static const _koreanAdditionsByVehicleId = {
     'motorcycle': '''
 오토바이 라이더 컨셉으로 만들어 주세요.
@@ -158,15 +198,219 @@ Use a bright, brave expression.
 ''',
   };
 
+  static const _japaneseAdditionsByVehicleId = {
+    'motorcycle': '''
+オートバイのライダーのコンセプトにしてください。
+かわいいヘルメットをかぶせてください。
+必要ならゴーグルやサングラスを追加してもかまいません。
+顔は隠さないでください。
+''',
+    'fire_truck': '''
+消防士のコンセプトにしてください。
+消防士のヘルメットまたは帽子をかぶせてください。
+明るく頼もしい雰囲気にしてください。
+''',
+    'police_car': '''
+警察官のコンセプトにしてください。
+警察の帽子またはヘルメットをかぶせてください。
+明るく自信のある表情にしてください。
+''',
+    'excavator': '''
+ショベルカーのオペレーターのコンセプトにしてください。
+黄色い安全ヘルメットをかぶせてください。
+必要なら作業服らしさをほんの少しだけ加えてください。
+顔は中央に保ってください。
+''',
+    'airplane': '''
+飛行機のパイロットのコンセプトにしてください。
+パイロット帽または航空ヘルメットをかぶせてください。
+明るく自信のある表情にしてください。
+''',
+    'bus': '''
+バス運転手のコンセプトにしてください。
+運転手の帽子またはきちんとした帽子をかぶせてください。
+親しみやすく頼もしい雰囲気にしてください。
+''',
+    'supercar': '''
+レーサーのコンセプトにしてください。
+スポーティーな帽子または軽いヘルメットをかぶせてください。
+わくわくした元気な表情にしてください。
+''',
+    'train': '''
+電車の運転士のコンセプトにしてください。
+運転士帽または車掌風の帽子をかぶせてください。
+落ち着いて信頼できる雰囲気にしてください。
+''',
+    't_rex': '''
+ティラノサウルスの探検家のコンセプトにしてください。
+かわいい探検家の帽子、または恐竜テーマの小物をとても控えめに加えてください。
+わくわくした勇敢な表情にしてください。
+''',
+    'shark': '''
+サメの海の探検家のコンセプトにしてください。
+かわいい船員帽、または海テーマの小物をとても控えめに加えてください。
+明るく遊び心のある表情にしてください。
+''',
+    'brachio': '''
+ブラキオ恐竜探検家のコンセプトにしてください。
+かわいいサファリ帽、または緑の恐竜テーマの小物をとても控えめに加えてください。
+落ち着いたやさしい表情にしてください。
+''',
+    'pteranodon': '''
+プテラノドンの空の探検家のコンセプトにしてください。
+かわいいパイロットゴーグル、または空テーマの小物をとても控えめに加えてください。
+明るく勇敢な表情にしてください。
+''',
+  };
+
+  static const _spanishAdditionsByVehicleId = {
+    'motorcycle': '''
+Usa un concepto de motociclista.
+Añade un casco bonito.
+Puedes añadir gafas o lentes de sol si hace falta.
+No cubras la cara.
+''',
+    'fire_truck': '''
+Usa un concepto de bombero.
+Añade un casco o gorro de bombero.
+Haz que el personaje se vea alegre y confiable.
+''',
+    'police_car': '''
+Usa un concepto de policía.
+Añade una gorra o casco de policía.
+Usa una expresión alegre y segura.
+''',
+    'excavator': '''
+Usa un concepto de operador de excavadora.
+Añade un casco de seguridad amarillo.
+Si hace falta, añade solo un toque muy sutil de ropa de trabajo.
+Mantén la cara centrada.
+''',
+    'airplane': '''
+Usa un concepto de piloto de avión.
+Añade una gorra de piloto o casco de aviación.
+Usa una expresión alegre y segura.
+''',
+    'bus': '''
+Usa un concepto de conductor de autobús.
+Añade una gorra de conductor o una gorra ordenada.
+Haz que el personaje se vea amable y confiable.
+''',
+    'supercar': '''
+Usa un concepto de piloto de carreras.
+Añade una gorra deportiva o un casco ligero.
+Usa una expresión emocionada y llena de energía.
+''',
+    'train': '''
+Usa un concepto de maquinista de tren.
+Añade una gorra de maquinista o de conductor de tren.
+Haz que el personaje se vea tranquilo y confiable.
+''',
+    't_rex': '''
+Usa un concepto de explorador de T-rex.
+Añade un sombrero de explorador bonito o un detalle de dinosaurio muy sutil.
+Usa una expresión emocionada y valiente.
+''',
+    'shark': '''
+Usa un concepto de explorador oceánico de tiburón.
+Añade un gorro de marinero bonito o un detalle marino muy sutil.
+Usa una expresión alegre y juguetona.
+''',
+    'brachio': '''
+Usa un concepto de explorador de braquiosaurio.
+Añade un sombrero de safari bonito o un detalle verde de dinosaurio muy sutil.
+Usa una expresión tranquila y amable.
+''',
+    'pteranodon': '''
+Usa un concepto de explorador del cielo de pteranodón.
+Añade gafas de piloto bonitas o un detalle del cielo muy sutil.
+Usa una expresión alegre y valiente.
+''',
+  };
+
+  static const _portugueseAdditionsByVehicleId = {
+    'motorcycle': '''
+Use um conceito de motociclista.
+Adicione um capacete fofo.
+Pode adicionar óculos de proteção ou óculos de sol se necessário.
+Não cubra o rosto.
+''',
+    'fire_truck': '''
+Use um conceito de bombeiro.
+Adicione um capacete ou chapéu de bombeiro.
+Faça o personagem parecer alegre e confiável.
+''',
+    'police_car': '''
+Use um conceito de policial.
+Adicione um boné ou capacete de policial.
+Use uma expressão alegre e confiante.
+''',
+    'excavator': '''
+Use um conceito de operador de escavadeira.
+Adicione um capacete de segurança amarelo.
+Se necessário, adicione apenas um toque muito sutil de roupa de trabalho.
+Mantenha o rosto centralizado.
+''',
+    'airplane': '''
+Use um conceito de piloto de avião.
+Adicione um chapéu de piloto ou capacete de aviação.
+Use uma expressão alegre e confiante.
+''',
+    'bus': '''
+Use um conceito de motorista de ônibus.
+Adicione um boné de motorista ou um boné arrumado.
+Faça o personagem parecer amigável e confiável.
+''',
+    'supercar': '''
+Use um conceito de piloto de corrida.
+Adicione um boné esportivo ou capacete leve.
+Use uma expressão animada e cheia de energia.
+''',
+    'train': '''
+Use um conceito de maquinista de trem.
+Adicione um boné de maquinista ou de condutor de trem.
+Faça o personagem parecer calmo e confiável.
+''',
+    't_rex': '''
+Use um conceito de explorador de T-rex.
+Adicione um chapéu de explorador fofo ou um detalhe de dinossauro muito sutil.
+Use uma expressão animada e corajosa.
+''',
+    'shark': '''
+Use um conceito de explorador oceânico de tubarão.
+Adicione um chapéu de marinheiro fofo ou um detalhe do oceano muito sutil.
+Use uma expressão alegre e brincalhona.
+''',
+    'brachio': '''
+Use um conceito de explorador de braquiossauro.
+Adicione um chapéu de safári fofo ou um detalhe verde de dinossauro muito sutil.
+Use uma expressão calma e gentil.
+''',
+    'pteranodon': '''
+Use um conceito de explorador do céu de pteranodonte.
+Adicione óculos de piloto fofos ou um detalhe do céu muito sutil.
+Use uma expressão alegre e corajosa.
+''',
+  };
+
   static String promptForVehicle(
     VehicleDefinition vehicle,
     String languageCode,
   ) {
-    final isKorean = languageCode == 'ko';
-    final basePrompt = isKorean ? _koreanBasePrompt : _englishBasePrompt;
-    final additions = isKorean
-        ? _koreanAdditionsByVehicleId
-        : _englishAdditionsByVehicleId;
+    final basePrompt = switch (languageCode) {
+      'ko' => _koreanBasePrompt,
+      'ja' => _japaneseBasePrompt,
+      'es' => _spanishBasePrompt,
+      'pt' => _portugueseBasePrompt,
+      _ => _englishBasePrompt,
+    };
+    final additions = switch (languageCode) {
+      'ko' => _koreanAdditionsByVehicleId,
+      'ja' => _japaneseAdditionsByVehicleId,
+      'es' => _spanishAdditionsByVehicleId,
+      'pt' => _portugueseAdditionsByVehicleId,
+      _ => _englishAdditionsByVehicleId,
+    };
     final vehiclePrompt = additions[vehicle.id] ?? '';
 
     return '$basePrompt\n$vehiclePrompt'.trim();
