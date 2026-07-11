@@ -24,6 +24,16 @@ void main() {
     addTearDown(harness.dispose);
 
     await _pumpSettings(tester, harness);
+
+    expect(
+      find.byKey(const ValueKey('settingsVehiclePackUnlockButton')),
+      findsNothing,
+    );
+    expect(
+      find.byKey(const ValueKey('settingsVehiclePackRestoreButton')),
+      findsNothing,
+    );
+
     await _scrollToVehiclePackCard(tester);
 
     expect(
@@ -106,6 +116,11 @@ void main() {
     addTearDown(harness.dispose);
 
     await _pumpSettings(tester, harness);
+
+    expect(
+      find.text('차량팩 열림. 모든 차량을 사용할 수 있어요.'),
+      findsNothing,
+    );
 
     await _scrollToVehiclePackCard(tester);
 
