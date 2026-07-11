@@ -57,7 +57,9 @@ Known full-suite failure areas to resolve before release:
   1. Vehicle pack intro sheet
   2. Guardian gate
   3. Vehicle pack purchase/restore sheet
-- Settings also exposes vehicle pack purchase and restore behind the guardian gate.
+- Settings shows the vehicle pack card lower in the settings list.
+- When the pack is locked, Settings exposes vehicle pack purchase and restore behind the guardian gate.
+- When the pack is unlocked, Settings shows only the unlocked status and hides purchase/restore actions.
 - Purchase state is kept separate from `MealTimerConfig`.
 - The local entitlement cache is stored through `LocalPurchaseEntitlementStore`.
 - Normal settings, progress, stickers, rewards, active timer state, and avatars remain local-first.
@@ -121,7 +123,7 @@ Use it only for local development:
 6. Tap a locked vehicle, pass the guardian gate, and verify the purchase sheet loads the `vehicle_pack` test product.
 7. Complete a local StoreKit purchase and verify the selected premium vehicle unlocks.
 8. Restart the app and verify the local entitlement cache keeps premium vehicles unlocked.
-9. Use the post-gate restore button and Settings restore flow to verify restore handling.
+9. Use the post-gate restore button and locked-state Settings restore flow to verify restore handling.
 
 Local StoreKit testing does not replace App Store sandbox or TestFlight testing.
 Before release, still create the real App Store Connect non-consumable product
@@ -135,22 +137,18 @@ exist yet.
 
 ## Platform Project TODOs
 
-Current Android and iOS IDs still look like Flutter placeholders. Do not submit
-until the final identifiers are set.
+Android and iOS production identifiers have been set in the project. Do not
+submit until the matching store records and signing setup are complete.
 
 - Android:
-  - Current `applicationId`: `com.example.jy_yamyam`
-  - Current `namespace`: `com.example.jy_yamyam`
-  - TODO: choose and set the final production application ID.
+  - Current `applicationId`: `com.yamyamrider.app`
+  - Current `namespace`: `com.yamyamrider.app`
+  - TODO: create the matching Play Console app record.
   - TODO: configure release signing. The current release build uses debug signing.
 - iOS:
-  - Current bundle ID: `com.example.jyYamyam`
-  - TODO: choose and set the final production bundle ID.
+  - Current bundle ID: `com.yamyamrider.app`
   - TODO: configure the App Store Connect app record with that bundle ID.
   - TODO: enable In-App Purchase capability if the final Xcode/App Store setup requires it.
-
-Do not invent placeholder production IDs during implementation. Use the actual
-developer account naming choice before store registration.
 
 ## Kids App Review Checklist
 
@@ -163,8 +161,8 @@ developer account naming choice before store registration.
 - Gate-before-purchase behavior is required for:
   - locked vehicle purchase entry from Home
   - locked vehicle purchase entry from Avatar setup
-  - Settings purchase entry
-  - Settings restore entry
+  - locked-state Settings purchase entry
+  - locked-state Settings restore entry
 - The pre-gate intro sheet must stay informational only:
   - allowed: vehicle pack context and guardian continuation
   - avoid before gate: price, buy button, restore action, sales pressure, external links
@@ -204,5 +202,9 @@ Suggested privacy wording:
 - App restart after purchase: premium vehicles remain unlocked from local cache.
 - Offline after cached purchase: unlocked vehicles remain available.
 - Locked saved `vehicleId` without entitlement: timer uses `motorcycle` fallback without overwriting the saved setting.
-- Settings restore entry requires guardian gate.
+- Locked-state Settings: vehicle pack card appears lower in the settings list, not on the first screen.
+- Locked-state Settings purchase entry requires guardian gate.
+- Locked-state Settings restore entry requires guardian gate.
+- Unlocked-state Settings: vehicle pack card appears lower in the settings list as a status-only card.
+- Unlocked-state Settings: purchase and restore actions are hidden.
 - Korean and English purchase/privacy copy fit on small devices.
