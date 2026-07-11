@@ -81,6 +81,56 @@ void main() {
     );
   });
 
+  testWidgets('Vehicle pack purchase sheet disables actions while restoring', (
+    tester,
+  ) async {
+    final controller = _StaticPurchaseController(
+      VehiclePackPurchaseState(
+        entitlement: const PurchaseEntitlement.locked(),
+        status: VehiclePackPurchaseStatus.restoring,
+        productDetails: fakeProductDetails(),
+      ),
+    );
+    addTearDown(controller.dispose);
+
+    await _pumpController(tester, controller);
+
+    expect(find.text('구매 내역을 확인하고 있어요.'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(const ValueKey('vehiclePackBuyButton')),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.byKey(const ValueKey('vehiclePackRestoreButton')),
+          )
+          .onPressed,
+      isNull,
+    );
+  });
+
+  testWidgets('Vehicle pack purchase sheet shows restore not found state', (
+    tester,
+  ) async {
+    final controller = _StaticPurchaseController(
+      VehiclePackPurchaseState(
+        entitlement: const PurchaseEntitlement.locked(),
+        status: VehiclePackPurchaseStatus.restoreNotFound,
+        productDetails: fakeProductDetails(),
+      ),
+    );
+    addTearDown(controller.dispose);
+
+    await _pumpController(tester, controller);
+
+    expect(find.text('복원할 차량팩 구매 내역을 찾지 못했어요.'), findsOneWidget);
+  });
+
   testWidgets('Vehicle pack purchase sheet shows error and canceled states', (
     tester,
   ) async {

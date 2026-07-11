@@ -104,13 +104,16 @@ class _VehiclePackPurchaseSheetState extends State<VehiclePackPurchaseSheet> {
         : texts.vehiclePackTitle;
     final isBusy =
         state.status == VehiclePackPurchaseStatus.loadingProduct ||
-        state.status == VehiclePackPurchaseStatus.purchasePending;
+        state.status == VehiclePackPurchaseStatus.purchasePending ||
+        state.status == VehiclePackPurchaseStatus.restoring;
     final canBuy =
         !state.vehiclePackUnlocked &&
         productDetails != null &&
-        state.status != VehiclePackPurchaseStatus.purchasePending;
+        state.status != VehiclePackPurchaseStatus.purchasePending &&
+        state.status != VehiclePackPurchaseStatus.restoring;
     final canRestore =
-        state.status != VehiclePackPurchaseStatus.purchasePending;
+        state.status != VehiclePackPurchaseStatus.purchasePending &&
+        state.status != VehiclePackPurchaseStatus.restoring;
     final includedVehicles = _includedVehicleLabels(context);
 
     return SafeArea(
@@ -340,7 +343,8 @@ class _StatusMessage extends StatelessWidget {
     final isError =
         status == VehiclePackPurchaseStatus.error ||
         status == VehiclePackPurchaseStatus.productNotFound ||
-        status == VehiclePackPurchaseStatus.storeUnavailable;
+        status == VehiclePackPurchaseStatus.storeUnavailable ||
+        status == VehiclePackPurchaseStatus.restoreNotFound;
     final backgroundColor = isError
         ? AppColors.errorContainer
         : AppColors.surfaceMint;
@@ -397,10 +401,9 @@ class _StatusMessage extends StatelessWidget {
         texts.vehiclePackPendingMessage,
       VehiclePackPurchaseStatus.purchaseCompleted =>
         texts.vehiclePackSuccessMessage,
-      VehiclePackPurchaseStatus.restoring =>
-        texts.vehiclePackLoadingProductMessage,
+      VehiclePackPurchaseStatus.restoring => texts.vehiclePackRestoringMessage,
       VehiclePackPurchaseStatus.restoreNotFound =>
-        texts.vehiclePackErrorMessage,
+        texts.vehiclePackRestoreNotFoundMessage,
       VehiclePackPurchaseStatus.restoreCompleted =>
         texts.vehiclePackRestoreSuccessMessage,
       VehiclePackPurchaseStatus.error => texts.vehiclePackErrorMessage,
