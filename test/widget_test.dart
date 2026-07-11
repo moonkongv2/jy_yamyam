@@ -6941,7 +6941,9 @@ void main() {
           .courseDuration,
       const Duration(minutes: 60),
     );
-    expect(
+    
+
+expect(
       tester
           .getRect(find.byType(RoadView))
           .contains(tester.getCenter(find.byType(VehicleWidget))),
@@ -8834,14 +8836,8 @@ class _FakeAvatarImagePicker implements AvatarImagePicker {
 
 Future<void> _finishCoursePreview(WidgetTester tester) async {
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 500));
-  await tester.pump(const Duration(milliseconds: 2000));
-  await tester.pump(const Duration(milliseconds: 1200));
-  await tester.pump(const Duration(milliseconds: 1000));
-  await tester.pump(const Duration(milliseconds: 700));
-  await tester.pump(const Duration(milliseconds: 700));
+  await tester.pump(const Duration(milliseconds: 4100));
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 100));
 }
 
 class _FakeScreenAwakeService implements ScreenAwakeService {

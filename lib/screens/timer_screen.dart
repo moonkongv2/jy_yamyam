@@ -215,6 +215,16 @@ class _TimerScreenState extends State<TimerScreen>
   late final MotivationCueController _motivationCueController;
   Timer? _motivationVoiceTimer;
   Timer? _arrivalPromptTimer;
+  Timer? _previewTimer;
+
+  Future<void> _delay(Duration duration) {
+    final completer = Completer<void>();
+    _previewTimer?.cancel();
+    _previewTimer = Timer(duration, () {
+      if (!completer.isCompleted) completer.complete();
+    });
+    return completer.future;
+  }
   bool _isFinishDriving = false;
   Animation<double>? _finishDriveAnimation;
   MealSessionResult? _pendingFinishDriveResult;
@@ -296,13 +306,13 @@ class _TimerScreenState extends State<TimerScreen>
       );
       _previewController!.addListener(() => setState(() {}));
 
-      await Future.delayed(const Duration(milliseconds: 500));
+      await _delay(const Duration(milliseconds: 500));
       if (!mounted) return;
 
       await _previewController!.forward();
 
       if (!mounted) return;
-      await Future.delayed(const Duration(milliseconds: 1200));
+      await _delay(const Duration(milliseconds: 1200));
 
       if (!mounted) return;
       _previewController!.duration = const Duration(milliseconds: 1000);
@@ -313,13 +323,13 @@ class _TimerScreenState extends State<TimerScreen>
     setState(() {
       _previewMessageState = _PreviewMessageState.ready;
     });
-    await Future.delayed(const Duration(milliseconds: 700));
+    await _delay(const Duration(milliseconds: 700));
 
     if (!mounted) return;
     setState(() {
       _previewMessageState = _PreviewMessageState.go;
     });
-    await Future.delayed(const Duration(milliseconds: 700));
+    await _delay(const Duration(milliseconds: 700));
 
     if (!mounted) return;
     setState(() {
@@ -351,6 +361,7 @@ class _TimerScreenState extends State<TimerScreen>
     WidgetsBinding.instance.removeObserver(this);
     _motivationVoiceTimer?.cancel();
     _arrivalPromptTimer?.cancel();
+    _previewTimer?.cancel();
     unawaited(_disposeMotivationAudioService());
     unawaited(
       _lifecycleController.lockPortraitIfNeeded(widget.orientationService),
