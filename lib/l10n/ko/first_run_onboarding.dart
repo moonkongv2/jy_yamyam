@@ -6,7 +6,7 @@ class FirstRunOnboardingTexts implements FirstRunOnboardingTextSet {
   const FirstRunOnboardingTexts();
 
   String get title => '냠냠 라이더 시작 전 안내';
-  String get subtitle => '식사 시간을 부담 없고 신나는 주행으로 바꿔요.';
+  String get subtitle => '식사 시간을 부담 없고 신나는 라이딩으로 바꿔요.';
   String get previousButtonLabel => '이전';
   String get nextButtonLabel => '다음';
   String get startButtonLabel => '지금 시작';

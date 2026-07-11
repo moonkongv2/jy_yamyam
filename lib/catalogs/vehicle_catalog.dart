@@ -122,7 +122,7 @@ abstract final class VehicleCatalog {
 
   static const tRex = VehicleDefinition(
     id: 't_rex',
-    labelKo: '티렉스',
+    labelKo: '티라노',
     labelEn: 'T-rex',
     emoji: '🦖',
     assetPath: 'assets/images/vehicle_t_rex.png',

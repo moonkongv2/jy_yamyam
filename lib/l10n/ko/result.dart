@@ -108,7 +108,7 @@ const _failedPrimaryMessagesByVehicle = {
   'bus': '버스가 먼저 출발했어.',
   'supercar': '슈퍼카가 먼저 달려갔어.',
   'train': '기차가 먼저 떠났어.',
-  't_rex': '티렉스가 먼저 쿵쿵 지나갔어.',
+  't_rex': '티라노가 먼저 쿵쿵 지나갔어.',
   'shark': '상어가 먼저 헤엄쳐 갔어.',
   'brachio': '브라키오가 먼저 걸어갔어.',
   'pteranodon': '프테라노돈이 먼저 날아갔어.',
