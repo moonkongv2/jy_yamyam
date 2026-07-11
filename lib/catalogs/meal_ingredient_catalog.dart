@@ -106,8 +106,8 @@ abstract final class MealIngredientCatalog {
     labelKo: '토마토',
     labelEn: 'Tomato',
     labelJa: 'トマト',
-    labelEs: 'Tomaté',
-    labelPtBr: 'Tomaté',
+    labelEs: 'Tomate',
+    labelPtBr: 'Tomate',
     emoji: '🍅',
   );
 
@@ -188,7 +188,7 @@ abstract final class MealIngredientCatalog {
     labelEn: 'Beans',
     labelJa: '豆',
     labelEs: 'Judías',
-    labelPtBr: 'Feijáo',
+    labelPtBr: 'Feijão',
     emoji: '🫘',
   );
 
