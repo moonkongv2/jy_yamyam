@@ -56,7 +56,9 @@ class _VehiclePackPurchaseSheetState extends State<VehiclePackPurchaseSheet> {
       final state = widget.controller.state;
       if (!state.vehiclePackUnlocked &&
           !state.hasProductDetails &&
-          state.status != VehiclePackPurchaseStatus.loadingProduct) {
+          state.status != VehiclePackPurchaseStatus.loadingProduct &&
+          state.status != VehiclePackPurchaseStatus.restoring &&
+          state.status != VehiclePackPurchaseStatus.restoreNotFound) {
         widget.controller.loadProductDetails();
       }
     });

@@ -105,6 +105,7 @@ void main() {
 
     expect(find.byType(VehiclePackPurchaseSheet), findsOneWidget);
     expect(harness.client.restorePurchasesCallCount, 1);
+    expect(find.text('복원할 차량팩 구매 내역을 찾지 못했어요.'), findsOneWidget);
   });
 
   testWidgets('Settings unlocked vehicle pack section hides purchase CTA', (
