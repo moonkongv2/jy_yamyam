@@ -123,7 +123,9 @@ Use it only for local development:
 6. Tap a locked vehicle, pass the guardian gate, and verify the purchase sheet loads the `vehicle_pack` test product.
 7. Complete a local StoreKit purchase and verify the selected premium vehicle unlocks.
 8. Restart the app and verify the local entitlement cache keeps premium vehicles unlocked.
-9. Use the post-gate restore button and locked-state Settings restore flow to verify restore handling.
+9. Reset the local StoreKit transaction history, then use the post-gate restore button and locked-state Settings restore flow.
+10. Verify the app shows `복원할 차량팩 구매 내역을 찾지 못했어요.` / `No Vehicle Pack purchase was found to restore.` when there is no purchase to restore.
+11. After the restore-not-found message, verify the guardian purchase CTA is still enabled and can retry loading the product/price instead of getting stuck disabled.
 
 Local StoreKit testing does not replace App Store sandbox or TestFlight testing.
 Before release, still create the real App Store Connect non-consumable product
@@ -134,6 +136,13 @@ the price, stop the app and run it from Xcode with the `Runner` scheme. A plain
 `flutter run` launch may not attach the StoreKit configuration, which makes the
 simulator query the real App Store environment where `vehicle_pack` does not
 exist yet.
+
+If restore reports that no purchase was found and the price is still missing,
+tap the guardian purchase CTA once more. The sheet should retry the product
+lookup. If the price still does not load, confirm the app was launched from the
+Xcode `Runner` scheme with `VehiclePack.storekit` attached, and confirm the
+StoreKit configuration still contains a non-consumable product whose ID is
+exactly `vehicle_pack`.
 
 ## Platform Project TODOs
 
