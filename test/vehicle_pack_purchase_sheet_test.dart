@@ -131,6 +131,33 @@ void main() {
     expect(find.text('복원할 차량팩 구매 내역을 찾지 못했어요.'), findsOneWidget);
   });
 
+  testWidgets('Vehicle pack purchase sheet can buy after restore not found', (
+    tester,
+  ) async {
+    final harness = _PurchaseSheetHarness();
+    addTearDown(harness.dispose);
+
+    await harness.controller.restorePurchases();
+    await _pumpController(tester, harness.controller);
+    await tester.pumpAndSettle();
+
+    expect(find.text('복원할 차량팩 구매 내역을 찾지 못했어요.'), findsOneWidget);
+    expect(find.text(r'$2.99'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(const ValueKey('vehiclePackBuyButton')),
+          )
+          .onPressed,
+      isNotNull,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('vehiclePackBuyButton')));
+    await tester.pump();
+
+    expect(harness.client.boughtProducts, [harness.productDetails]);
+  });
+
   testWidgets('Vehicle pack purchase sheet shows error and canceled states', (
     tester,
   ) async {
@@ -265,7 +292,9 @@ class _StaticPurchaseController extends VehiclePackPurchaseController {
   VehiclePackPurchaseState get state => _state;
 
   @override
-  Future<void> loadProductDetails() async {}
+  Future<void> loadProductDetails({
+    bool preserveStatusOnSuccess = false,
+  }) async {}
 
   @override
   Future<bool> buyVehiclePack({String? applicationUserName}) async {

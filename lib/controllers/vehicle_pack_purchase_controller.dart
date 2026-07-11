@@ -103,13 +103,16 @@ class VehiclePackPurchaseController extends ChangeNotifier {
     );
   }
 
-  Future<void> loadProductDetails() async {
-    _setState(
-      _state.copyWith(
-        status: VehiclePackPurchaseStatus.loadingProduct,
-        errorMessage: null,
-      ),
-    );
+  Future<void> loadProductDetails({bool preserveStatusOnSuccess = false}) async {
+    final preservedStatus = preserveStatusOnSuccess ? _state.status : null;
+    if (!preserveStatusOnSuccess) {
+      _setState(
+        _state.copyWith(
+          status: VehiclePackPurchaseStatus.loadingProduct,
+          errorMessage: null,
+        ),
+      );
+    }
 
     try {
       final isAvailable = await _purchaseClient.isAvailable();
@@ -151,8 +154,9 @@ class VehiclePackPurchaseController extends ChangeNotifier {
 
       _setState(
         _state.copyWith(
-          status: VehiclePackPurchaseStatus.productReady,
+          status: preservedStatus ?? VehiclePackPurchaseStatus.productReady,
           productDetails: productDetails,
+          errorMessage: null,
         ),
       );
     } catch (error) {

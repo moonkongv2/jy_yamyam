@@ -57,9 +57,11 @@ class _VehiclePackPurchaseSheetState extends State<VehiclePackPurchaseSheet> {
       if (!state.vehiclePackUnlocked &&
           !state.hasProductDetails &&
           state.status != VehiclePackPurchaseStatus.loadingProduct &&
-          state.status != VehiclePackPurchaseStatus.restoring &&
-          state.status != VehiclePackPurchaseStatus.restoreNotFound) {
-        widget.controller.loadProductDetails();
+          state.status != VehiclePackPurchaseStatus.restoring) {
+        widget.controller.loadProductDetails(
+          preserveStatusOnSuccess:
+              state.status == VehiclePackPurchaseStatus.restoreNotFound,
+        );
       }
     });
   }
