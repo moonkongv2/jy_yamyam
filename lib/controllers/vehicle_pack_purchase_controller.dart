@@ -215,6 +215,9 @@ class VehiclePackPurchaseController extends ChangeNotifier {
             errorMessage: null,
           ),
         );
+        if (!_state.hasProductDetails) {
+          await loadProductDetails(preserveStatusOnSuccess: true);
+        }
       }
     } catch (error) {
       _setState(

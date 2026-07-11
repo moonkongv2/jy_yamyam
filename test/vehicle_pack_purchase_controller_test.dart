@@ -279,7 +279,13 @@ void main() {
     'Vehicle pack purchase controller reports restore without purchase updates',
     () async {
       SharedPreferences.setMockInitialValues({});
-      final client = FakeIapPurchaseClient();
+      final productDetails = fakeProductDetails();
+      final client = FakeIapPurchaseClient(
+        productDetailsResponse: ProductDetailsResponse(
+          productDetails: [productDetails],
+          notFoundIDs: const [],
+        ),
+      );
       addTearDown(client.dispose);
       final store = const LocalPurchaseEntitlementStore();
       final controller = _controller(client, store: store);
@@ -293,6 +299,8 @@ void main() {
         VehiclePackPurchaseStatus.restoreNotFound,
       );
       expect(controller.state.vehiclePackUnlocked, isFalse);
+      expect(controller.state.productDetails, productDetails);
+      expect(client.queriedProductIdSets, [IapProductIds.all]);
       expect(await store.load(), const PurchaseEntitlement.locked());
     },
   );
