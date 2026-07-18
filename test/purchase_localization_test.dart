@@ -5,6 +5,7 @@ import 'package:jy_yamyam/catalogs/avatar_prompt_catalog.dart';
 import 'package:jy_yamyam/catalogs/meal_ingredient_catalog.dart';
 import 'package:jy_yamyam/catalogs/vehicle_catalog.dart';
 import 'package:jy_yamyam/l10n/app_texts.dart';
+import 'package:jy_yamyam/models/reward_item.dart';
 
 void main() {
   test(
@@ -39,6 +40,18 @@ void main() {
     expect(ingredient.labelForLanguage('es'), 'Zanahoria');
     expect(ingredient.labelForLanguage('pt'), 'Cenoura');
     expect(ingredient.labelForLanguage('fr'), 'Carrot');
+  });
+
+  test('Reward sticker labels use supported locale vehicle names', () {
+    final sticker = RewardCatalog.findVehicleStickerByVehicleId('motorcycle');
+
+    expect(sticker, isNotNull);
+    expect(sticker!.labelForLanguage('ko'), '오토바이 스티커');
+    expect(sticker.labelForLanguage('en'), 'Motorcycle Sticker');
+    expect(sticker.labelForLanguage('ja'), 'オートバイステッカー');
+    expect(sticker.labelForLanguage('es'), 'Pegatina de moto');
+    expect(sticker.labelForLanguage('pt'), 'Adesivo de moto');
+    expect(sticker.labelForLanguage('fr'), 'Motorcycle Sticker');
   });
 
   test('Avatar prompts are localized and keep vehicle concepts', () {
