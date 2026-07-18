@@ -178,12 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       showGuardianGateSheet(
         context,
         onPassed: () {
-          unawaited(
-            showVehiclePackPurchaseSheet(
-              context,
-              purchaseController: controller,
-            ),
-          );
+          unawaited(controller.restorePurchases());
         },
       ),
     );
