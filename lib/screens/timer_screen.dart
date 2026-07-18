@@ -225,6 +225,7 @@ class _TimerScreenState extends State<TimerScreen>
     });
     return completer.future;
   }
+
   bool _isFinishDriving = false;
   Animation<double>? _finishDriveAnimation;
   MealSessionResult? _pendingFinishDriveResult;
@@ -1709,6 +1710,7 @@ class _ProgressMessageCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final iconSize = isCompact ? 40.0 : 36.0;
+    final compactProgressMinWidth = isCompact ? 180.0 : 0.0;
     final messageStyle = textTheme.titleMedium?.copyWith(
       color: AppColors.brown900,
       fontSize: isCompact ? 23 : null,
@@ -1750,28 +1752,47 @@ class _ProgressMessageCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 220),
-                child: Text(
-                  message,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: messageStyle,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
               Expanded(
-                child: ClipRRect(
-                  borderRadius: AppRadius.pill,
-                  child: LinearProgressIndicator(
-                    key: const ValueKey('timerProgressIndicator'),
-                    value: progress,
-                    minHeight: 7,
-                    backgroundColor: AppColors.borderSoft,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      AppColors.primary,
-                    ),
-                  ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final maxMessageWidth = math.max(
+                      0.0,
+                      constraints.maxWidth -
+                          AppSpacing.md -
+                          compactProgressMinWidth,
+                    );
+                    return Row(
+                      children: [
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: maxMessageWidth,
+                          ),
+                          child: Text(
+                            message,
+                            key: const ValueKey('timerProgressMessageText'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: messageStyle,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: AppRadius.pill,
+                            child: LinearProgressIndicator(
+                              key: const ValueKey('timerProgressIndicator'),
+                              value: progress,
+                              minHeight: 7,
+                              backgroundColor: AppColors.borderSoft,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ],

@@ -6903,6 +6903,60 @@ void main() {
     expect(tester.getSize(find.byType(RoadView)), roadSize);
   });
 
+  testWidgets('Landscape finish drive message has room for Japanese copy', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    var now = DateTime(2026);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ja'),
+        home: TimerScreen(
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(seconds: 100),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          now: () => now,
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+    await _finishCoursePreview(tester);
+
+    now = now.add(const Duration(seconds: 50));
+    await tester.pump(const Duration(milliseconds: 250));
+    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton).last);
+    await tester.pump();
+
+    expect(find.text('仕上げに向かっています！'), findsOneWidget);
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('timerProgressMessageText')))
+          .width,
+      greaterThan(220),
+    );
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('timerProgressIndicator')))
+          .width,
+      greaterThan(180),
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
   testWidgets('Timer screen keeps long landscape course viewport fixed', (
     tester,
   ) async {
@@ -6941,9 +6995,8 @@ void main() {
           .courseDuration,
       const Duration(minutes: 60),
     );
-    
 
-expect(
+    expect(
       tester
           .getRect(find.byType(RoadView))
           .contains(tester.getCenter(find.byType(VehicleWidget))),
