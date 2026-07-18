@@ -134,6 +134,70 @@ void main() {
     expect(purchases.vehiclePackOfflineBody, contains('offline'));
   });
 
+  test('Settings legal and support labels are localized', () {
+    final expectedLabelsByLocale = {
+      const Locale('ko'): [
+        '도움말 및 지원',
+        '사용 가이드',
+        '구매 복원',
+        '고객지원',
+        '정보',
+        '개인정보처리방침',
+        '앱 버전',
+      ],
+      const Locale('en'): [
+        'Help & Support',
+        'User Guide',
+        'Restore Purchase',
+        'Contact Support',
+        'About',
+        'Privacy Policy',
+        'App Version',
+      ],
+      const Locale('ja'): [
+        'ヘルプとサポート',
+        '使い方ガイド',
+        '購入を復元',
+        'サポートに問い合わせ',
+        '情報',
+        'プライバシーポリシー',
+        'アプリバージョン',
+      ],
+      const Locale('es'): [
+        'Ayuda y soporte',
+        'Guía de uso',
+        'Restaurar compra',
+        'Contactar con soporte',
+        'Acerca de',
+        'Política de privacidad',
+        'Versión de la app',
+      ],
+      const Locale('pt', 'BR'): [
+        'Ajuda e suporte',
+        'Guia de uso',
+        'Restaurar compra',
+        'Falar com o suporte',
+        'Sobre',
+        'Política de privacidade',
+        'Versão do app',
+      ],
+    };
+
+    for (final entry in expectedLabelsByLocale.entries) {
+      final settings = AppTexts.forLocale(entry.key).settings;
+
+      expect([
+        settings.helpSupportTitle,
+        settings.userGuide,
+        settings.restorePurchase,
+        settings.contactSupport,
+        settings.aboutTitle,
+        settings.privacyPolicy,
+        settings.appVersion,
+      ], entry.value);
+    }
+  });
+
   test('Avatar privacy copy describes optional local image selection', () {
     expect(AppTexts.ko.avatarSetup.privacyNote, contains('직접 누를 때만'));
     expect(AppTexts.ko.avatarSetup.privacyNote, contains('기기 안에만 저장'));
