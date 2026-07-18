@@ -70,6 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   );
   late final ExternalLinkLauncher _externalLinkLauncher;
   late Future<String> _appVersionLabel;
+  bool _isRestoringVehiclePack = false;
 
   @override
   void initState() {
@@ -178,10 +179,131 @@ class _SettingsScreenState extends State<SettingsScreen> {
       showGuardianGateSheet(
         context,
         onPassed: () {
-          unawaited(controller.restorePurchases());
+          unawaited(_restoreVehiclePackPurchaseAfterGate(controller));
         },
       ),
     );
+  }
+
+  Future<void> _restoreVehiclePackPurchaseAfterGate(
+    VehiclePackPurchaseController controller,
+  ) async {
+    if (_isRestoringVehiclePack) {
+      return;
+    }
+
+    final texts = AppTexts.of(context).purchases;
+    setState(() => _isRestoringVehiclePack = true);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(texts.vehiclePackRestoringMessage)));
+
+    try {
+      await controller.restorePurchases();
+      final status = await _waitForVehiclePackRestoreResult(controller);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              _vehiclePackRestoreResultMessage(
+                AppTexts.of(context).purchases,
+                status,
+                controller.state.vehiclePackUnlocked,
+              ),
+            ),
+          ),
+        );
+    } finally {
+      if (mounted) {
+        setState(() => _isRestoringVehiclePack = false);
+      }
+    }
+  }
+
+  Future<VehiclePackPurchaseStatus> _waitForVehiclePackRestoreResult(
+    VehiclePackPurchaseController controller,
+  ) {
+    final initialStatus = controller.state.status;
+    if (_isVehiclePackRestoreTerminalStatus(initialStatus)) {
+      return Future.value(initialStatus);
+    }
+
+    final completer = Completer<VehiclePackPurchaseStatus>();
+    late final VoidCallback listener;
+    Timer? timeout;
+
+    void complete(VehiclePackPurchaseStatus status) {
+      if (completer.isCompleted) {
+        return;
+      }
+      timeout?.cancel();
+      controller.removeListener(listener);
+      completer.complete(status);
+    }
+
+    listener = () {
+      final status = controller.state.status;
+      if (_isVehiclePackRestoreTerminalStatus(status)) {
+        complete(status);
+      }
+    };
+
+    controller.addListener(listener);
+    timeout = Timer(const Duration(seconds: 15), () {
+      complete(controller.state.status);
+    });
+
+    return completer.future;
+  }
+
+  bool _isVehiclePackRestoreTerminalStatus(VehiclePackPurchaseStatus status) {
+    return switch (status) {
+      VehiclePackPurchaseStatus.restoreCompleted ||
+      VehiclePackPurchaseStatus.restoreNotFound ||
+      VehiclePackPurchaseStatus.storeUnavailable ||
+      VehiclePackPurchaseStatus.productNotFound ||
+      VehiclePackPurchaseStatus.error ||
+      VehiclePackPurchaseStatus.canceled => true,
+      VehiclePackPurchaseStatus.idle ||
+      VehiclePackPurchaseStatus.loadingProduct ||
+      VehiclePackPurchaseStatus.productReady ||
+      VehiclePackPurchaseStatus.purchasePending ||
+      VehiclePackPurchaseStatus.purchaseCompleted ||
+      VehiclePackPurchaseStatus.restoring => false,
+    };
+  }
+
+  String _vehiclePackRestoreResultMessage(
+    PurchaseTextSet texts,
+    VehiclePackPurchaseStatus status,
+    bool vehiclePackUnlocked,
+  ) {
+    if (status == VehiclePackPurchaseStatus.restoreCompleted ||
+        vehiclePackUnlocked) {
+      return texts.vehiclePackRestoreSuccessMessage;
+    }
+
+    return switch (status) {
+      VehiclePackPurchaseStatus.restoreNotFound =>
+        texts.vehiclePackRestoreNotFoundMessage,
+      VehiclePackPurchaseStatus.storeUnavailable =>
+        texts.vehiclePackStoreUnavailableMessage,
+      VehiclePackPurchaseStatus.productNotFound =>
+        texts.vehiclePackProductNotFoundMessage,
+      VehiclePackPurchaseStatus.canceled => texts.vehiclePackCanceledMessage,
+      VehiclePackPurchaseStatus.error => texts.vehiclePackErrorMessage,
+      VehiclePackPurchaseStatus.idle ||
+      VehiclePackPurchaseStatus.loadingProduct ||
+      VehiclePackPurchaseStatus.productReady ||
+      VehiclePackPurchaseStatus.purchasePending ||
+      VehiclePackPurchaseStatus.purchaseCompleted ||
+      VehiclePackPurchaseStatus.restoreCompleted ||
+      VehiclePackPurchaseStatus.restoring => texts.vehiclePackErrorMessage,
+    };
   }
 
   @override
@@ -528,7 +650,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 leading: const Icon(Icons.restore_rounded),
                 title: Text(texts.settings.restorePurchase),
                 trailing: const Icon(Icons.chevron_right_rounded),
-                onTap: purchaseScope?.purchaseController == null
+                onTap:
+                    purchaseScope?.purchaseController == null ||
+                        _isRestoringVehiclePack
                     ? null
                     : () => _restoreVehiclePackPurchase(
                         purchaseScope!.purchaseController!,
