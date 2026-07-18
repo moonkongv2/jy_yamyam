@@ -26,6 +26,7 @@ class FakeIapPurchaseClient implements IapPurchaseClient {
   Object? queryProductDetailsError;
   Object? buyNonConsumableError;
   Object? restorePurchasesError;
+  Future<void> Function(String? applicationUserName)? onRestorePurchases;
   Object? completePurchaseError;
   final queriedProductIdSets = <Set<String>>[];
   final boughtProducts = <ProductDetails>[];
@@ -93,6 +94,7 @@ class FakeIapPurchaseClient implements IapPurchaseClient {
     }
 
     restoreApplicationUserNames.add(applicationUserName);
+    await onRestorePurchases?.call(applicationUserName);
   }
 
   @override

@@ -15,7 +15,6 @@ import 'package:jy_yamyam/services/external_link_launcher.dart';
 import 'package:jy_yamyam/services/local_purchase_entitlement_store.dart';
 import 'package:jy_yamyam/widgets/purchases/guardian_gate_sheet.dart';
 import 'package:jy_yamyam/widgets/purchases/purchase_entitlement_scope.dart';
-import 'package:jy_yamyam/widgets/purchases/vehicle_pack_purchase_sheet.dart';
 
 import 'fakes/fake_iap_purchase_client.dart';
 import 'helpers/guardian_gate_test_helpers.dart';
@@ -61,9 +60,7 @@ void main() {
     expect(harness.linkLauncher.openedUris, isEmpty);
   });
 
-  testWidgets('Restore Purchase opens guardian gate before restore UI', (
-    tester,
-  ) async {
+  testWidgets('Restore Purchase runs after guardian gate', (tester) async {
     final harness = _SettingsLegalSupportHarness();
     addTearDown(harness.dispose);
 
@@ -74,7 +71,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(GuardianGateSheet), findsOneWidget);
-    expect(find.byType(VehiclePackPurchaseSheet), findsNothing);
     expect(harness.purchaseClient.restorePurchasesCallCount, 0);
 
     await enterCurrentGuardianGateAnswer(tester);
@@ -83,8 +79,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(GuardianGateSheet), findsNothing);
-    expect(find.byType(VehiclePackPurchaseSheet), findsOneWidget);
-    expect(harness.purchaseClient.restorePurchasesCallCount, 0);
+    expect(harness.purchaseClient.restorePurchasesCallCount, 1);
   });
 
   testWidgets('Contact Support opens external URL after guardian gate', (

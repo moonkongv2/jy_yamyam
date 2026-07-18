@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -79,7 +81,7 @@ void main() {
     expect(find.byKey(const ValueKey('vehiclePackBuyButton')), findsOneWidget);
   });
 
-  testWidgets('Settings restore CTA requires gate before showing restore UI', (
+  testWidgets('Settings restore CTA restores directly after guardian gate', (
     tester,
   ) async {
     final harness = _SettingsPurchaseHarness(
@@ -101,18 +103,53 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('guardianGateContinueButton')));
     await tester.pumpAndSettle();
 
-    expect(find.byType(VehiclePackPurchaseSheet), findsOneWidget);
-    expect(harness.client.restorePurchasesCallCount, 0);
-    expect(
-      find.byKey(const ValueKey('vehiclePackRestoreButton')),
-      findsOneWidget,
-    );
-
-    await tester.tap(find.byKey(const ValueKey('vehiclePackRestoreButton')));
-    await tester.pumpAndSettle();
-
+    expect(find.byType(GuardianGateSheet), findsNothing);
+    expect(find.byType(VehiclePackPurchaseSheet), findsNothing);
     expect(harness.client.restorePurchasesCallCount, 1);
     expect(find.text('복원할 차량팩 구매 내역을 찾지 못했어요.'), findsOneWidget);
+  });
+
+  testWidgets('Settings restore CTA shows restored purchase feedback', (
+    tester,
+  ) async {
+    final harness = _SettingsPurchaseHarness(
+      entitlement: const PurchaseEntitlement.locked(),
+    );
+    addTearDown(harness.dispose);
+    final restoreCompleter = Completer<void>();
+    harness.client.onRestorePurchases = (_) => restoreCompleter.future;
+
+    await _pumpSettings(tester, harness);
+    await _scrollToRestorePurchaseTile(tester);
+
+    await tester.tap(find.byKey(const ValueKey('settingsRestorePurchaseTile')));
+    await tester.pumpAndSettle();
+
+    await enterCurrentGuardianGateAnswer(tester);
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('guardianGateContinueButton')));
+    await tester.pump();
+
+    expect(find.byType(VehiclePackPurchaseSheet), findsNothing);
+    expect(harness.client.restorePurchasesCallCount, 1);
+    expect(find.text('구매 내역을 확인하고 있어요.'), findsOneWidget);
+    expect(
+      tester
+          .widget<ListTile>(
+            find.byKey(const ValueKey('settingsRestorePurchaseTile')),
+          )
+          .onTap,
+      isNull,
+    );
+
+    harness.client.emitPurchases([
+      fakePurchaseDetails(status: PurchaseStatus.restored),
+    ]);
+    await tester.pump();
+    restoreCompleter.complete();
+    await tester.pump();
+
+    expect(find.text('구매 복원이 완료됐어요.'), findsOneWidget);
   });
 
   testWidgets('Settings unlocked vehicle pack section hides purchase CTA', (
