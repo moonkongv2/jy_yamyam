@@ -47,6 +47,13 @@ class JaSettingsTexts implements SettingsTextSet {
   String get avatarDefaultState => '標準画像を使用中';
   String get avatarCustomState => '作成したライダーを使用中';
   String get avatarSettingsButton => 'ライダーを設定';
+  String get helpSupportTitle => 'ヘルプとサポート';
+  String get userGuide => '使い方ガイド';
+  String get restorePurchase => '購入を復元';
+  String get contactSupport => 'サポートに問い合わせ';
+  String get aboutTitle => '情報';
+  String get privacyPolicy => 'プライバシーポリシー';
+  String get appVersion => 'アプリバージョン';
 
   String durationSegmentLabel(int minutes) => '$minutes分';
   String motivationVideoIntervalSegmentLabel(int minutes) => '$minutes分';

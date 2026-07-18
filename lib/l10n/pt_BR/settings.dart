@@ -48,6 +48,13 @@ class PtBrSettingsTexts implements SettingsTextSet {
   String get avatarDefaultState => 'Usando imagem padrão';
   String get avatarCustomState => 'Usando rider personalizado';
   String get avatarSettingsButton => 'Abrir ajustes do rider';
+  String get helpSupportTitle => 'Ajuda e suporte';
+  String get userGuide => 'Guia de uso';
+  String get restorePurchase => 'Restaurar compra';
+  String get contactSupport => 'Falar com o suporte';
+  String get aboutTitle => 'Sobre';
+  String get privacyPolicy => 'Política de privacidade';
+  String get appVersion => 'Versão do app';
 
   String durationSegmentLabel(int minutes) => '$minutes min';
   String motivationVideoIntervalSegmentLabel(int minutes) => '$minutes min';

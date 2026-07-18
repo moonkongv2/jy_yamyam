@@ -208,6 +208,13 @@ abstract interface class SettingsTextSet {
   String get avatarDefaultState;
   String get avatarCustomState;
   String get avatarSettingsButton;
+  String get helpSupportTitle;
+  String get userGuide;
+  String get restorePurchase;
+  String get contactSupport;
+  String get aboutTitle;
+  String get privacyPolicy;
+  String get appVersion;
 
   String durationSegmentLabel(int minutes);
   String motivationVideoIntervalSegmentLabel(int minutes);

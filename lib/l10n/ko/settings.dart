@@ -48,6 +48,13 @@ class SettingsTexts implements SettingsTextSet {
   String get avatarDefaultState => '기본 이미지 사용 중';
   String get avatarCustomState => '직접 만든 라이더 사용 중';
   String get avatarSettingsButton => '라이더 설정하기';
+  String get helpSupportTitle => '도움말 및 지원';
+  String get userGuide => '사용 가이드';
+  String get restorePurchase => '구매 복원';
+  String get contactSupport => '고객지원';
+  String get aboutTitle => '정보';
+  String get privacyPolicy => '개인정보처리방침';
+  String get appVersion => '앱 버전';
 
   String durationSegmentLabel(int minutes) => '$minutes분';
   String motivationVideoIntervalSegmentLabel(int minutes) => '$minutes분';

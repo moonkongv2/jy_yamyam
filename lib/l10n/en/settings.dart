@@ -49,6 +49,13 @@ class EnSettingsTexts implements SettingsTextSet {
   String get avatarDefaultState => 'Using default image';
   String get avatarCustomState => 'Using custom rider';
   String get avatarSettingsButton => 'Open rider image settings';
+  String get helpSupportTitle => 'Help & Support';
+  String get userGuide => 'User Guide';
+  String get restorePurchase => 'Restore Purchase';
+  String get contactSupport => 'Contact Support';
+  String get aboutTitle => 'About';
+  String get privacyPolicy => 'Privacy Policy';
+  String get appVersion => 'App Version';
 
   String durationSegmentLabel(int minutes) => '$minutes min';
   String motivationVideoIntervalSegmentLabel(int minutes) => '$minutes min';

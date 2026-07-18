@@ -50,6 +50,13 @@ class EsSettingsTexts implements SettingsTextSet {
   String get avatarDefaultState => 'Usando imagen predeterminada';
   String get avatarCustomState => 'Usando rider personalizado';
   String get avatarSettingsButton => 'Abrir ajustes del rider';
+  String get helpSupportTitle => 'Ayuda y soporte';
+  String get userGuide => 'Guía de uso';
+  String get restorePurchase => 'Restaurar compra';
+  String get contactSupport => 'Contactar con soporte';
+  String get aboutTitle => 'Acerca de';
+  String get privacyPolicy => 'Política de privacidad';
+  String get appVersion => 'Versión de la app';
 
   String durationSegmentLabel(int minutes) => '$minutes min';
   String motivationVideoIntervalSegmentLabel(int minutes) => '$minutes min';
