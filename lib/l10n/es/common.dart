@@ -8,7 +8,7 @@ class EsCommonTexts implements CommonTextSet {
   String get appTitle => 'Yamyam Rider';
   String get apply => 'Aplicar';
   String get cancel => 'Cancelar';
-  String get defaultChildName => 'Sofía';
+  String get defaultChildName => 'Luca';
   String get complete => 'Listo';
   String get finishPointSemanticLabel => 'punto de llegada';
   String get home => 'Inicio';
