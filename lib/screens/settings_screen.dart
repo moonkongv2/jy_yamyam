@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 
 import '../catalogs/meal_course_catalog.dart';
 import '../constants/child_name_limits.dart';
+import '../constants/legal_support_links.dart';
 import '../controllers/vehicle_pack_purchase_controller.dart';
 import '../l10n/app_texts.dart';
 import '../l10n/text_sets.dart';
 import '../models/meal_timer_config.dart';
 import '../models/purchase_entitlement.dart';
+import '../services/app_version_service.dart';
+import '../services/external_link_launcher.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app/app_help_sheet.dart';
 import '../widgets/purchases/guardian_gate_sheet.dart';
@@ -47,10 +50,14 @@ class SettingsScreen extends StatefulWidget {
     super.key,
     required this.config,
     required this.onConfigChanged,
+    this.externalLinkLauncher,
+    this.appVersionService,
   });
 
   final MealTimerConfig config;
   final ValueChanged<MealTimerConfig> onConfigChanged;
+  final ExternalLinkLauncher? externalLinkLauncher;
+  final AppVersionService? appVersionService;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -61,6 +68,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late final TextEditingController _childNameController = TextEditingController(
     text: widget.config.childName,
   );
+  late final ExternalLinkLauncher _externalLinkLauncher;
+  late Future<String> _appVersionLabel;
+
+  @override
+  void initState() {
+    super.initState();
+    _externalLinkLauncher =
+        widget.externalLinkLauncher ?? const UrlLauncherExternalLinkLauncher();
+    _appVersionLabel = _loadAppVersionLabel();
+  }
 
   @override
   void didUpdateWidget(covariant SettingsScreen oldWidget) {
@@ -118,6 +135,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<String> _loadAppVersionLabel() {
+    return (widget.appVersionService ?? PackageInfoAppVersionService())
+        .loadVersionLabel();
+  }
+
+  void _openUserGuide() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const UserGuideScreen()));
+  }
+
+  void _openGuardianProtectedLink(Uri uri) {
+    unawaited(
+      showGuardianGateSheet(
+        context,
+        onPassed: () {
+          unawaited(_externalLinkLauncher.open(uri));
+        },
+      ),
+    );
+  }
+
   void _openVehiclePackPurchaseSheet(VehiclePackPurchaseController controller) {
     unawaited(
       showGuardianGateSheet(
@@ -168,26 +207,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Card(
-            child: ListTile(
-              key: const ValueKey('userGuideSettingsTile'),
-              leading: const Icon(Icons.menu_book_rounded),
-              title: Text(
-                texts.userGuide.title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-              ),
-              subtitle: Text(texts.userGuide.subtitle),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const UserGuideScreen()),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 20),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -495,16 +514,107 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   : () => _openVehiclePackPurchaseSheet(
                       purchaseScope.purchaseController!,
                     ),
-              onRestorePressed:
-                  purchaseScope.entitlement.vehiclePackUnlocked ||
-                      purchaseScope.purchaseController == null
-                  ? null
-                  : () => _restoreVehiclePackPurchase(
-                      purchaseScope.purchaseController!,
-                    ),
             ),
             const SizedBox(height: 20),
           ],
+          _SettingsListSection(
+            key: const ValueKey('settingsHelpSupportSection'),
+            title: texts.settings.helpSupportTitle,
+            children: [
+              ListTile(
+                key: const ValueKey('userGuideSettingsTile'),
+                leading: const Icon(Icons.menu_book_rounded),
+                title: Text(texts.settings.userGuide),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: _openUserGuide,
+              ),
+              ListTile(
+                key: const ValueKey('settingsRestorePurchaseTile'),
+                leading: const Icon(Icons.restore_rounded),
+                title: Text(texts.settings.restorePurchase),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: purchaseScope?.purchaseController == null
+                    ? null
+                    : () => _restoreVehiclePackPurchase(
+                        purchaseScope!.purchaseController!,
+                      ),
+              ),
+              ListTile(
+                key: const ValueKey('settingsContactSupportTile'),
+                leading: const Icon(Icons.support_agent_rounded),
+                title: Text(texts.settings.contactSupport),
+                trailing: const Icon(Icons.open_in_new_rounded),
+                onTap: () =>
+                    _openGuardianProtectedLink(LegalSupportLinks.supportUri),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _SettingsListSection(
+            key: const ValueKey('settingsAboutSection'),
+            title: texts.settings.aboutTitle,
+            children: [
+              ListTile(
+                key: const ValueKey('settingsPrivacyPolicyTile'),
+                leading: const Icon(Icons.privacy_tip_rounded),
+                title: Text(texts.settings.privacyPolicy),
+                trailing: const Icon(Icons.open_in_new_rounded),
+                onTap: () => _openGuardianProtectedLink(
+                  LegalSupportLinks.privacyPolicyUri,
+                ),
+              ),
+              ListTile(
+                key: const ValueKey('settingsAppVersionRow'),
+                leading: const Icon(Icons.info_outline_rounded),
+                title: Text(texts.settings.appVersion),
+                trailing: FutureBuilder<String>(
+                  future: _appVersionLabel,
+                  builder: (context, snapshot) {
+                    return Text(
+                      snapshot.data ?? '',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SettingsListSection extends StatelessWidget {
+  const _SettingsListSection({
+    super.key,
+    required this.title,
+    required this.children,
+  });
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+          ...children,
         ],
       ),
     );
@@ -517,14 +627,12 @@ class _SettingsVehiclePackCard extends StatelessWidget {
     required this.entitlement,
     required this.purchaseController,
     required this.onUnlockPressed,
-    required this.onRestorePressed,
   });
 
   final Key cardKey;
   final PurchaseEntitlement entitlement;
   final VehiclePackPurchaseController? purchaseController;
   final VoidCallback? onUnlockPressed;
-  final VoidCallback? onRestorePressed;
 
   @override
   Widget build(BuildContext context) {
@@ -588,13 +696,6 @@ class _SettingsVehiclePackCard extends StatelessWidget {
                 onPressed: onUnlockPressed,
                 icon: const Icon(Icons.lock_open_rounded),
                 label: Text(texts.settingsVehiclePackUnlockButton),
-              ),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                key: const ValueKey('settingsVehiclePackRestoreButton'),
-                onPressed: onRestorePressed,
-                icon: const Icon(Icons.restore_rounded),
-                label: Text(texts.settingsVehiclePackRestoreButton),
               ),
             ],
           ],

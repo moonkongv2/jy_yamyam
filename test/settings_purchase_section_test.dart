@@ -30,7 +30,7 @@ void main() {
       findsNothing,
     );
     expect(
-      find.byKey(const ValueKey('settingsVehiclePackRestoreButton')),
+      find.byKey(const ValueKey('settingsRestorePurchaseTile')),
       findsNothing,
     );
 
@@ -47,7 +47,7 @@ void main() {
       findsOneWidget,
     );
     expect(
-      find.byKey(const ValueKey('settingsVehiclePackRestoreButton')),
+      find.byKey(const ValueKey('settingsRestorePurchaseTile')),
       findsOneWidget,
     );
   });
@@ -88,11 +88,9 @@ void main() {
     addTearDown(harness.dispose);
 
     await _pumpSettings(tester, harness);
-    await _scrollToVehiclePackCard(tester);
+    await _scrollToRestorePurchaseTile(tester);
 
-    await tester.tap(
-      find.byKey(const ValueKey('settingsVehiclePackRestoreButton')),
-    );
+    await tester.tap(find.byKey(const ValueKey('settingsRestorePurchaseTile')));
     await tester.pumpAndSettle();
 
     expect(find.byType(GuardianGateSheet), findsOneWidget);
@@ -140,15 +138,20 @@ void main() {
       find.byKey(const ValueKey('settingsVehiclePackUnlockButton')),
       findsNothing,
     );
-    expect(
-      find.byKey(const ValueKey('settingsVehiclePackRestoreButton')),
-      findsNothing,
-    );
   });
 }
 
 Future<void> _scrollToVehiclePackCard(WidgetTester tester) async {
   await tester.drag(find.byType(ListView), const Offset(0, -900));
+  await tester.pumpAndSettle();
+}
+
+Future<void> _scrollToRestorePurchaseTile(WidgetTester tester) async {
+  await tester.scrollUntilVisible(
+    find.byKey(const ValueKey('settingsRestorePurchaseTile')),
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
   await tester.pumpAndSettle();
 }
 
