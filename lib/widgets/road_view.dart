@@ -1051,7 +1051,8 @@ class _MotivationVideoBubbleState extends State<_MotivationVideoBubble> {
         setState(() => _isReady = true);
       }
     } catch (_) {
-      _finish();
+      // Keep the cue alive until the fallback timer clears it. This avoids
+      // immediate state churn if an enabled build is misconfigured.
     }
   }
 

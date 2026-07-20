@@ -16,13 +16,12 @@ The app is designed around one simple goal: make mealtime pacing feel like a coz
 - Vehicle-specific custom avatar storage and preview
 - Custom avatar setup flow with image upload, per-vehicle adjustment controls, and prompt guidance
 - Animated road, rail, sky, or water course progress based on the selected vehicle
-- Portrait and landscape timer layouts with dedicated road, vehicle, and motivation video layers
+- Portrait and landscape timer layouts with dedicated road and vehicle layers
 - Pause, resume, complete, arrival prompt, and exit confirmation flows
 - Optional remaining-time display, sound effects, and keep-screen-awake setting
-- Short motivation video overlay during timer milestones
-- Locale-based shared motivation voice playback when sound is enabled
+- Motivation video and voice implementation retained behind a release availability flag
 - Completion result screen with vehicle-specific success videos and fallback handling
-- In-app parent guide and contextual help for ingredients, motivation videos, results, rewards, and history
+- In-app parent guide and contextual help for ingredients, results, rewards, and history
 - Local active timer session restore, meal history, progress summary, vehicle stickers, and reward goal tracking
 - Vehicle sticker collection and reward goal screens
 - One-time vehicle pack in-app purchase flow with guardian gate and local entitlement cache
@@ -37,30 +36,30 @@ The app is designed around one simple goal: make mealtime pacing feel like a coz
 4. Start a preset course or configure a custom duration.
 5. Choose random meal ingredients or select up to five ingredients for the course.
 6. Watch the selected vehicle move along its course as the timer progresses.
-7. See short motivation videos at progress milestones.
-8. If sound is enabled, hear a short locale-based cheer voice with the motivation video.
-9. Pause, resume, complete, or respond to the arrival prompt when needed.
-10. Review the result and earned vehicle stickers.
-11. Track meal history, vehicle sticker inventory, and reward goals from the home screen.
+7. Pause, resume, complete, or respond to the arrival prompt when needed.
+8. Review the result and earned vehicle stickers.
+9. Track meal history, vehicle sticker inventory, and reward goals from the home screen.
 
 ## Motivation Media
 
-Motivation videos are short silent cheer-up clips, focused on smiling and thumbs-up style encouragement rather than spoken lip-sync video.
+Motivation media is temporarily deferred from the launch build while localized voice resources are completed for every supported language. The implementation, settings schema, localization strings, tests, and source media remain in the repository for later re-enablement.
 
-Current behavior:
+Re-enablement steps and verification live in `docs/motivation_media.md`.
+
+When `ENABLE_MOTIVATION_MEDIA=true` is built with the motivation assets restored:
 
 - Milestones still decide when a motivation video can appear.
 - The actual video is selected from the current vehicle's candidate list.
 - Unknown or unsupported vehicle IDs fall back to `motivation_fallback.mp4`.
 - Motivation videos have a minimum replay interval.
-- For test builds, the current minimum interval is set to 10 seconds.
+- For tests, the current minimum interval is set to 10 seconds.
 - When `soundEnabled` is off, only the video is shown.
 - When `soundEnabled` is on, the app picks a shared voice clip by locale.
 - Korean uses `ko_*.mp3`, English uses `en_*.mp3`.
 - Unsupported locales fall back to English voice clips.
 - Vehicle-specific voice override support is reserved in the catalog structure, but not used yet.
 
-Asset layout:
+Source media layout retained in Git:
 
 ```text
 assets/
@@ -86,7 +85,7 @@ assets/
 - Custom local text bundles for Korean and English
 - `shared_preferences` for local settings, progress, history, vehicle stickers, and rewards
 - `video_player` for splash, motivation, and result videos
-- `audioplayers` for motivation voice playback
+- `audioplayers` for gated motivation voice playback
 - `image_picker`, `path_provider`, and `image` for custom avatar image import and normalization
 - `wakelock_plus` for the keep-screen-awake timer setting
 - `flutter_launcher_icons` for launcher icon generation
@@ -169,12 +168,12 @@ lib/
     reward_sticker_image.dart        # Sticker image with fallback
 
 assets/
-  audio/motivation/                  # Locale-based shared motivation voice clips
+  audio/motivation/                  # Deferred locale-based shared motivation voice clips
   fonts/                             # Cal Sans font
   images/                            # Vehicles, ingredients, and result fallbacks
   icons/                             # Launcher icon source assets
   videos/                            # Splash and result media
-  videos/motivation/                 # Vehicle-specific silent motivation videos
+  videos/motivation/                 # Deferred vehicle-specific silent motivation videos
 
 test/
   active_meal_timer_session_store_test.dart # Active timer persistence tests
@@ -226,9 +225,9 @@ dart run flutter_launcher_icons
 - Vehicle course visuals are selected through `VehicleCourseKind`, so airplanes and pteranodons use sky styling, sharks use water styling, trains use rail styling, and other vehicles use road styling.
 - Meal ingredients are selected before a ride and expanded into repeated course slots by `MealIngredientCatalog`.
 - Custom avatar images are stored per vehicle, so multiple vehicle tiles can keep their own custom avatar previews.
-- User-facing guide and help copy should stay synchronized with actual timer, ingredient, motivation, and reward rules.
+- User-facing guide and help copy should stay synchronized with actual timer, ingredient, feature availability, and reward rules.
 - Settings, meal progress, vehicle sticker inventory, reward goals, and avatar config are stored locally with `SharedPreferences`.
-- Motivation video paths and voice paths should be registered through `MotivationAssetCatalog`.
+- Motivation video paths and voice paths should stay registered through `MotivationAssetCatalog`; launch build availability is controlled separately by `ENABLE_MOTIVATION_MEDIA`.
 - Vehicle assets should keep consistent canvas size, padding, and visual scale because they are also used as reward stickers.
 - UI polish should use the shared design tokens in `lib/theme/` and reusable app widgets in `lib/widgets/app/`.
 - Launcher icon assets live under `assets/icons/`; regenerate platform icons with `dart run flutter_launcher_icons` after changing them.
