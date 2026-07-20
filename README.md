@@ -44,6 +44,8 @@ The app is designed around one simple goal: make mealtime pacing feel like a coz
 
 Motivation media is temporarily deferred from the launch build while localized voice resources are completed for every supported language. The implementation, settings schema, localization strings, tests, and source media remain in the repository for later re-enablement.
 
+Re-enablement steps and verification live in `docs/motivation_media.md`.
+
 When `ENABLE_MOTIVATION_MEDIA=true` is built with the motivation assets restored:
 
 - Milestones still decide when a motivation video can appear.
