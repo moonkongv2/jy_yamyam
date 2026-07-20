@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'config/app_feature_flags.dart';
 import 'controllers/vehicle_pack_purchase_controller.dart';
 import 'l10n/app_texts.dart';
 import 'models/meal_timer_config.dart';
@@ -26,6 +27,7 @@ class YamyamRiderApp extends StatefulWidget {
     this.initialPurchaseEntitlement = const PurchaseEntitlement.locked(),
     this.purchaseController,
     this.activeSessionStore = const ActiveMealTimerSessionStore(),
+    this.motivationMediaAvailable = AppFeatureFlags.motivationMediaAvailable,
     this.showSplashOnStart = true,
   });
 
@@ -36,6 +38,7 @@ class YamyamRiderApp extends StatefulWidget {
   final PurchaseEntitlement initialPurchaseEntitlement;
   final VehiclePackPurchaseController? purchaseController;
   final ActiveMealTimerSessionStore activeSessionStore;
+  final bool motivationMediaAvailable;
   final bool showSplashOnStart;
 
   @override
@@ -141,6 +144,7 @@ class _YamyamRiderAppState extends State<YamyamRiderApp> {
                 config: _config,
                 mealProgressService: widget.mealProgressService,
                 activeSessionStore: widget.activeSessionStore,
+                motivationMediaAvailable: widget.motivationMediaAvailable,
                 onConfigChanged: _saveConfig,
               )
             : ChildNameSetupScreen(onNameSaved: _saveChildName),

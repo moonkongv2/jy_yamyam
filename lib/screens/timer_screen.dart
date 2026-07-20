@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../catalogs/meal_ingredient_catalog.dart';
 import '../catalogs/motivation_asset_catalog.dart';
 import '../catalogs/vehicle_catalog.dart';
+import '../config/app_feature_flags.dart';
 import '../controllers/meal_timer_controller.dart';
 import '../controllers/motivation_cue_controller.dart';
 import '../controllers/timer_active_session_controller.dart';
@@ -165,6 +166,7 @@ class TimerScreen extends StatefulWidget {
     this.screenAwakeService = const WakelockScreenAwakeService(),
     this.orientationService = const SystemOrientationService(),
     this.activeSessionStore = const ActiveMealTimerSessionStore(),
+    this.motivationMediaAvailable = AppFeatureFlags.motivationMediaAvailable,
     this.motivationAudioService,
     this.restoredSession,
     this.now,
@@ -176,6 +178,7 @@ class TimerScreen extends StatefulWidget {
   final ScreenAwakeService screenAwakeService;
   final OrientationService orientationService;
   final ActiveMealTimerSessionStore activeSessionStore;
+  final bool motivationMediaAvailable;
   final MotivationAudioService? motivationAudioService;
   final ActiveMealTimerSession? restoredSession;
   final DateTime Function()? now;
@@ -243,7 +246,10 @@ class _TimerScreenState extends State<TimerScreen>
     WidgetsBinding.instance.addObserver(this);
     _timerConfig = widget.config;
     _motivationAudioService =
-        widget.motivationAudioService ?? AudioplayersMotivationAudioService();
+        widget.motivationAudioService ??
+        (widget.motivationMediaAvailable
+            ? AudioplayersMotivationAudioService()
+            : const NoOpMotivationAudioService());
     _ownsMotivationAudioService = widget.motivationAudioService == null;
     final restoredSession = widget.restoredSession;
     if (restoredSession == null) {
@@ -444,7 +450,7 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _maybeShowMotivationVideo() {
-    if (!mounted || _isFinishDriving) {
+    if (!widget.motivationMediaAvailable || !mounted || _isFinishDriving) {
       return;
     }
 
@@ -465,6 +471,9 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _scheduleMotivationVoice() {
+    if (!widget.motivationMediaAvailable) {
+      return;
+    }
     _motivationVoiceTimer?.cancel();
     _motivationVoiceTimer = Timer(motivationVoiceStartDelay, () {
       if (!mounted) {
@@ -475,7 +484,7 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _maybePlayMotivationVoice() {
-    if (!_timerConfig.soundEnabled) {
+    if (!widget.motivationMediaAvailable || !_timerConfig.soundEnabled) {
       return;
     }
 
@@ -529,6 +538,9 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   Future<void> _openMotivationSettings() async {
+    if (!widget.motivationMediaAvailable) {
+      return;
+    }
     final result = await showModalBottomSheet<_MotivationVideoSettingsResult>(
       context: context,
       isScrollControlled: true,
@@ -874,6 +886,9 @@ class _TimerScreenState extends State<TimerScreen>
         final displayedRemaining = _isFinishDriving
             ? Duration.zero
             : _controller.remaining;
+        final onMotivationSettings = widget.motivationMediaAvailable
+            ? _openMotivationSettings
+            : null;
 
         return PopScope(
           canPop: _allowExit,
@@ -892,12 +907,13 @@ class _TimerScreenState extends State<TimerScreen>
                     foregroundColor: AppColors.brown900,
                     elevation: 0,
                     actions: [
-                      IconButton(
-                        key: const ValueKey('motivationSettingsButton'),
-                        tooltip: texts.settings.motivationVideoEnabled,
-                        icon: const Icon(Icons.video_settings_rounded),
-                        onPressed: _openMotivationSettings,
-                      ),
+                      if (onMotivationSettings != null)
+                        IconButton(
+                          key: const ValueKey('motivationSettingsButton'),
+                          tooltip: texts.settings.motivationVideoEnabled,
+                          icon: const Icon(Icons.video_settings_rounded),
+                          onPressed: onMotivationSettings,
+                        ),
                     ],
                   ),
             body: SafeArea(
@@ -917,13 +933,20 @@ class _TimerScreenState extends State<TimerScreen>
                     avatar: vehicleAvatar,
                     motivationVideoAssetPath: _isPreviewing || _isFinishDriving
                         ? null
-                        : _motivationCueController.activeVideoPath,
+                        : widget.motivationMediaAvailable
+                        ? _motivationCueController.activeVideoPath
+                        : null,
                     motivationVideoMilestone: _isPreviewing || _isFinishDriving
                         ? null
-                        : _motivationCueController.activeMilestone,
+                        : widget.motivationMediaAvailable
+                        ? _motivationCueController.activeMilestone
+                        : null,
                     onMotivationVideoFinished: _handleMotivationVideoFinished,
                     showVehicle: !isLandscape,
-                    showMotivationVideo: !isLandscape && !_isPreviewing,
+                    showMotivationVideo:
+                        widget.motivationMediaAvailable &&
+                        !isLandscape &&
+                        !_isPreviewing,
                     ingredients: courseIngredients,
                     ingredientClearProgress: vehicleDisplayProgress,
                     isRoadMotionActive:
@@ -984,6 +1007,7 @@ class _TimerScreenState extends State<TimerScreen>
                       : null;
                   final landscapeMotivationVideoLayer =
                       !_isFinishDriving &&
+                          widget.motivationMediaAvailable &&
                           !_isPreviewing &&
                           isLandscape &&
                           _motivationCueController.activeVideoPath != null &&
@@ -1036,7 +1060,7 @@ class _TimerScreenState extends State<TimerScreen>
                       vehicleLayer: landscapeVehicleLayer,
                       motivationVideoLayer: landscapeMotivationVideoLayer,
                       onBack: _confirmExit,
-                      onMotivationSettings: _openMotivationSettings,
+                      onMotivationSettings: onMotivationSettings,
                       controls: TimerControlBar(
                         isPaused: _controller.isPaused,
                         onPauseResume: canUseTimerControls
@@ -1048,7 +1072,7 @@ class _TimerScreenState extends State<TimerScreen>
                       ),
                       compactControls: _CompactLandscapeControls(
                         isPaused: _controller.isPaused,
-                        onMotivationSettings: _openMotivationSettings,
+                        onMotivationSettings: onMotivationSettings,
                         onPauseResume: canUseTimerControls
                             ? handlePauseResume
                             : null,
@@ -1120,7 +1144,7 @@ class _LandscapeTimerLayout extends StatelessWidget {
   final Widget? vehicleLayer;
   final Widget? motivationVideoLayer;
   final VoidCallback onBack;
-  final VoidCallback onMotivationSettings;
+  final VoidCallback? onMotivationSettings;
   final Widget controls;
   final Widget compactControls;
 
@@ -1183,7 +1207,7 @@ class _CompactLandscapeControls extends StatelessWidget {
   });
 
   final bool isPaused;
-  final VoidCallback onMotivationSettings;
+  final VoidCallback? onMotivationSettings;
   final VoidCallback? onPauseResume;
   final VoidCallback? onComplete;
 
@@ -1195,14 +1219,16 @@ class _CompactLandscapeControls extends StatelessWidget {
       key: const ValueKey('compactLandscapeControls'),
       mainAxisSize: MainAxisSize.min,
       children: [
-        _CompactLandscapeButton(
-          key: const ValueKey('motivationSettingsButton'),
-          label: texts.settings.motivationVideoEnabled,
-          icon: Icons.video_settings_rounded,
-          onPressed: onMotivationSettings,
-          variant: _CompactLandscapeButtonVariant.outline,
-        ),
-        const SizedBox(height: AppSpacing.sm),
+        if (onMotivationSettings != null) ...[
+          _CompactLandscapeButton(
+            key: const ValueKey('motivationSettingsButton'),
+            label: texts.settings.motivationVideoEnabled,
+            icon: Icons.video_settings_rounded,
+            onPressed: onMotivationSettings,
+            variant: _CompactLandscapeButtonVariant.outline,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
         _CompactLandscapeButton(
           label: isPaused ? texts.common.restartRide : texts.timer.pauseButton,
           icon: isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded,
@@ -1303,7 +1329,7 @@ class _LandscapeCourseCanvas extends StatelessWidget {
   final Widget? vehicleLayer;
   final Widget? motivationVideoLayer;
   final VoidCallback onBack;
-  final VoidCallback onMotivationSettings;
+  final VoidCallback? onMotivationSettings;
   final Widget? compactControls;
 
   @override
@@ -1357,7 +1383,8 @@ class _LandscapeCourseCanvas extends StatelessWidget {
                     icon: Icons.arrow_back_rounded,
                     onPressed: onBack,
                   ),
-                  if (compactControls == null) ...[
+                  if (compactControls == null &&
+                      onMotivationSettings != null) ...[
                     const SizedBox(width: AppSpacing.sm),
                     _LandscapeIconButton(
                       key: const ValueKey('motivationSettingsButton'),
@@ -1365,7 +1392,7 @@ class _LandscapeCourseCanvas extends StatelessWidget {
                         context,
                       ).settings.motivationVideoEnabled,
                       icon: Icons.video_settings_rounded,
-                      onPressed: onMotivationSettings,
+                      onPressed: onMotivationSettings!,
                     ),
                   ],
                 ],

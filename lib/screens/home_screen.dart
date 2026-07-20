@@ -8,6 +8,7 @@ import '../catalogs/meal_ingredient_catalog.dart';
 import '../catalogs/meal_course_catalog.dart';
 import '../catalogs/vehicle_catalog.dart';
 import '../catalogs/vehicle_unlock_catalog.dart';
+import '../config/app_feature_flags.dart';
 import '../l10n/app_texts.dart';
 import '../models/active_meal_timer_session.dart';
 import '../models/meal_progress_snapshot.dart';
@@ -57,6 +58,7 @@ class HomeScreen extends StatefulWidget {
     required this.mealProgressService,
     required this.onConfigChanged,
     this.activeSessionStore = const ActiveMealTimerSessionStore(),
+    this.motivationMediaAvailable = AppFeatureFlags.motivationMediaAvailable,
     this.avatarImageBuilder,
     this.now,
   });
@@ -65,6 +67,7 @@ class HomeScreen extends StatefulWidget {
   final LocalMealProgressService mealProgressService;
   final ValueChanged<MealTimerConfig> onConfigChanged;
   final ActiveMealTimerSessionStore activeSessionStore;
+  final bool motivationMediaAvailable;
   final Widget Function(BuildContext context, String imagePath)?
   avatarImageBuilder;
   final DateTime Function()? now;
@@ -299,6 +302,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           config: config,
           mealProgressService: widget.mealProgressService,
           activeSessionStore: widget.activeSessionStore,
+          motivationMediaAvailable: widget.motivationMediaAvailable,
           onConfigChanged: _updateTimerRuntimeConfig,
         ),
       ),
@@ -369,6 +373,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           restoredSession: effectiveSession,
           mealProgressService: widget.mealProgressService,
           activeSessionStore: widget.activeSessionStore,
+          motivationMediaAvailable: widget.motivationMediaAvailable,
           onConfigChanged: _updateTimerRuntimeConfig,
         ),
       ),
@@ -596,8 +601,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   Future<void> _openSettings() async {
     await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) =>
-            SettingsScreen(config: _config, onConfigChanged: _updateConfig),
+        builder: (_) => SettingsScreen(
+          config: _config,
+          motivationMediaAvailable: widget.motivationMediaAvailable,
+          onConfigChanged: _updateConfig,
+        ),
       ),
     );
   }

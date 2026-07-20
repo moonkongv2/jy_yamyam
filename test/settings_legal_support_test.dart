@@ -167,6 +167,7 @@ Future<void> _pumpSettings(
           GlobalWidgetsLocalizations.delegate,
         ],
         home: SettingsScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults(),
           onConfigChanged: (_) {},
           externalLinkLauncher: harness.linkLauncher,

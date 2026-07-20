@@ -1994,6 +1994,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -2038,6 +2039,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -2088,6 +2090,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -2146,6 +2149,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -2202,6 +2206,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: mealProgressService,
           onConfigChanged: (_) {},
@@ -2247,6 +2252,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -2282,6 +2288,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -2321,6 +2328,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -2363,6 +2371,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
             courseIngredientMode: CourseIngredientMode.off,
@@ -2408,6 +2417,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
             duration: const Duration(minutes: 35),
@@ -2466,6 +2476,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -2521,6 +2532,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
             duration: const Duration(minutes: 35),
@@ -2572,6 +2584,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
             duration: const Duration(minutes: 35),
@@ -2621,6 +2634,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
             duration: const Duration(minutes: 35),
@@ -2677,6 +2691,7 @@ void main() {
           supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
           home: HomeScreen(
+            motivationMediaAvailable: true,
             config: MealTimerConfig.defaults().copyWith(childName: '지율'),
             mealProgressService: LocalMealProgressService(),
             onConfigChanged: (_) {},
@@ -2741,6 +2756,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -2779,6 +2795,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
             duration: const Duration(minutes: 15),
@@ -2811,6 +2828,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
             duration: const Duration(minutes: 35),
@@ -2867,6 +2885,7 @@ void main() {
           supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
           home: HomeScreen(
+            motivationMediaAvailable: true,
             config: MealTimerConfig.defaults().copyWith(
               childName: '지율',
               duration: const Duration(minutes: 35),
@@ -2931,6 +2950,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
             avatarMode: AvatarImageMode.custom,
@@ -2997,6 +3017,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
             avatarMode: AvatarImageMode.custom,
@@ -3047,6 +3068,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
             vehicleId: 'excavator',
@@ -3637,6 +3659,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: SettingsScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults(),
           onConfigChanged: (_) {},
         ),
@@ -3665,7 +3688,7 @@ void main() {
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
         locale: Locale('en'),
-        home: UserGuideScreen(),
+        home: UserGuideScreen(motivationMediaAvailable: true),
       ),
     );
 
@@ -3697,7 +3720,7 @@ void main() {
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
         locale: Locale('ko'),
-        home: UserGuideScreen(),
+        home: UserGuideScreen(motivationMediaAvailable: true),
       ),
     );
 
@@ -3748,6 +3771,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: SettingsScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults(),
           onConfigChanged: (_) {},
         ),
@@ -3797,6 +3821,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: SettingsScreen(
+          motivationMediaAvailable: true,
           config: latestConfig,
           onConfigChanged: (config) => latestConfig = config,
         ),
@@ -3842,6 +3867,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: SettingsScreen(
+          motivationMediaAvailable: true,
           config: latestConfig,
           onConfigChanged: (config) => latestConfig = config,
         ),
@@ -3913,6 +3939,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: SettingsScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults(),
           onConfigChanged: (_) {},
         ),
@@ -3955,6 +3982,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: '지율'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (config) => changedConfig = config,
@@ -4047,6 +4075,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: SettingsScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             avatarMode: AvatarImageMode.custom,
             customAvatarImagePath: avatarFile.path,
@@ -4157,6 +4186,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: childName),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -4368,6 +4398,7 @@ void main() {
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             childName: '지율',
             vehicleId: 'fire_truck',
@@ -5655,6 +5686,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             vehicleId: 'excavator',
             avatarMode: AvatarImageMode.custom,
@@ -5689,6 +5721,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             vehicleId: 'fire_truck',
             avatarMode: AvatarImageMode.custom,
@@ -5727,6 +5760,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             courseIngredientIds: const ['carrot', 'egg'],
           ),
@@ -5762,6 +5796,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             courseIngredientMode: CourseIngredientMode.off,
             courseIngredientIds: const [],
@@ -5787,6 +5822,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 60),
           ),
@@ -5815,6 +5851,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 35),
             childName: '지율',
@@ -5858,6 +5895,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 35),
           ),
@@ -5911,6 +5949,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 10),
           ),
@@ -5959,6 +5998,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults(),
           restoredSession: session,
           mealProgressService: LocalMealProgressService(),
@@ -6006,6 +6046,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults(),
           restoredSession: session,
           mealProgressService: LocalMealProgressService(),
@@ -6053,6 +6094,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 25),
           ),
@@ -6089,6 +6131,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 10),
           ),
@@ -6127,6 +6170,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(seconds: 100),
           ),
@@ -6170,6 +6214,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 10),
           ),
@@ -6207,6 +6252,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(seconds: 1),
           ),
@@ -6246,6 +6292,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(seconds: 1),
             courseIngredientMode: CourseIngredientMode.manual,
@@ -6289,6 +6336,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(seconds: 1),
             vehicleId: 'bus',
@@ -6329,6 +6377,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(seconds: 1),
           ),
@@ -6377,6 +6426,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(seconds: 100),
             soundEnabled: true,
@@ -6389,6 +6439,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await _finishCoursePreview(tester);
     now = now.add(const Duration(seconds: 10));
     await tester.pump(const Duration(milliseconds: 250));
 
@@ -6421,6 +6472,7 @@ void main() {
           supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
           home: TimerScreen(
+            motivationMediaAvailable: true,
             config: MealTimerConfig.defaults().copyWith(
               duration: const Duration(minutes: 60),
               soundEnabled: false,
@@ -6474,6 +6526,7 @@ void main() {
           supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
           home: TimerScreen(
+            motivationMediaAvailable: true,
             config: MealTimerConfig.defaults().copyWith(
               duration: const Duration(minutes: 15),
               soundEnabled: false,
@@ -6530,6 +6583,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 60),
             soundEnabled: false,
@@ -6591,6 +6645,7 @@ void main() {
           supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
           home: TimerScreen(
+            motivationMediaAvailable: true,
             config: MealTimerConfig.defaults().copyWith(
               duration: const Duration(minutes: 60),
               soundEnabled: false,
@@ -6651,6 +6706,7 @@ void main() {
           supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
           home: TimerScreen(
+            motivationMediaAvailable: true,
             config: MealTimerConfig.defaults().copyWith(
               duration: const Duration(minutes: 60),
               soundEnabled: false,
@@ -6716,6 +6772,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 60),
             soundEnabled: false,
@@ -6758,6 +6815,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 60),
           ),
@@ -6812,6 +6870,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 5),
           ),
@@ -6920,6 +6979,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ja'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(seconds: 100),
           ),
@@ -6973,6 +7033,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 60),
           ),
@@ -7020,6 +7081,7 @@ void main() {
           supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('en'),
           home: TimerScreen(
+            motivationMediaAvailable: true,
             config: MealTimerConfig.defaults(),
             mealProgressService: LocalMealProgressService(),
             onConfigChanged: (_) {},
@@ -7079,6 +7141,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             motivationVideoUseCustomInterval: true,
           ),
@@ -7114,6 +7177,7 @@ void main() {
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -7144,6 +7208,7 @@ void main() {
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
         supportedLocales: AppTexts.supportedLocales,
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(keepScreenAwake: true),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -7171,6 +7236,7 @@ void main() {
           localizationsDelegates: GlobalMaterialLocalizations.delegates,
           supportedLocales: AppTexts.supportedLocales,
           home: TimerScreen(
+            motivationMediaAvailable: true,
             config: MealTimerConfig.defaults().copyWith(keepScreenAwake: false),
             mealProgressService: LocalMealProgressService(),
             onConfigChanged: (_) {},
@@ -7213,6 +7279,7 @@ void main() {
     navigatorKey.currentState!.push(
       MaterialPageRoute(
         builder: (_) => TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -7287,6 +7354,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -7310,6 +7378,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: TimerScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -7960,6 +8029,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: 'Jiyul'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -7985,6 +8055,7 @@ void main() {
           supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('en'),
           home: HomeScreen(
+            motivationMediaAvailable: true,
             config: MealTimerConfig.defaults().copyWith(childName: 'Jiyul'),
             mealProgressService: service,
             onConfigChanged: (_) {},
@@ -8129,6 +8200,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: 'Jiyul'),
           mealProgressService: service,
           onConfigChanged: (_) {},
@@ -8170,6 +8242,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: HomeScreen(
+          motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(childName: '강우'),
           mealProgressService: service,
           onConfigChanged: (_) {},
@@ -8600,6 +8673,7 @@ Future<void> _pumpYamyamApp(
   required MealTimerConfig initialConfig,
   required bool initialHasSeenFirstRunOnboarding,
   Locale locale = const Locale('ko'),
+  bool motivationMediaAvailable = true,
 }) async {
   tester.binding.platformDispatcher.localeTestValue = locale;
   tester.binding.platformDispatcher.localesTestValue = [locale];
@@ -8613,6 +8687,7 @@ Future<void> _pumpYamyamApp(
       activeSessionStore: const ActiveMealTimerSessionStore(),
       initialConfig: initialConfig,
       initialHasSeenFirstRunOnboarding: initialHasSeenFirstRunOnboarding,
+      motivationMediaAvailable: motivationMediaAvailable,
       showSplashOnStart: false,
     ),
   );
@@ -8889,7 +8964,9 @@ class _FakeAvatarImagePicker implements AvatarImagePicker {
 
 Future<void> _finishCoursePreview(WidgetTester tester) async {
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 4100));
+  for (var i = 0; i < 30; i += 1) {
+    await tester.pump(const Duration(milliseconds: 250));
+  }
   await tester.pump();
 }
 

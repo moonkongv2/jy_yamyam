@@ -87,8 +87,6 @@ flutter:
     - assets/images/riders/
     - assets/images/ingredients/
     - assets/videos/
-    - assets/videos/motivation/
-    - assets/audio/motivation/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

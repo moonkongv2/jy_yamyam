@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../config/app_feature_flags.dart';
 import '../catalogs/meal_course_catalog.dart';
 import '../constants/child_name_limits.dart';
 import '../constants/legal_support_links.dart';
@@ -50,12 +51,14 @@ class SettingsScreen extends StatefulWidget {
     super.key,
     required this.config,
     required this.onConfigChanged,
+    this.motivationMediaAvailable = AppFeatureFlags.motivationMediaAvailable,
     this.externalLinkLauncher,
     this.appVersionService,
   });
 
   final MealTimerConfig config;
   final ValueChanged<MealTimerConfig> onConfigChanged;
+  final bool motivationMediaAvailable;
   final ExternalLinkLauncher? externalLinkLauncher;
   final AppVersionService? appVersionService;
 
@@ -142,9 +145,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _openUserGuide() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const UserGuideScreen()));
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => UserGuideScreen(
+          motivationMediaAvailable: widget.motivationMediaAvailable,
+        ),
+      ),
+    );
   }
 
   void _openGuardianProtectedLink(Uri uri) {
@@ -516,106 +523,108 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 20),
-          Card(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          texts.settings.motivationVideoHelpTitle,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                      ),
-                      IconButton(
-                        key: const ValueKey('motivationVideoHelpButton'),
-                        tooltip: texts.settings.motivationVideoHelpTitle,
-                        onPressed: _showMotivationVideoHelp,
-                        icon: const Icon(Icons.help_outline_rounded),
-                        color: AppColors.brown700,
-                      ),
-                    ],
-                  ),
-                ),
-                SwitchListTile(
-                  key: const ValueKey('motivationVideoEnabledSwitch'),
-                  title: Text(texts.settings.motivationVideoEnabled),
-                  value: _config.motivationVideoEnabled,
-                  onChanged: (value) {
-                    _update(_config.copyWith(motivationVideoEnabled: value));
-                  },
-                ),
-                SwitchListTile(
-                  key: const ValueKey('motivationVideoCustomIntervalSwitch'),
-                  title: Text(texts.settings.motivationVideoCustomInterval),
-                  value: _config.motivationVideoUseCustomInterval,
-                  onChanged: _config.motivationVideoEnabled
-                      ? (value) {
-                          _update(
-                            _config.copyWith(
-                              motivationVideoUseCustomInterval: value,
-                            ),
-                          );
-                        }
-                      : null,
-                ),
-                if (_config.motivationVideoEnabled &&
-                    _config.motivationVideoUseCustomInterval)
+          if (widget.motivationMediaAvailable) ...[
+            const SizedBox(height: 20),
+            Card(
+              child: Column(
+                children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    padding: const EdgeInsets.fromLTRB(20, 12, 8, 0),
+                    child: Row(
                       children: [
-                        Text(
-                          texts.settings.motivationVideoInterval,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                        const SizedBox(height: 12),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: SegmentedButton<int>(
-                            key: const ValueKey(
-                              'motivationVideoIntervalSegmentedButton',
-                            ),
-                            segments: [
-                              for (final interval
-                                  in _motivationVideoIntervalOptions)
-                                ButtonSegment(
-                                  value: interval.inMinutes,
-                                  label: Text(
-                                    texts.settings
-                                        .motivationVideoIntervalSegmentLabel(
-                                          interval.inMinutes,
-                                        ),
-                                  ),
-                                ),
-                            ],
-                            selected: {motivationVideoIntervalMinutes},
-                            onSelectionChanged: (selected) {
-                              if (selected.isEmpty) {
-                                return;
-                              }
-                              _update(
-                                _config.copyWith(
-                                  motivationVideoInterval: Duration(
-                                    minutes: selected.first,
-                                  ),
-                                ),
-                              );
-                            },
+                        Expanded(
+                          child: Text(
+                            texts.settings.motivationVideoHelpTitle,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w900),
                           ),
+                        ),
+                        IconButton(
+                          key: const ValueKey('motivationVideoHelpButton'),
+                          tooltip: texts.settings.motivationVideoHelpTitle,
+                          onPressed: _showMotivationVideoHelp,
+                          icon: const Icon(Icons.help_outline_rounded),
+                          color: AppColors.brown700,
                         ),
                       ],
                     ),
                   ),
-              ],
+                  SwitchListTile(
+                    key: const ValueKey('motivationVideoEnabledSwitch'),
+                    title: Text(texts.settings.motivationVideoEnabled),
+                    value: _config.motivationVideoEnabled,
+                    onChanged: (value) {
+                      _update(_config.copyWith(motivationVideoEnabled: value));
+                    },
+                  ),
+                  SwitchListTile(
+                    key: const ValueKey('motivationVideoCustomIntervalSwitch'),
+                    title: Text(texts.settings.motivationVideoCustomInterval),
+                    value: _config.motivationVideoUseCustomInterval,
+                    onChanged: _config.motivationVideoEnabled
+                        ? (value) {
+                            _update(
+                              _config.copyWith(
+                                motivationVideoUseCustomInterval: value,
+                              ),
+                            );
+                          }
+                        : null,
+                  ),
+                  if (_config.motivationVideoEnabled &&
+                      _config.motivationVideoUseCustomInterval)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            texts.settings.motivationVideoInterval,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w900),
+                          ),
+                          const SizedBox(height: 12),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: SegmentedButton<int>(
+                              key: const ValueKey(
+                                'motivationVideoIntervalSegmentedButton',
+                              ),
+                              segments: [
+                                for (final interval
+                                    in _motivationVideoIntervalOptions)
+                                  ButtonSegment(
+                                    value: interval.inMinutes,
+                                    label: Text(
+                                      texts.settings
+                                          .motivationVideoIntervalSegmentLabel(
+                                            interval.inMinutes,
+                                          ),
+                                    ),
+                                  ),
+                              ],
+                              selected: {motivationVideoIntervalMinutes},
+                              onSelectionChanged: (selected) {
+                                if (selected.isEmpty) {
+                                  return;
+                                }
+                                _update(
+                                  _config.copyWith(
+                                    motivationVideoInterval: Duration(
+                                      minutes: selected.first,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
+          ],
           const SizedBox(height: 20),
           if (purchaseScope != null) ...[
             _SettingsVehiclePackCard(
