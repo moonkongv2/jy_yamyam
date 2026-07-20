@@ -21,7 +21,7 @@ class EsMealIngredientTexts implements MealIngredientTextSet {
     'En el historial solo aparecen los ingredientes elegidos manualmente.',
   ];
   String get randomStartButton => 'Empezar al azar';
-  String get selectedStartButton => 'Empezar con selección';
+  String get selectedStartButton => 'Usar selección';
 
   String selectedCount(int selectedCount, int maxCount) {
     return '$selectedCount/$maxCount seleccionados';

@@ -20,8 +20,8 @@ class EnMealIngredientTexts implements MealIngredientTextSet {
     'Auto: the app shows random ingredients on the road. They are not saved in history.',
     'Only manually chosen ingredients are saved to meal records.',
   ];
-  String get randomStartButton => 'Start with random ingredients';
-  String get selectedStartButton => 'Start with selected ingredients';
+  String get randomStartButton => 'Random start';
+  String get selectedStartButton => 'Use selected';
 
   String selectedCount(int selectedCount, int maxCount) {
     return '$selectedCount/$maxCount selected';

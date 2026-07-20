@@ -20,7 +20,7 @@ class PtBrMealIngredientTexts implements MealIngredientTextSet {
     'No histórico aparecem apenas os ingredientes escolhidos manualmente.',
   ];
   String get randomStartButton => 'Começar aleatório';
-  String get selectedStartButton => 'Começar com seleção';
+  String get selectedStartButton => 'Usar seleção';
 
   String selectedCount(int selectedCount, int maxCount) {
     return '$selectedCount/$maxCount selecionados';

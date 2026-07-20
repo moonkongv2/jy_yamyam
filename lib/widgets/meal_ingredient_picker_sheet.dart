@@ -237,7 +237,10 @@ class _MealIngredientPickerSheetState extends State<MealIngredientPickerSheet> {
                               'randomStartMealIngredientsButton',
                             ),
                             onPressed: _startRandom,
-                            icon: const Icon(Icons.shuffle_rounded),
+                            icon: const Icon(
+                              Icons.shuffle_rounded,
+                              size: 28,
+                            ),
                             label: Text(texts.randomStartButton),
                           ),
                         ),
@@ -250,7 +253,10 @@ class _MealIngredientPickerSheetState extends State<MealIngredientPickerSheet> {
                             onPressed: _selectedIds.isEmpty
                                 ? null
                                 : _startSelected,
-                            icon: const Icon(Icons.play_arrow_rounded),
+                            icon: const Icon(
+                              Icons.play_arrow_rounded,
+                              size: 28,
+                            ),
                             label: Text(texts.selectedStartButton),
                           ),
                         ),
