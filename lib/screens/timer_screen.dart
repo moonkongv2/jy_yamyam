@@ -7,6 +7,7 @@ import '../catalogs/meal_ingredient_catalog.dart';
 import '../catalogs/motivation_asset_catalog.dart';
 import '../catalogs/vehicle_catalog.dart';
 import '../config/app_feature_flags.dart';
+import '../config/meal_timer_policy.dart';
 import '../controllers/meal_timer_controller.dart';
 import '../controllers/motivation_cue_controller.dart';
 import '../controllers/timer_active_session_controller.dart';
@@ -48,6 +49,19 @@ const _motivationVideoIntervalOptions = [
   Duration(minutes: 5),
   Duration(minutes: 10),
 ];
+
+MealTimerConfig _normalizeMealTimerConfig(MealTimerConfig config) {
+  final duration = MealTimerPolicy.normalizeDuration(config.duration);
+  if (duration == config.duration) {
+    return config;
+  }
+
+  return config.copyWith(duration: duration);
+}
+
+ActiveMealTimerSession _normalizeActiveSession(ActiveMealTimerSession session) {
+  return session.copyWith(config: _normalizeMealTimerConfig(session.config));
+}
 
 Duration finishDriveDurationForProgress(double startProgress) {
   final remainingProgress = 1 - startProgress.clamp(0.0, 1.0).toDouble();
@@ -244,16 +258,18 @@ class _TimerScreenState extends State<TimerScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _timerConfig = widget.config;
+    _timerConfig = _normalizeMealTimerConfig(widget.config);
     _motivationAudioService =
         widget.motivationAudioService ??
         (widget.motivationMediaAvailable
             ? AudioplayersMotivationAudioService()
             : const NoOpMotivationAudioService());
     _ownsMotivationAudioService = widget.motivationAudioService == null;
-    final restoredSession = widget.restoredSession;
+    final restoredSession = widget.restoredSession == null
+        ? null
+        : _normalizeActiveSession(widget.restoredSession!);
     if (restoredSession == null) {
-      _controller = MealTimerController(config: widget.config, now: widget.now);
+      _controller = MealTimerController(config: _timerConfig, now: widget.now);
       _activeSessionId = _createActiveSessionId();
       _motivationCueController = MotivationCueController();
     } else {
@@ -351,7 +367,7 @@ class _TimerScreenState extends State<TimerScreen>
   void didUpdateWidget(covariant TimerScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.config != widget.config) {
-      _timerConfig = widget.config;
+      _timerConfig = _normalizeMealTimerConfig(widget.config);
       unawaited(_persistActiveSession());
     }
     unawaited(

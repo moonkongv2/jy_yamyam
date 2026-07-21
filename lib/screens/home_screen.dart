@@ -9,6 +9,7 @@ import '../catalogs/meal_course_catalog.dart';
 import '../catalogs/vehicle_catalog.dart';
 import '../catalogs/vehicle_unlock_catalog.dart';
 import '../config/app_feature_flags.dart';
+import '../config/meal_timer_policy.dart';
 import '../l10n/app_texts.dart';
 import '../models/active_meal_timer_session.dart';
 import '../models/meal_progress_snapshot.dart';
@@ -51,6 +52,19 @@ const _unscopedPurchaseEntitlement = PurchaseEntitlement(
   vehiclePackUnlocked: true,
 );
 
+MealTimerConfig _normalizeMealTimerConfig(MealTimerConfig config) {
+  final duration = MealTimerPolicy.normalizeDuration(config.duration);
+  if (duration == config.duration) {
+    return config;
+  }
+
+  return config.copyWith(duration: duration);
+}
+
+double _normalizedMealMinutes(Duration duration) {
+  return MealTimerPolicy.normalizeMinutes(duration.inMinutes).toDouble();
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
@@ -77,8 +91,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with RouteAware {
-  late MealTimerConfig _config = widget.config;
-  late double _customMinutes = _config.duration.inMinutes.toDouble();
+  late MealTimerConfig _config = _normalizeMealTimerConfig(widget.config);
+  late double _customMinutes = _normalizedMealMinutes(_config.duration);
   late Future<ActiveMealTimerSession?> _activeSessionFuture;
   late Future<MealProgressSnapshot> _progressSnapshotFuture;
   bool _isRouteVisible = true;
@@ -99,10 +113,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void didUpdateWidget(covariant HomeScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.config != widget.config) {
-      _config = widget.config;
+      _config = _normalizeMealTimerConfig(widget.config);
     }
     if (oldWidget.config.duration != _config.duration) {
-      _customMinutes = _config.duration.inMinutes.toDouble();
+      _customMinutes = _normalizedMealMinutes(_config.duration);
     }
     if (oldWidget.activeSessionStore != widget.activeSessionStore ||
         oldWidget.mealProgressService != widget.mealProgressService) {
@@ -188,14 +202,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   void _updateConfig(MealTimerConfig config) {
+    final normalizedConfig = _normalizeMealTimerConfig(config);
     setState(() {
-      if (_config.duration != config.duration) {
-        _customMinutes = config.duration.inMinutes.toDouble();
+      if (_config.duration != normalizedConfig.duration) {
+        _customMinutes = _normalizedMealMinutes(normalizedConfig.duration);
       }
-      _config = config;
+      _config = normalizedConfig;
     });
     _syncSelectedVehicleCustomAvatarExists();
-    widget.onConfigChanged(config);
+    widget.onConfigChanged(normalizedConfig);
   }
 
   String? _selectedVehicleCustomAvatarPathForConfig(MealTimerConfig config) {
@@ -279,6 +294,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Future<void> _startTimer(int minutes) async {
+    final normalizedMinutes = MealTimerPolicy.normalizeMinutes(minutes);
     final shouldStartNewTimer = await _resolveActiveSessionBeforeNewTimer();
     if (!mounted || !shouldStartNewTimer) {
       return;
@@ -291,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
 
     final config = _configWithEffectiveVehicle(_config).copyWith(
-      duration: Duration(minutes: minutes),
+      duration: Duration(minutes: normalizedMinutes),
       courseIngredientIds: courseIngredientSelection.courseIngredientIds,
       selectedCourseIngredientIds:
           courseIngredientSelection.selectedCourseIngredientIds,
@@ -366,11 +382,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   Future<void> _resumeActiveTimer(ActiveMealTimerSession session) async {
     final effectiveSession = _sessionWithEffectiveVehicle(session);
+    final normalizedSession = effectiveSession.copyWith(
+      config: _normalizeMealTimerConfig(effectiveSession.config),
+    );
     await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => TimerScreen(
-          config: effectiveSession.config,
-          restoredSession: effectiveSession,
+          config: normalizedSession.config,
+          restoredSession: normalizedSession,
           mealProgressService: widget.mealProgressService,
           activeSessionStore: widget.activeSessionStore,
           motivationMediaAvailable: widget.motivationMediaAvailable,
@@ -455,7 +474,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   Future<void> _openCustomMinutesSheet() async {
     final texts = AppTexts.of(context);
-    var sheetMinutes = _customMinutes;
+    var sheetMinutes = MealTimerPolicy.normalizeMinutes(
+      _customMinutes.round(),
+    ).toDouble();
 
     await showModalBottomSheet<void>(
       context: context,
@@ -466,8 +487,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           builder: (context, setSheetState) {
             void updateSheetMinutes(double value) {
               final minutes = value.clamp(
-                MealCourseCatalog.minCustomMinutes.toDouble(),
-                MealCourseCatalog.maxCustomMinutes.toDouble(),
+                MealTimerPolicy.minMinutes.toDouble(),
+                MealTimerPolicy.maxMinutes.toDouble(),
               );
               setState(() => _customMinutes = minutes);
               setSheetState(() => sheetMinutes = minutes);
@@ -813,7 +834,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     _QuickCourseButton(
                       label: texts.home.customSheetTitle,
                       subtitle: texts.home.recentCustomMinutes(
-                        _customMinutes.round(),
+                        MealTimerPolicy.normalizeMinutes(
+                          _customMinutes.round(),
+                        ),
                       ),
                       icon: Icons.tune_rounded,
                       isFullWidthOnNarrow: true,
@@ -1772,8 +1795,8 @@ class _CustomMinutesSheetContent extends StatelessWidget {
             ),
             child: Slider(
               value: minutes,
-              min: MealCourseCatalog.minCustomMinutes.toDouble(),
-              max: MealCourseCatalog.maxCustomMinutes.toDouble(),
+              min: MealTimerPolicy.minMinutes.toDouble(),
+              max: MealTimerPolicy.maxMinutes.toDouble(),
               label: sliderLabel,
               onChanged: onChanged,
             ),

@@ -81,6 +81,64 @@ void main() {
     },
   );
 
+  testWidgets('Home normalizes below-minimum duration before starting timer', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final savedConfig = MealTimerConfig.defaults().copyWith(
+      childName: '지율',
+      duration: const Duration(minutes: 1),
+      courseIngredientMode: CourseIngredientMode.off,
+    );
+
+    await _pumpHome(
+      tester,
+      config: savedConfig,
+      entitlement: const PurchaseEntitlement(vehiclePackUnlocked: true),
+    );
+
+    _tapNormalCourse(tester);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    final timerScreen = tester.widget<TimerScreen>(find.byType(TimerScreen));
+    expect(timerScreen.config.duration, const Duration(minutes: 5));
+    await _disposeCurrentTree(tester);
+  });
+
+  testWidgets('Home custom duration slider starts at policy minimum', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await _pumpHome(
+      tester,
+      config: MealTimerConfig.defaults().copyWith(
+        childName: '지율',
+        duration: const Duration(minutes: 1),
+      ),
+      entitlement: const PurchaseEntitlement(vehiclePackUnlocked: true),
+    );
+
+    final customDurationButton = find.byIcon(Icons.tune_rounded);
+    for (var i = 0; i < 4 && customDurationButton.evaluate().isEmpty; i += 1) {
+      await tester.drag(find.byType(ListView), const Offset(0, -500));
+      await tester.pump();
+    }
+
+    expect(customDurationButton, findsOneWidget);
+    await tester.tap(customDurationButton);
+    await tester.pumpAndSettle();
+
+    final slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.min, 5);
+    expect(slider.max, 60);
+    expect(slider.value, 5);
+
+    await _disposeCurrentTree(tester);
+  });
+
   testWidgets('Home resumes active session with free fallback', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final startedAt = DateTime.utc(2026, 7, 1, 10);
@@ -92,6 +150,7 @@ void main() {
         startedAt: startedAt,
         config: MealTimerConfig.defaults().copyWith(
           childName: '지율',
+          duration: const Duration(minutes: 4),
           vehicleId: 'bus',
         ),
         state: ActiveMealTimerSessionState.running,
@@ -113,6 +172,10 @@ void main() {
 
     final timerScreen = tester.widget<TimerScreen>(find.byType(TimerScreen));
     expect(timerScreen.restoredSession?.config.vehicleId, 'motorcycle');
+    expect(
+      timerScreen.restoredSession?.config.duration,
+      const Duration(minutes: 5),
+    );
     await _disposeCurrentTree(tester);
   });
 

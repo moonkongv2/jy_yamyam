@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../config/app_feature_flags.dart';
 import '../catalogs/meal_course_catalog.dart';
+import '../config/meal_timer_policy.dart';
 import '../constants/child_name_limits.dart';
 import '../constants/legal_support_links.dart';
 import '../controllers/vehicle_pack_purchase_controller.dart';
@@ -46,6 +47,15 @@ String _courseIngredientModeLabel(
   };
 }
 
+MealTimerConfig _normalizeMealTimerConfig(MealTimerConfig config) {
+  final duration = MealTimerPolicy.normalizeDuration(config.duration);
+  if (duration == config.duration) {
+    return config;
+  }
+
+  return config.copyWith(duration: duration);
+}
+
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     super.key,
@@ -67,7 +77,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  late MealTimerConfig _config = widget.config;
+  late MealTimerConfig _config = _normalizeMealTimerConfig(widget.config);
   late final TextEditingController _childNameController = TextEditingController(
     text: widget.config.childName,
   );
@@ -86,6 +96,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void didUpdateWidget(covariant SettingsScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.config != widget.config) {
+      _config = _normalizeMealTimerConfig(widget.config);
+    }
     if (oldWidget.config.childName != widget.config.childName &&
         _childNameController.text != widget.config.childName) {
       _childNameController.text = widget.config.childName;
@@ -99,8 +112,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _update(MealTimerConfig config) {
-    setState(() => _config = config);
-    widget.onConfigChanged(config);
+    final normalizedConfig = _normalizeMealTimerConfig(config);
+    setState(() => _config = normalizedConfig);
+    widget.onConfigChanged(normalizedConfig);
   }
 
   void _saveChildName() {

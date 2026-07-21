@@ -6,19 +6,23 @@ import '../models/active_meal_timer_session.dart';
 import '../models/meal_completion_status.dart';
 import '../models/meal_session_result.dart';
 import '../models/meal_timer_config.dart';
+import '../config/meal_timer_policy.dart';
 
 enum MealTimerState { idle, running, paused, arrived, completed }
 
 class MealTimerController extends ChangeNotifier {
   static const _tickerInterval = Duration(milliseconds: 16);
 
-  MealTimerController({required this.config, DateTime Function()? now})
-    : _now = now ?? DateTime.now;
+  MealTimerController({
+    required MealTimerConfig config,
+    DateTime Function()? now,
+  }) : config = _normalizeConfig(config),
+       _now = now ?? DateTime.now;
 
   MealTimerController.fromSession({
     required ActiveMealTimerSession session,
     DateTime Function()? now,
-  }) : config = session.config,
+  }) : config = _normalizeConfig(session.config),
        _now = now ?? DateTime.now {
     _restoreFromSession(session);
   }
@@ -200,4 +204,13 @@ class MealTimerController extends ChangeNotifier {
     _ticker?.cancel();
     super.dispose();
   }
+}
+
+MealTimerConfig _normalizeConfig(MealTimerConfig config) {
+  final duration = MealTimerPolicy.normalizeDuration(config.duration);
+  if (duration == config.duration) {
+    return config;
+  }
+
+  return config.copyWith(duration: duration);
 }

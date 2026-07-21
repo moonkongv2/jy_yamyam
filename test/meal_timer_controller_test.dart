@@ -5,6 +5,18 @@ import 'package:jy_yamyam/models/active_meal_timer_session.dart';
 import 'package:jy_yamyam/models/meal_timer_config.dart';
 
 void main() {
+  test('MealTimerController normalizes below-minimum configured duration', () {
+    final controller = MealTimerController(
+      config: MealTimerConfig.defaults().copyWith(
+        duration: const Duration(minutes: 1),
+      ),
+    );
+
+    expect(controller.config.duration, const Duration(minutes: 5));
+
+    controller.dispose();
+  });
+
   test(
     'MealTimerController restores a running session from wall-clock time',
     () {
