@@ -431,6 +431,40 @@ void main() {
     expect(preferences.getInt('motivationVideoIntervalMinutes'), 5);
   });
 
+  test(
+    'Local settings normalizes stored meal durations below minimum',
+    () async {
+      SharedPreferences.setMockInitialValues({'durationMinutes': 4});
+
+      final loadedConfig = await LocalSettingsService().loadConfig();
+
+      expect(loadedConfig.duration, const Duration(minutes: 5));
+    },
+  );
+
+  test(
+    'Local settings normalizes stored meal durations above maximum',
+    () async {
+      SharedPreferences.setMockInitialValues({'durationMinutes': 61});
+
+      final loadedConfig = await LocalSettingsService().loadConfig();
+
+      expect(loadedConfig.duration, const Duration(minutes: 60));
+    },
+  );
+
+  test('Local settings saves normalized meal durations', () async {
+    SharedPreferences.setMockInitialValues({});
+
+    final service = LocalSettingsService();
+    await service.saveConfig(
+      MealTimerConfig.defaults().copyWith(duration: const Duration(minutes: 1)),
+    );
+
+    final preferences = await SharedPreferences.getInstance();
+    expect(preferences.getInt('durationMinutes'), 5);
+  });
+
   test('Local settings saves and loads course ingredient mode', () async {
     SharedPreferences.setMockInitialValues({});
 

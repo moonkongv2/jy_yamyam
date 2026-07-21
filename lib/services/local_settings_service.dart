@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/meal_timer_policy.dart';
 import '../models/meal_timer_config.dart';
 
 class LocalSettingsService {
@@ -70,13 +71,12 @@ class LocalSettingsService {
     final activeAvatarConfig = activeAvatarVehicleId == null
         ? null
         : customAvatarsByVehicle[activeAvatarVehicleId];
+    final durationMinutes = MealTimerPolicy.normalizeMinutes(
+      preferences.getInt(_durationMinutesKey) ?? defaults.duration.inMinutes,
+    );
 
     return defaults.copyWith(
-      duration: Duration(
-        minutes:
-            preferences.getInt(_durationMinutesKey) ??
-            defaults.duration.inMinutes,
-      ),
+      duration: Duration(minutes: durationMinutes),
       showRemainingTime:
           preferences.getBool(_showRemainingTimeKey) ??
           defaults.showRemainingTime,
@@ -114,7 +114,10 @@ class LocalSettingsService {
 
   Future<void> saveConfig(MealTimerConfig config) async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.setInt(_durationMinutesKey, config.duration.inMinutes);
+    await preferences.setInt(
+      _durationMinutesKey,
+      MealTimerPolicy.normalizeMinutes(config.duration.inMinutes),
+    );
     await preferences.setBool(_showRemainingTimeKey, config.showRemainingTime);
     await preferences.setBool(_soundEnabledKey, config.soundEnabled);
     await preferences.setBool(
