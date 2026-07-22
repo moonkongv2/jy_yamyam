@@ -6215,7 +6215,8 @@ void main() {
       ),
     );
     await tester.pump();
-    now = now.add(const Duration(seconds: 50));
+    await _finishCoursePreview(tester);
+    now = now.add(const Duration(seconds: 150));
     await tester.pump(const Duration(milliseconds: 250));
 
     tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
@@ -6288,7 +6289,7 @@ void main() {
         home: TimerScreen(
           motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(seconds: 1),
+            duration: const Duration(minutes: 5),
           ),
           mealProgressService: LocalMealProgressService(),
           now: () => now,
@@ -6297,7 +6298,8 @@ void main() {
       ),
     );
     await tester.pump();
-    now = now.add(const Duration(seconds: 2));
+    await _finishCoursePreview(tester);
+    now = now.add(const Duration(minutes: 6));
     await tester.pump(const Duration(milliseconds: 250));
 
     tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
@@ -6328,7 +6330,7 @@ void main() {
         home: TimerScreen(
           motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(seconds: 1),
+            duration: const Duration(minutes: 5),
             courseIngredientMode: CourseIngredientMode.manual,
             courseIngredientIds: const ['carrot', 'egg'],
             selectedCourseIngredientIds: const ['carrot', 'egg'],
@@ -6340,7 +6342,8 @@ void main() {
       ),
     );
     await tester.pump();
-    now = now.add(const Duration(seconds: 2));
+    await _finishCoursePreview(tester);
+    now = now.add(const Duration(minutes: 6));
     await tester.pump(const Duration(milliseconds: 250));
 
     tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
@@ -6372,7 +6375,7 @@ void main() {
         home: TimerScreen(
           motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(seconds: 1),
+            duration: const Duration(minutes: 5),
             vehicleId: 'bus',
           ),
           mealProgressService: service,
@@ -6382,7 +6385,8 @@ void main() {
       ),
     );
     await tester.pump();
-    now = now.add(const Duration(seconds: 2));
+    await _finishCoursePreview(tester);
+    now = now.add(const Duration(minutes: 6));
     await tester.pump(const Duration(milliseconds: 250));
 
     tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
@@ -6413,7 +6417,7 @@ void main() {
         home: TimerScreen(
           motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(seconds: 1),
+            duration: const Duration(minutes: 5),
           ),
           mealProgressService: LocalMealProgressService(),
           now: () => now,
@@ -6423,7 +6427,8 @@ void main() {
       ),
     );
     await tester.pump();
-    now = now.add(const Duration(seconds: 2));
+    await _finishCoursePreview(tester);
+    now = now.add(const Duration(minutes: 6));
     await tester.pump(const Duration(milliseconds: 250));
 
     tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
@@ -6462,7 +6467,7 @@ void main() {
         home: TimerScreen(
           motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(seconds: 100),
+            duration: const Duration(minutes: 5),
             soundEnabled: true,
           ),
           mealProgressService: LocalMealProgressService(),
@@ -6474,7 +6479,7 @@ void main() {
     );
     await tester.pump();
     await _finishCoursePreview(tester);
-    now = now.add(const Duration(seconds: 10));
+    now = now.add(const Duration(seconds: 30));
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(

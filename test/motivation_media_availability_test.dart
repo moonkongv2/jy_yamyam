@@ -220,14 +220,14 @@ void main() {
       motivationMediaAvailable: false,
       motivationAudioService: audioService,
       config: MealTimerConfig.defaults().copyWith(
-        duration: const Duration(seconds: 100),
+        duration: const Duration(minutes: 5),
         soundEnabled: true,
         motivationVideoEnabled: true,
       ),
     );
     await _finishCoursePreview(tester);
 
-    now = now.add(const Duration(seconds: 15));
+    now = now.add(const Duration(seconds: 30));
     await tester.pump(const Duration(milliseconds: 250));
     await tester.pump(motivationVoiceStartDelay);
 
@@ -246,7 +246,7 @@ void main() {
       sessionId: 'session-1',
       startedAt: now,
       config: MealTimerConfig.defaults().copyWith(
-        duration: const Duration(seconds: 100),
+        duration: const Duration(minutes: 5),
         soundEnabled: true,
         motivationVideoEnabled: true,
       ),
@@ -255,7 +255,7 @@ void main() {
       lastMotivationVideoShownAt: const Duration(seconds: 15),
       motivationScheduleStartedAt: Duration.zero,
     );
-    now = now.add(const Duration(seconds: 25));
+    now = now.add(const Duration(seconds: 60));
 
     await _pumpTimer(
       tester,
@@ -282,13 +282,13 @@ void main() {
       now: () => now,
       motivationMediaAvailable: true,
       config: MealTimerConfig.defaults().copyWith(
-        duration: const Duration(seconds: 100),
+        duration: const Duration(minutes: 5),
         soundEnabled: false,
       ),
     );
     await _finishCoursePreview(tester);
 
-    now = now.add(const Duration(seconds: 10));
+    now = now.add(const Duration(seconds: 30));
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(

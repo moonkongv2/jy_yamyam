@@ -9,7 +9,7 @@ The app is designed around one simple goal: make mealtime pacing feel like a coz
 - First-run child name setup and local settings persistence
 - First-run parent onboarding guide before child name setup
 - Preset meal courses for 15, 25, and 35 minutes
-- Custom meal duration from 1 to 60 minutes
+- Custom meal duration from 5 to 60 minutes, with an explicit local short-timer mode for testing
 - Meal ingredient course setup with random or selected ingredients
 - Home course suggestions that adapt to the saved default duration
 - 12 selectable rider vehicles: motorcycle, supercar, fire truck, police car, excavator, airplane, bus, train, T-rex, shark, brachio, and pteranodon
@@ -98,6 +98,8 @@ assets/
 lib/
   app.dart                           # App root, theme, localization, initial routing
   main.dart                          # App bootstrap and local service initialization
+  config/
+    meal_timer_policy.dart           # Meal timer duration range and build-mode policy
   catalogs/
     avatar_prompt_catalog.dart       # Vehicle-specific avatar generation prompt copy
     meal_course_catalog.dart         # Preset and custom meal course constants
@@ -197,6 +199,15 @@ Run the app:
 ```bash
 flutter run
 ```
+
+By default, local runs use the production-like meal timer minimum of 5 minutes.
+For local testing only, enable 1-minute timers explicitly:
+
+```bash
+flutter run --dart-define=ALLOW_SHORT_TIMER=true
+```
+
+Release builds always enforce the 5-minute minimum, even if `ALLOW_SHORT_TIMER=true` is passed.
 
 Run static analysis:
 
