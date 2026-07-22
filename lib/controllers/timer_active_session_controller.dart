@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../config/meal_timer_policy.dart';
 import '../models/active_meal_timer_session.dart';
 import '../models/meal_timer_config.dart';
 import '../services/active_meal_timer_session_store.dart';
@@ -40,7 +41,7 @@ class TimerActiveSessionController {
     return ActiveMealTimerSession(
       sessionId: _sessionId,
       startedAt: startedAt,
-      config: _config(),
+      config: _normalizeConfig(_config()),
       state: switch (_timerController.state) {
         MealTimerState.paused => ActiveMealTimerSessionState.paused,
         MealTimerState.arrived => ActiveMealTimerSessionState.arrived,
@@ -76,4 +77,13 @@ class TimerActiveSessionController {
       debugPrintStack(stackTrace: stackTrace);
     }
   }
+}
+
+MealTimerConfig _normalizeConfig(MealTimerConfig config) {
+  final duration = MealTimerPolicy.normalizeDuration(config.duration);
+  if (duration == config.duration) {
+    return config;
+  }
+
+  return config.copyWith(duration: duration);
 }

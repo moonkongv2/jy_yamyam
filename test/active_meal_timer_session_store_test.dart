@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -139,6 +141,46 @@ void main() {
     final loadedSession = await ActiveMealTimerSessionStore().load();
 
     expect(loadedSession, isNull);
+  });
+
+  test('Active meal timer session store normalizes loaded durations', () async {
+    final startedAt = DateTime.utc(2026, 6, 10, 1, 30);
+    SharedPreferences.setMockInitialValues({
+      'activeMealTimerSession': jsonEncode({
+        'sessionId': 'session-5',
+        'startedAt': startedAt.toIso8601String(),
+        'config': {'durationMs': const Duration(minutes: 4).inMilliseconds},
+        'state': ActiveMealTimerSessionState.running.name,
+        'totalPausedDurationMs': 0,
+      }),
+    });
+
+    final loadedSession = await ActiveMealTimerSessionStore().load();
+
+    expect(loadedSession, isNotNull);
+    expect(loadedSession!.startedAt, startedAt);
+    expect(loadedSession.duration, const Duration(minutes: 5));
+  });
+
+  test('Active meal timer session store normalizes saved durations', () async {
+    SharedPreferences.setMockInitialValues({});
+    final store = ActiveMealTimerSessionStore();
+
+    await store.save(
+      ActiveMealTimerSession(
+        sessionId: 'session-6',
+        startedAt: DateTime.utc(2026, 6, 10, 1, 30),
+        config: MealTimerConfig.defaults().copyWith(
+          duration: const Duration(minutes: 61),
+        ),
+        state: ActiveMealTimerSessionState.running,
+      ),
+    );
+
+    final loadedSession = await store.load();
+
+    expect(loadedSession, isNotNull);
+    expect(loadedSession!.duration, const Duration(minutes: 60));
   });
 
   test('Active meal timer session store clears saved data', () async {

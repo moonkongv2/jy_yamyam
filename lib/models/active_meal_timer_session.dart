@@ -1,3 +1,4 @@
+import '../config/meal_timer_policy.dart';
 import 'meal_timer_config.dart';
 
 enum ActiveMealTimerSessionState { running, paused, arrived }
@@ -111,8 +112,9 @@ class ActiveMealTimerSession {
 }
 
 Map<String, Object?> _configToJson(MealTimerConfig config) {
+  final duration = MealTimerPolicy.normalizeDuration(config.duration);
   return {
-    'durationMs': config.duration.inMilliseconds,
+    'durationMs': duration.inMilliseconds,
     'showRemainingTime': config.showRemainingTime,
     'soundEnabled': config.soundEnabled,
     'motivationVideoEnabled': config.motivationVideoEnabled,
@@ -141,7 +143,9 @@ Map<String, Object?> _configToJson(MealTimerConfig config) {
 MealTimerConfig _configFromJson(Map<String, Object?> json) {
   final defaults = MealTimerConfig.defaults();
   return defaults.copyWith(
-    duration: _durationFromJson(json['durationMs'], defaults.duration),
+    duration: MealTimerPolicy.normalizeDuration(
+      _durationFromJson(json['durationMs'], defaults.duration),
+    ),
     showRemainingTime:
         json['showRemainingTime'] as bool? ?? defaults.showRemainingTime,
     soundEnabled: json['soundEnabled'] as bool? ?? defaults.soundEnabled,

@@ -49,6 +49,27 @@ void main() {
     controller.dispose();
   });
 
+  test('TimerActiveSessionController normalizes snapshot config duration', () {
+    final startedAt = DateTime.utc(2026, 6, 15, 10);
+    final controller = MealTimerController(
+      config: MealTimerConfig.defaults(),
+      now: () => startedAt,
+    )..start();
+    final activeSessionController = buildActiveSessionController(
+      timerController: controller,
+      config: () => MealTimerConfig.defaults().copyWith(
+        duration: const Duration(minutes: 1),
+      ),
+    );
+
+    final session = activeSessionController.snapshot();
+
+    expect(session, isNotNull);
+    expect(session!.duration, const Duration(minutes: 5));
+
+    controller.dispose();
+  });
+
   test('TimerActiveSessionController maps paused sessions', () {
     var now = DateTime.utc(2026, 6, 15, 10);
     final controller = MealTimerController(
