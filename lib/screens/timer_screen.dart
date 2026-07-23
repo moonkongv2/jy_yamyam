@@ -656,7 +656,10 @@ class _TimerScreenState extends State<TimerScreen>
     _exitPromptShown = false;
     if (shouldExit == true) {
       _allowExit = true;
-      unawaited(_clearActiveSession());
+      await _clearActiveSession(waitForTimerAudio: false);
+      if (!mounted) {
+        return;
+      }
       final navigator = Navigator.of(context);
       if (route != null && navigator.canPop()) {
         navigator.removeRoute(route);
@@ -800,9 +803,12 @@ class _TimerScreenState extends State<TimerScreen>
     await _activeSessionController.persist();
   }
 
-  Future<void> _clearActiveSession() async {
-    await _stopAllTimerAudio();
+  Future<void> _clearActiveSession({bool waitForTimerAudio = true}) async {
+    final stopTimerAudio = _stopAllTimerAudio();
     await _activeSessionController.clear();
+    if (waitForTimerAudio) {
+      await stopTimerAudio;
+    }
   }
 
   bool get _shouldPlayTimerBgm {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -7,6 +9,7 @@ import 'package:jy_yamyam/l10n/app_texts.dart';
 import 'package:jy_yamyam/models/active_meal_timer_session.dart';
 import 'package:jy_yamyam/models/meal_timer_config.dart';
 import 'package:jy_yamyam/screens/timer_screen.dart';
+import 'package:jy_yamyam/services/active_meal_timer_session_store.dart';
 import 'package:jy_yamyam/services/local_meal_progress_service.dart';
 import 'package:jy_yamyam/services/timer_audio_service.dart';
 
@@ -142,6 +145,38 @@ void main() {
 
     expect(audioService.stopBgmCount, 1);
   });
+
+  testWidgets('confirmed exit waits for active session clear before leaving', (
+    tester,
+  ) async {
+    final audioService = _FakeTimerAudioService();
+    final store = _DelayedClearActiveSessionStore();
+
+    await _pumpTimer(
+      tester,
+      activeSessionStore: store,
+      timerAudioService: audioService,
+    );
+    await _finishCoursePreview(tester);
+
+    expect(await store.load(), isNotNull);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 320));
+    await tester.tap(find.text('그만하기'));
+    await tester.pump();
+
+    expect(store.clearStarted, isTrue);
+    expect(find.text('오늘의 냠냠코스'), findsOneWidget);
+    expect(find.text('타이머 닫힘'), findsNothing);
+
+    store.completeClear();
+    await tester.pumpAndSettle();
+
+    expect(find.text('타이머 닫힘'), findsOneWidget);
+    expect(await store.load(), isNull);
+  });
 }
 
 MealTimerConfig _timerConfig({bool soundEnabled = true}) {
@@ -156,6 +191,7 @@ Future<void> _pumpTimer(
   MealTimerConfig? config,
   DateTime Function()? now,
   ActiveMealTimerSession? restoredSession,
+  ActiveMealTimerSessionStore? activeSessionStore,
   required TimerAudioService timerAudioService,
 }) async {
   SharedPreferences.setMockInitialValues({});
@@ -171,13 +207,30 @@ Future<void> _pumpTimer(
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       supportedLocales: AppTexts.supportedLocales,
       locale: const Locale('ko'),
-      home: TimerScreen(
-        config: config ?? _timerConfig(),
-        restoredSession: restoredSession,
-        mealProgressService: LocalMealProgressService(),
-        timerAudioService: timerAudioService,
-        now: now,
-        onConfigChanged: (_) {},
+      home: Navigator(
+        onGenerateRoute: (_) => MaterialPageRoute(
+          builder: (_) => const Scaffold(body: Center(child: Text('타이머 닫힘'))),
+        ),
+        onGenerateInitialRoutes: (navigator, initialRoute) {
+          return [
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  const Scaffold(body: Center(child: Text('타이머 닫힘'))),
+            ),
+            MaterialPageRoute<void>(
+              builder: (_) => TimerScreen(
+                config: config ?? _timerConfig(),
+                restoredSession: restoredSession,
+                mealProgressService: LocalMealProgressService(),
+                activeSessionStore:
+                    activeSessionStore ?? const ActiveMealTimerSessionStore(),
+                timerAudioService: timerAudioService,
+                now: now,
+                onConfigChanged: (_) {},
+              ),
+            ),
+          ];
+        },
       ),
     ),
   );
@@ -227,5 +280,33 @@ class _FakeTimerAudioService implements TimerAudioService {
   @override
   Future<void> dispose() async {
     disposeCount += 1;
+  }
+}
+
+class _DelayedClearActiveSessionStore extends ActiveMealTimerSessionStore {
+  ActiveMealTimerSession? _session;
+  Completer<void>? _clearCompleter;
+
+  bool get clearStarted => _clearCompleter != null;
+
+  @override
+  Future<void> save(ActiveMealTimerSession session) async {
+    _session = session;
+  }
+
+  @override
+  Future<ActiveMealTimerSession?> load() async {
+    return _session;
+  }
+
+  @override
+  Future<void> clear() async {
+    _clearCompleter = Completer<void>();
+    await _clearCompleter!.future;
+    _session = null;
+  }
+
+  void completeClear() {
+    _clearCompleter?.complete();
   }
 }
