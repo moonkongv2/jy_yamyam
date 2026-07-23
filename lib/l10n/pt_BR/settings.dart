@@ -7,7 +7,7 @@ class PtBrSettingsTexts implements SettingsTextSet {
 
   String get title => 'Ajustes';
   String get showRemainingTime => 'Mostrar tempo restante';
-  String get soundEnabled => 'Efeitos sonoros';
+  String get soundEnabled => 'Sons do timer';
   String get motivationVideoEnabled => 'Vídeos de incentivo';
   String get motivationVideoCustomInterval => 'Usar intervalo personalizado';
   String get motivationVideoInterval => 'Intervalo dos vídeos de incentivo';
@@ -23,11 +23,12 @@ class PtBrSettingsTexts implements SettingsTextSet {
     'Em rotas personalizadas muito curtas, alguns marcos podem ser pulados para evitar vídeos sobrepostos.',
     'Em rotas com mais de 30 minutos ou com intervalo personalizado, eles podem aparecer por intervalo de tempo.',
     'O intervalo personalizado pode ser de 3, 5 ou 10 minutos.',
-    'As configurações de som e de vídeo funcionam separadamente.',
+    'Os sons do timer e as configurações de vídeo funcionam separadamente.',
     'O app ajusta o intervalo para os vídeos não aparecerem com frequência demais.',
   ];
   String get keepScreenAwake => 'Manter a tela ligada';
-  String get savedOnlySubtitle => 'Liga ou desliga os sons durante o timer.';
+  String get savedOnlySubtitle =>
+      'Liga ou desliga a música e os efeitos do timer.';
   String get keepScreenAwakeSubtitle => 'Vale durante o timer da refeição.';
   String get courseIngredientModeTitle => 'Ingredientes na rota';
   String get courseIngredientModeOff => 'Desativado';
