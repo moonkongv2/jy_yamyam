@@ -3,5 +3,5 @@ abstract final class TimerAudioAssetCatalog {
   static const String markerAssetPath = 'assets/audio/marker/marker_01.mp3';
 
   static const double bgmVolume = 0.22;
-  static const double markerVolume = 0.85;
+  static const double markerVolume = 0.080;
 }
