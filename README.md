@@ -77,6 +77,12 @@ assets/
       en_2.mp3
 ```
 
+## Timer Audio Assets
+
+Timer background music and course-marker sound effects live under `assets/audio/timer_bgm/` and `assets/audio/marker/`. The app registers only the exact playable files in `pubspec.yaml` so license evidence, metadata, screenshots, certificates, PDFs, and original source files under `_licenses/` are kept out of the app bundle.
+
+Repository-local license metadata lives next to each audio asset under `_licenses/<audio-file-stem>/`. Source and license details must come from real evidence and must not be invented. Licensed audio and evidence are kept in this private repository for rebuild and audit purposes, and must not be redistributed independently from the app.
+
 ## Tech Stack
 
 - Flutter
