@@ -253,6 +253,7 @@ class _TimerScreenState extends State<TimerScreen>
   bool _isFinishDriving = false;
   bool _isAppBackgrounded = false;
   _TimerBgmState _timerBgmState = _TimerBgmState.stopped;
+  var _highestHandledCourseMarkerIndex = -1;
   Animation<double>? _finishDriveAnimation;
   MealSessionResult? _pendingFinishDriveResult;
   double _finishDriveStartProgress = 0;
@@ -884,6 +885,32 @@ class _TimerScreenState extends State<TimerScreen>
     }
   }
 
+  void _handleCourseMarkerPassed(int index) {
+    if (index <= _highestHandledCourseMarkerIndex) {
+      return;
+    }
+
+    _highestHandledCourseMarkerIndex = index;
+    if (!_timerConfig.soundEnabled ||
+        _controller.state != MealTimerState.running ||
+        !mounted ||
+        _isPreviewing ||
+        _isFinishDriving) {
+      return;
+    }
+
+    unawaited(_playCourseMarkerSfx());
+  }
+
+  Future<void> _playCourseMarkerSfx() async {
+    try {
+      await _timerAudioService.playMarkerSfx();
+    } catch (error, stackTrace) {
+      debugPrint('Unable to play course marker SFX: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
   String _runningProgressMessage(TimerTextSet texts, double progress) {
     if (progress < 0.25) {
       return texts.progressJustStarted;
@@ -1074,6 +1101,7 @@ class _TimerScreenState extends State<TimerScreen>
                         !_isPreviewing,
                     ingredients: courseIngredients,
                     ingredientClearProgress: vehicleDisplayProgress,
+                    onCourseMarkerPassed: _handleCourseMarkerPassed,
                     isRoadMotionActive:
                         _isFinishDriving ||
                         _controller.state == MealTimerState.running,

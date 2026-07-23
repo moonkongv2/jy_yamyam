@@ -177,6 +177,46 @@ void main() {
     expect(find.text('타이머 닫힘'), findsOneWidget);
     expect(await store.load(), isNull);
   });
+
+  testWidgets('course marker crossing plays one marker SFX', (tester) async {
+    final audioService = _FakeTimerAudioService();
+    var now = DateTime(2026, 1, 1, 8);
+
+    await _pumpTimer(tester, now: () => now, timerAudioService: audioService);
+    await _finishCoursePreview(tester);
+
+    now = now.add(const Duration(seconds: 30));
+    await tester.pump(const Duration(milliseconds: 20));
+    await tester.pump();
+
+    expect(audioService.playMarkerSfxCount, 1);
+
+    await tester.pump(const Duration(milliseconds: 120));
+
+    expect(audioService.playMarkerSfxCount, 1);
+  });
+
+  testWidgets(
+    'course marker crossing does not play SFX when sound is disabled',
+    (tester) async {
+      final audioService = _FakeTimerAudioService();
+      var now = DateTime(2026, 1, 1, 8);
+
+      await _pumpTimer(
+        tester,
+        now: () => now,
+        timerAudioService: audioService,
+        config: _timerConfig(soundEnabled: false),
+      );
+      await _finishCoursePreview(tester);
+
+      now = now.add(const Duration(seconds: 30));
+      await tester.pump(const Duration(milliseconds: 20));
+      await tester.pump();
+
+      expect(audioService.playMarkerSfxCount, 0);
+    },
+  );
 }
 
 MealTimerConfig _timerConfig({bool soundEnabled = true}) {
