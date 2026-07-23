@@ -217,6 +217,53 @@ void main() {
       expect(audioService.playMarkerSfxCount, 0);
     },
   );
+
+  testWidgets('timer sound toggle stops and restarts BGM while running', (
+    tester,
+  ) async {
+    final audioService = _FakeTimerAudioService();
+    final changedConfigs = <MealTimerConfig>[];
+
+    await _pumpTimer(
+      tester,
+      timerAudioService: audioService,
+      onConfigChanged: changedConfigs.add,
+    );
+    await _finishCoursePreview(tester);
+
+    expect(audioService.startOrResumeBgmCount, 1);
+
+    await tester.tap(find.byKey(const ValueKey('timerSoundToggleButton')));
+    await tester.pump();
+
+    expect(changedConfigs.last.soundEnabled, isFalse);
+    expect(audioService.stopBgmCount, 1);
+
+    await tester.tap(find.byKey(const ValueKey('timerSoundToggleButton')));
+    await tester.pump();
+
+    expect(changedConfigs.last.soundEnabled, isTrue);
+    expect(audioService.startOrResumeBgmCount, 2);
+  });
+
+  testWidgets('timer sound toggle persists active session sound setting', (
+    tester,
+  ) async {
+    final audioService = _FakeTimerAudioService();
+    final store = _DelayedClearActiveSessionStore();
+
+    await _pumpTimer(
+      tester,
+      activeSessionStore: store,
+      timerAudioService: audioService,
+    );
+    await _finishCoursePreview(tester);
+
+    await tester.tap(find.byKey(const ValueKey('timerSoundToggleButton')));
+    await tester.pump();
+
+    expect((await store.load())?.config.soundEnabled, isFalse);
+  });
 }
 
 MealTimerConfig _timerConfig({bool soundEnabled = true}) {
@@ -232,6 +279,7 @@ Future<void> _pumpTimer(
   DateTime Function()? now,
   ActiveMealTimerSession? restoredSession,
   ActiveMealTimerSessionStore? activeSessionStore,
+  ValueChanged<MealTimerConfig>? onConfigChanged,
   required TimerAudioService timerAudioService,
 }) async {
   SharedPreferences.setMockInitialValues({});
@@ -266,7 +314,7 @@ Future<void> _pumpTimer(
                     activeSessionStore ?? const ActiveMealTimerSessionStore(),
                 timerAudioService: timerAudioService,
                 now: now,
-                onConfigChanged: (_) {},
+                onConfigChanged: onConfigChanged ?? (_) {},
               ),
             ),
           ];
