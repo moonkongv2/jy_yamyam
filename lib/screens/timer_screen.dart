@@ -25,6 +25,7 @@ import '../services/local_meal_progress_service.dart';
 import '../services/motivation_audio_service.dart';
 import '../services/orientation_service.dart';
 import '../services/screen_awake_service.dart';
+import '../services/timer_audio_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_shadows.dart';
@@ -49,6 +50,8 @@ const _motivationVideoIntervalOptions = [
   Duration(minutes: 5),
   Duration(minutes: 10),
 ];
+
+enum _TimerBgmState { stopped, paused, playing }
 
 MealTimerConfig _normalizeMealTimerConfig(MealTimerConfig config) {
   final duration = MealTimerPolicy.normalizeDuration(config.duration);
@@ -182,6 +185,7 @@ class TimerScreen extends StatefulWidget {
     this.activeSessionStore = const ActiveMealTimerSessionStore(),
     this.motivationMediaAvailable = AppFeatureFlags.motivationMediaAvailable,
     this.motivationAudioService,
+    this.timerAudioService,
     this.restoredSession,
     this.now,
   });
@@ -194,6 +198,7 @@ class TimerScreen extends StatefulWidget {
   final ActiveMealTimerSessionStore activeSessionStore;
   final bool motivationMediaAvailable;
   final MotivationAudioService? motivationAudioService;
+  final TimerAudioService? timerAudioService;
   final ActiveMealTimerSession? restoredSession;
   final DateTime Function()? now;
 
@@ -224,6 +229,8 @@ class _TimerScreenState extends State<TimerScreen>
   _PreviewMessageState _previewMessageState = _PreviewMessageState.none;
   late final MotivationAudioService _motivationAudioService;
   late final bool _ownsMotivationAudioService;
+  late final TimerAudioService _timerAudioService;
+  late final bool _ownsTimerAudioService;
   late MealTimerConfig _timerConfig;
   final math.Random _motivationRandom = math.Random();
   bool _arrivalPromptShown = false;
@@ -244,6 +251,8 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   bool _isFinishDriving = false;
+  bool _isAppBackgrounded = false;
+  _TimerBgmState _timerBgmState = _TimerBgmState.stopped;
   Animation<double>? _finishDriveAnimation;
   MealSessionResult? _pendingFinishDriveResult;
   double _finishDriveStartProgress = 0;
@@ -265,6 +274,9 @@ class _TimerScreenState extends State<TimerScreen>
             ? AudioplayersMotivationAudioService()
             : const NoOpMotivationAudioService());
     _ownsMotivationAudioService = widget.motivationAudioService == null;
+    _timerAudioService =
+        widget.timerAudioService ?? AudioplayersTimerAudioService();
+    _ownsTimerAudioService = widget.timerAudioService == null;
     final restoredSession = widget.restoredSession == null
         ? null
         : _normalizeActiveSession(widget.restoredSession!);
@@ -305,6 +317,7 @@ class _TimerScreenState extends State<TimerScreen>
       _lifecycleController.allowMealFlowOrientations(widget.orientationService),
     );
     _applyScreenAwakeSetting();
+    _syncTimerAudioWithState();
     if (restoredSession == null) {
       _startPreviewSequence();
     }
@@ -360,6 +373,7 @@ class _TimerScreenState extends State<TimerScreen>
       _previewMessageState = _PreviewMessageState.none;
     });
     _controller.start();
+    _syncTimerAudioWithState();
     unawaited(_persistActiveSession());
   }
 
@@ -370,6 +384,7 @@ class _TimerScreenState extends State<TimerScreen>
       _timerConfig = _normalizeMealTimerConfig(widget.config);
       unawaited(_persistActiveSession());
     }
+    _syncTimerAudioWithState();
     unawaited(
       _lifecycleController.replaceScreenAwakeServiceIfNeeded(
         oldService: oldWidget.screenAwakeService,
@@ -385,6 +400,7 @@ class _TimerScreenState extends State<TimerScreen>
     _motivationVoiceTimer?.cancel();
     _arrivalPromptTimer?.cancel();
     _previewTimer?.cancel();
+    unawaited(_disposeTimerAudioService());
     unawaited(_disposeMotivationAudioService());
     unawaited(
       _lifecycleController.lockPortraitIfNeeded(widget.orientationService),
@@ -406,15 +422,26 @@ class _TimerScreenState extends State<TimerScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state) {
       case AppLifecycleState.resumed:
+        _isAppBackgrounded = false;
         _controller.refreshFromClock();
+        _syncTimerAudioWithState();
         unawaited(_persistActiveSession());
         break;
       case AppLifecycleState.inactive:
       case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
       case AppLifecycleState.detached:
+        _isAppBackgrounded = true;
+        _syncTimerAudioWithState();
         unawaited(_persistActiveSession());
         break;
+    }
+  }
+
+  Future<void> _disposeTimerAudioService() async {
+    await _stopAllTimerAudio();
+    if (_ownsTimerAudioService) {
+      await _timerAudioService.dispose();
     }
   }
 
@@ -435,6 +462,7 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _handleTimerChanged() {
+    _syncTimerAudioWithState();
     if (_isFinishDriving) {
       return;
     }
@@ -716,6 +744,7 @@ class _TimerScreenState extends State<TimerScreen>
   void _startFinishDrive(MealSessionResult result) {
     _motivationVoiceTimer?.cancel();
     unawaited(_motivationAudioService.stop());
+    unawaited(_stopAllTimerAudio());
 
     _finishDriveStartProgress = _controller.progress.clamp(0.0, 1.0).toDouble();
     _pendingFinishDriveResult = result;
@@ -772,7 +801,81 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   Future<void> _clearActiveSession() async {
+    await _stopAllTimerAudio();
     await _activeSessionController.clear();
+  }
+
+  bool get _shouldPlayTimerBgm {
+    return mounted &&
+        !_isPreviewing &&
+        !_isFinishDriving &&
+        !_isAppBackgrounded &&
+        _timerConfig.soundEnabled &&
+        _controller.state == MealTimerState.running;
+  }
+
+  void _syncTimerAudioWithState() {
+    if (_shouldPlayTimerBgm) {
+      if (_timerBgmState != _TimerBgmState.playing) {
+        _timerBgmState = _TimerBgmState.playing;
+        unawaited(_startOrResumeTimerBgm());
+      }
+      return;
+    }
+
+    if (!_timerConfig.soundEnabled ||
+        _controller.state == MealTimerState.idle ||
+        _controller.state == MealTimerState.arrived ||
+        _controller.state == MealTimerState.completed ||
+        _isFinishDriving) {
+      if (_timerBgmState != _TimerBgmState.stopped) {
+        _timerBgmState = _TimerBgmState.stopped;
+        unawaited(_stopTimerBgm());
+      }
+      return;
+    }
+
+    if (_timerBgmState != _TimerBgmState.paused) {
+      _timerBgmState = _TimerBgmState.paused;
+      unawaited(_pauseTimerBgm());
+    }
+  }
+
+  Future<void> _startOrResumeTimerBgm() async {
+    try {
+      await _timerAudioService.startOrResumeBgm();
+    } catch (error, stackTrace) {
+      debugPrint('Unable to start or resume timer BGM: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> _pauseTimerBgm() async {
+    try {
+      await _timerAudioService.pauseBgm();
+    } catch (error, stackTrace) {
+      debugPrint('Unable to pause timer BGM: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> _stopTimerBgm() async {
+    try {
+      await _timerAudioService.stopBgm();
+    } catch (error, stackTrace) {
+      debugPrint('Unable to stop timer BGM: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> _stopAllTimerAudio() async {
+    try {
+      _timerBgmState = _TimerBgmState.stopped;
+      await _timerAudioService.stopAll();
+    } catch (error, stackTrace) {
+      debugPrint('Unable to stop timer audio: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   String _runningProgressMessage(TimerTextSet texts, double progress) {
