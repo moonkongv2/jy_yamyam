@@ -18,14 +18,14 @@ The app is designed around one simple goal: make mealtime pacing feel like a coz
 - Animated road, rail, sky, or water course progress based on the selected vehicle
 - Portrait and landscape timer layouts with dedicated road and vehicle layers
 - Pause, resume, complete, arrival prompt, and exit confirmation flows
-- Optional remaining-time display, sound effects, and keep-screen-awake setting
+- Optional remaining-time display, timer sounds, and keep-screen-awake setting
 - Motivation video and voice implementation retained behind a release availability flag
 - Completion result screen with vehicle-specific success videos and fallback handling
 - In-app parent guide and contextual help for ingredients, results, rewards, and history
 - Local active timer session restore, meal history, progress summary, vehicle stickers, and reward goal tracking
 - Vehicle sticker collection and reward goal screens
 - One-time vehicle pack in-app purchase flow with guardian gate and local entitlement cache
-- Korean and English localization
+- Korean, English, Japanese, Spanish, and Brazilian Portuguese localization
 - Shared kid-friendly UI system with colors, radius, shadows, spacing, motion, cards, and bouncy buttons
 
 ## App Flow
@@ -79,7 +79,13 @@ assets/
 
 ## Timer Audio Assets
 
-Timer background music and course-marker sound effects live under `assets/audio/timer_bgm/` and `assets/audio/marker/`. The app registers only the exact playable files in `pubspec.yaml` so license evidence, metadata, screenshots, certificates, PDFs, and original source files under `_licenses/` are kept out of the app bundle.
+Timer background music loops only while a meal timer is actively running. It does not play during the pre-ride preview, pauses with the meal timer or app backgrounding, resumes from the current track position when appropriate, and stops on arrival, early completion, confirmed exit, finalization, sound-off, and screen disposal.
+
+Course-marker sound effects play once when the rider passes a visible meal-ingredient marker. The marker event uses the same progress thresholds as the visible course markers and suppresses duplicate playback after rebuilds, restores, orientation changes, and large progress jumps.
+
+Both timer background music and course-marker effects use the existing sound setting. The same setting also continues to gate motivation voice when motivation media is later re-enabled; motivation video availability remains separately controlled by `ENABLE_MOTIVATION_MEDIA`.
+
+Runtime audio files live under `assets/audio/timer_bgm/` and `assets/audio/marker/`. The app registers only the exact playable files in `pubspec.yaml` so license evidence, metadata, screenshots, certificates, PDFs, and original source files under `_licenses/` are kept out of the app bundle.
 
 Repository-local license metadata lives next to each audio asset under `_licenses/<audio-file-stem>/`. Source and license details must come from real evidence and must not be invented. Licensed audio and evidence are kept in this private repository for rebuild and audit purposes, and must not be redistributed independently from the app.
 
@@ -111,6 +117,7 @@ lib/
     meal_course_catalog.dart         # Preset and custom meal course constants
     meal_ingredient_catalog.dart     # Meal ingredient options and course slot generation
     motivation_asset_catalog.dart    # Motivation video and voice asset catalogs
+    timer_audio_asset_catalog.dart   # Timer BGM and marker SFX asset catalog
     vehicle_catalog.dart             # Available vehicles and image assets
   controllers/
     meal_timer_controller.dart       # Timer state, progress, pause/resume logic
@@ -152,6 +159,7 @@ lib/
     local_settings_service.dart      # SharedPreferences wrapper for settings
     local_meal_progress_service.dart # Local history, vehicle sticker, and reward persistence
     motivation_audio_service.dart    # Motivation voice playback wrapper
+    timer_audio_service.dart         # Timer BGM and marker SFX playback wrapper
     screen_awake_service.dart        # Wakelock wrapper
   theme/
     app_colors.dart                  # Role-based color tokens
@@ -176,7 +184,9 @@ lib/
     reward_sticker_image.dart        # Sticker image with fallback
 
 assets/
+  audio/marker/                      # Timer course-marker SFX and local license metadata
   audio/motivation/                  # Deferred locale-based shared motivation voice clips
+  audio/timer_bgm/                   # Timer BGM and local license metadata
   fonts/                             # Cal Sans font
   images/                            # Vehicles, ingredients, and result fallbacks
   icons/                             # Launcher icon source assets
