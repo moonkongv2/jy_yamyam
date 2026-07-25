@@ -31,6 +31,7 @@ class PtBrTimerTexts implements TimerTextSet {
   String get finishDriveTimeLabel => 'Finalizando';
   String get previewReady => 'Preparar... 🚦';
   String get previewGo => 'Vai! 🌟';
+  String get courseOverviewButton => 'Ver rota';
 
   String arrivalDialogMessage(String vehicleLabel) {
     return '$vehicleLabel chegou primeiro. A refeição terminou?';

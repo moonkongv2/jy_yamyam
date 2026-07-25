@@ -31,6 +31,7 @@ class EnTimerTexts implements TimerTextSet {
   String get finishDriveTimeLabel => 'Finishing up';
   String get previewReady => 'Ready... 🚦';
   String get previewGo => 'Go! 🌟';
+  String get courseOverviewButton => 'View course';
 
   String arrivalDialogMessage(String vehicleLabel) {
     return 'Time is up. Did you finish your meal?';

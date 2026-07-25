@@ -405,7 +405,6 @@ class _TimerScreenState extends State<TimerScreen>
     unawaited(_persistActiveSession());
   }
 
-  // ignore: unused_element
   Future<void> _startCourseOverview() async {
     if (!_canStartCourseOverview) {
       return;
@@ -468,6 +467,10 @@ class _TimerScreenState extends State<TimerScreen>
         !_isFinishDriving &&
         (_controller.state == MealTimerState.running ||
             _controller.state == MealTimerState.paused);
+  }
+
+  bool get _shouldShowCourseOverviewControl {
+    return _timerConfig.duration.inMinutes > 5;
   }
 
   bool _shouldContinueCourseOverview() {
@@ -1209,6 +1212,9 @@ class _TimerScreenState extends State<TimerScreen>
         final soundToggleIcon = _timerConfig.soundEnabled
             ? Icons.volume_up_rounded
             : Icons.volume_off_rounded;
+        final onCourseOverview = _canStartCourseOverview
+            ? _startCourseOverview
+            : null;
 
         return PopScope(
           canPop: _allowExit,
@@ -1233,6 +1239,13 @@ class _TimerScreenState extends State<TimerScreen>
                         icon: Icon(soundToggleIcon),
                         onPressed: _toggleSoundEnabled,
                       ),
+                      if (_shouldShowCourseOverviewControl)
+                        IconButton(
+                          key: const ValueKey('courseOverviewButton'),
+                          tooltip: texts.timer.courseOverviewButton,
+                          icon: const Icon(Icons.route_rounded),
+                          onPressed: onCourseOverview,
+                        ),
                       if (onMotivationSettings != null)
                         IconButton(
                           key: const ValueKey('motivationSettingsButton'),
@@ -1393,6 +1406,12 @@ class _TimerScreenState extends State<TimerScreen>
                       onSoundToggle: _toggleSoundEnabled,
                       soundToggleIcon: soundToggleIcon,
                       soundToggleLabel: texts.settings.soundEnabled,
+                      showCourseOverviewControl:
+                          _shouldShowCourseOverviewControl,
+                      onCourseOverview: _shouldShowCourseOverviewControl
+                          ? onCourseOverview
+                          : null,
+                      courseOverviewLabel: texts.timer.courseOverviewButton,
                       controls: TimerControlBar(
                         isPaused: _controller.isPaused,
                         onPauseResume: canUseTimerControls
@@ -1408,6 +1427,12 @@ class _TimerScreenState extends State<TimerScreen>
                         onSoundToggle: _toggleSoundEnabled,
                         soundToggleIcon: soundToggleIcon,
                         soundToggleLabel: texts.settings.soundEnabled,
+                        showCourseOverviewControl:
+                            _shouldShowCourseOverviewControl,
+                        onCourseOverview: _shouldShowCourseOverviewControl
+                            ? onCourseOverview
+                            : null,
+                        courseOverviewLabel: texts.timer.courseOverviewButton,
                         onPauseResume: canUseTimerControls
                             ? handlePauseResume
                             : null,
@@ -1472,6 +1497,9 @@ class _LandscapeTimerLayout extends StatelessWidget {
     required this.onSoundToggle,
     required this.soundToggleIcon,
     required this.soundToggleLabel,
+    required this.showCourseOverviewControl,
+    required this.onCourseOverview,
+    required this.courseOverviewLabel,
     required this.controls,
     required this.compactControls,
   });
@@ -1486,6 +1514,9 @@ class _LandscapeTimerLayout extends StatelessWidget {
   final VoidCallback onSoundToggle;
   final IconData soundToggleIcon;
   final String soundToggleLabel;
+  final bool showCourseOverviewControl;
+  final VoidCallback? onCourseOverview;
+  final String courseOverviewLabel;
   final Widget controls;
   final Widget compactControls;
 
@@ -1515,6 +1546,9 @@ class _LandscapeTimerLayout extends StatelessWidget {
             onSoundToggle: onSoundToggle,
             soundToggleIcon: soundToggleIcon,
             soundToggleLabel: soundToggleLabel,
+            showCourseOverviewControl: showCourseOverviewControl,
+            onCourseOverview: onCourseOverview,
+            courseOverviewLabel: courseOverviewLabel,
             compactControls: isCompactLandscape ? compactControls : null,
           );
 
@@ -1549,6 +1583,9 @@ class _CompactLandscapeControls extends StatelessWidget {
     required this.onSoundToggle,
     required this.soundToggleIcon,
     required this.soundToggleLabel,
+    required this.showCourseOverviewControl,
+    required this.onCourseOverview,
+    required this.courseOverviewLabel,
     required this.onPauseResume,
     required this.onComplete,
   });
@@ -1558,6 +1595,9 @@ class _CompactLandscapeControls extends StatelessWidget {
   final VoidCallback onSoundToggle;
   final IconData soundToggleIcon;
   final String soundToggleLabel;
+  final bool showCourseOverviewControl;
+  final VoidCallback? onCourseOverview;
+  final String courseOverviewLabel;
   final VoidCallback? onPauseResume;
   final VoidCallback? onComplete;
 
@@ -1577,6 +1617,16 @@ class _CompactLandscapeControls extends StatelessWidget {
           variant: _CompactLandscapeButtonVariant.outline,
         ),
         const SizedBox(height: AppSpacing.sm),
+        if (showCourseOverviewControl) ...[
+          _CompactLandscapeButton(
+            key: const ValueKey('courseOverviewButton'),
+            label: courseOverviewLabel,
+            icon: Icons.route_rounded,
+            onPressed: onCourseOverview,
+            variant: _CompactLandscapeButtonVariant.outline,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
         if (onMotivationSettings != null) ...[
           _CompactLandscapeButton(
             key: const ValueKey('motivationSettingsButton'),
@@ -1681,6 +1731,9 @@ class _LandscapeCourseCanvas extends StatelessWidget {
     required this.onSoundToggle,
     required this.soundToggleIcon,
     required this.soundToggleLabel,
+    required this.showCourseOverviewControl,
+    required this.onCourseOverview,
+    required this.courseOverviewLabel,
     this.compactControls,
   });
 
@@ -1694,6 +1747,9 @@ class _LandscapeCourseCanvas extends StatelessWidget {
   final VoidCallback onSoundToggle;
   final IconData soundToggleIcon;
   final String soundToggleLabel;
+  final bool showCourseOverviewControl;
+  final VoidCallback? onCourseOverview;
+  final String courseOverviewLabel;
   final Widget? compactControls;
 
   @override
@@ -1756,6 +1812,15 @@ class _LandscapeCourseCanvas extends StatelessWidget {
                       onPressed: onSoundToggle,
                     ),
                   ],
+                  if (compactControls == null && showCourseOverviewControl) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    _LandscapeIconButton(
+                      key: const ValueKey('courseOverviewButton'),
+                      label: courseOverviewLabel,
+                      icon: Icons.route_rounded,
+                      onPressed: onCourseOverview,
+                    ),
+                  ],
                   if (compactControls == null &&
                       onMotivationSettings != null) ...[
                     const SizedBox(width: AppSpacing.sm),
@@ -1809,7 +1874,7 @@ class _LandscapeIconButton extends StatelessWidget {
 
   final String label;
   final IconData icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -1823,7 +1888,9 @@ class _LandscapeIconButton extends StatelessWidget {
       child: IconButton(
         tooltip: label,
         icon: Icon(icon),
-        color: AppColors.brown700,
+        color: onPressed == null
+            ? AppColors.brown500.withValues(alpha: 0.56)
+            : AppColors.brown700,
         iconSize: 24,
         onPressed: onPressed,
       ),

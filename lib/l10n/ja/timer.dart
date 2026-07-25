@@ -30,6 +30,7 @@ class JaTimerTexts implements TimerTextSet {
   String get finishDriveTimeLabel => '仕上げ中';
   String get previewReady => '準備... 🚦';
   String get previewGo => '出発！ 🌟';
+  String get courseOverviewButton => 'コースを見る';
 
   String arrivalDialogMessage(String vehicleLabel) {
     return '$vehicleLabelが先に到着しました。食事は終わりましたか？';

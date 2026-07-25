@@ -30,6 +30,7 @@ class TimerTexts implements TimerTextSet {
   String get finishDriveTimeLabel => '마무리 중';
   String get previewReady => '준비... 🚦';
   String get previewGo => '출발! 🌟';
+  String get courseOverviewButton => '코스 보기';
 
   String arrivalDialogMessage(String vehicleLabel) {
     return '$vehicleLabel${_subjectParticle(vehicleLabel)} 지나갔어. 식사를 마무리했어?';

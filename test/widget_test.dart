@@ -7144,12 +7144,13 @@ void main() {
       expect(find.byType(SingleChildScrollView), findsNothing);
       expect(find.byType(TimerControlBar), findsNothing);
       expect(find.byIcon(Icons.video_settings_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.route_rounded), findsOneWidget);
       expect(roadRect.width, greaterThan(760));
       expect(roadRect.height, greaterThan(320));
       expect(controlsRect.left, greaterThanOrEqualTo(expectedRoadRight));
       expect(controlsRect.right, lessThanOrEqualTo(roadRect.right));
       expect(controlsRect.width, lessThanOrEqualTo(72));
-      expect(controlsRect.height, lessThanOrEqualTo(210));
+      expect(controlsRect.height, lessThanOrEqualTo(350));
       expect(controlsRect.contains(settingsRect.center), isTrue);
       expect(controlsRect.contains(pauseRect.center), isTrue);
       expect(settingsRect.bottom, lessThanOrEqualTo(pauseRect.top));
