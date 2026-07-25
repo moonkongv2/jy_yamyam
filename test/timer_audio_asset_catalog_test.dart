@@ -8,11 +8,19 @@ void main() {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     final bgmAssetPath = TimerAudioAssetCatalog.bgmAssetPath;
     final markerAssetPath = TimerAudioAssetCatalog.markerAssetPath;
+    final courseLoadingAssetPath =
+        TimerAudioAssetCatalog.courseLoadingAssetPath;
+    final readyStartBeepAssetPath =
+        TimerAudioAssetCatalog.readyStartBeepAssetPath;
 
     expect(File(bgmAssetPath).existsSync(), isTrue);
     expect(File(markerAssetPath).existsSync(), isTrue);
+    expect(File(courseLoadingAssetPath).existsSync(), isTrue);
+    expect(File(readyStartBeepAssetPath).existsSync(), isTrue);
     expect(pubspec, contains('    - $bgmAssetPath\n'));
     expect(pubspec, contains('    - $markerAssetPath\n'));
+    expect(pubspec, contains('    - $courseLoadingAssetPath\n'));
+    expect(pubspec, contains('    - $readyStartBeepAssetPath\n'));
     expect(pubspec, isNot(contains('    - assets/audio/timer_bgm/\n')));
     expect(pubspec, isNot(contains('    - assets/audio/marker/\n')));
     expect(pubspec, isNot(contains('_licenses')));

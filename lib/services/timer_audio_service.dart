@@ -14,6 +14,14 @@ abstract interface class TimerAudioService {
 
   Future<void> playMarkerSfx();
 
+  Future<void> playCourseLoading();
+
+  Future<void> stopCourseLoading();
+
+  Future<void> playReadyStartBeep();
+
+  Future<void> stopReadyStartBeep();
+
   Future<void> stopAll();
 
   Future<void> dispose();
@@ -35,6 +43,18 @@ class NoOpTimerAudioService implements TimerAudioService {
   Future<void> playMarkerSfx() async {}
 
   @override
+  Future<void> playCourseLoading() async {}
+
+  @override
+  Future<void> stopCourseLoading() async {}
+
+  @override
+  Future<void> playReadyStartBeep() async {}
+
+  @override
+  Future<void> stopReadyStartBeep() async {}
+
+  @override
   Future<void> stopAll() async {}
 
   @override
@@ -45,14 +65,26 @@ class AudioplayersTimerAudioService implements TimerAudioService {
   AudioplayersTimerAudioService({
     String bgmAssetPath = TimerAudioAssetCatalog.bgmAssetPath,
     String markerAssetPath = TimerAudioAssetCatalog.markerAssetPath,
+    String courseLoadingAssetPath =
+        TimerAudioAssetCatalog.courseLoadingAssetPath,
+    String readyStartBeepAssetPath =
+        TimerAudioAssetCatalog.readyStartBeepAssetPath,
     double bgmVolume = TimerAudioAssetCatalog.bgmVolume,
     double markerVolume = TimerAudioAssetCatalog.markerVolume,
+    double courseLoadingVolume = TimerAudioAssetCatalog.courseLoadingVolume,
+    double readyStartBeepVolume = TimerAudioAssetCatalog.readyStartBeepVolume,
   }) : _bgmAssetPath = bgmAssetPath,
        _markerAssetPath = markerAssetPath,
+       _courseLoadingAssetPath = courseLoadingAssetPath,
+       _readyStartBeepAssetPath = readyStartBeepAssetPath,
        _bgmVolume = bgmVolume,
        _markerVolume = markerVolume,
+       _courseLoadingVolume = courseLoadingVolume,
+       _readyStartBeepVolume = readyStartBeepVolume,
        _bgmPlayer = AudioPlayer(),
        _markerPlayer = AudioPlayer(),
+       _courseLoadingPlayer = AudioPlayer(),
+       _readyStartBeepPlayer = AudioPlayer(),
        _audioContext = AudioContextConfig(
          focus: AudioContextConfigFocus.gain,
          respectSilence: false,
@@ -60,10 +92,16 @@ class AudioplayersTimerAudioService implements TimerAudioService {
 
   final String _bgmAssetPath;
   final String _markerAssetPath;
+  final String _courseLoadingAssetPath;
+  final String _readyStartBeepAssetPath;
   final double _bgmVolume;
   final double _markerVolume;
+  final double _courseLoadingVolume;
+  final double _readyStartBeepVolume;
   final AudioPlayer _bgmPlayer;
   final AudioPlayer _markerPlayer;
+  final AudioPlayer _courseLoadingPlayer;
+  final AudioPlayer _readyStartBeepPlayer;
   final AudioContext _audioContext;
 
   Future<void>? _bgmTransition;
@@ -138,6 +176,74 @@ class AudioplayersTimerAudioService implements TimerAudioService {
   }
 
   @override
+  Future<void> playCourseLoading() async {
+    if (_disposed) {
+      return;
+    }
+
+    try {
+      await _courseLoadingPlayer.setReleaseMode(ReleaseMode.stop);
+      await _courseLoadingPlayer.play(
+        AssetSource(_assetSourcePath(_courseLoadingAssetPath)),
+        volume: _courseLoadingVolume,
+        ctx: _audioContext,
+        mode: PlayerMode.mediaPlayer,
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Timer course loading playback failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  @override
+  Future<void> stopCourseLoading() async {
+    if (_disposed) {
+      return;
+    }
+
+    try {
+      await _courseLoadingPlayer.stop();
+    } catch (error, stackTrace) {
+      debugPrint('Timer course loading stop failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  @override
+  Future<void> playReadyStartBeep() async {
+    if (_disposed) {
+      return;
+    }
+
+    try {
+      await _readyStartBeepPlayer.setReleaseMode(ReleaseMode.stop);
+      await _readyStartBeepPlayer.play(
+        AssetSource(_assetSourcePath(_readyStartBeepAssetPath)),
+        volume: _readyStartBeepVolume,
+        ctx: _audioContext,
+        mode: PlayerMode.lowLatency,
+      );
+    } catch (error, stackTrace) {
+      debugPrint('Timer ready/start beep playback failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  @override
+  Future<void> stopReadyStartBeep() async {
+    if (_disposed) {
+      return;
+    }
+
+    try {
+      await _readyStartBeepPlayer.stop();
+    } catch (error, stackTrace) {
+      debugPrint('Timer ready/start beep stop failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  @override
   Future<void> stopAll() async {
     await stopBgm();
     if (_disposed) {
@@ -150,6 +256,8 @@ class AudioplayersTimerAudioService implements TimerAudioService {
       debugPrint('Timer marker SFX stop failed: $error');
       debugPrintStack(stackTrace: stackTrace);
     }
+    await stopCourseLoading();
+    await stopReadyStartBeep();
   }
 
   @override
@@ -163,6 +271,14 @@ class AudioplayersTimerAudioService implements TimerAudioService {
     await Future.wait([
       _disposePlayer(_bgmPlayer, 'Timer BGM dispose failed'),
       _disposePlayer(_markerPlayer, 'Timer marker SFX dispose failed'),
+      _disposePlayer(
+        _courseLoadingPlayer,
+        'Timer course loading dispose failed',
+      ),
+      _disposePlayer(
+        _readyStartBeepPlayer,
+        'Timer ready/start beep dispose failed',
+      ),
     ]);
   }
 
