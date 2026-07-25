@@ -19,6 +19,7 @@ class EnTimerTexts implements TimerTextSet {
   String get exitDialogCancelButton => 'Keep going';
   String get exitDialogConfirmButton => 'Leave';
   String get pauseButton => 'Pause';
+  String get resumeButton => 'Resume';
   String get completeMealButton => 'Meal done';
   String get runningArrivalLabel => 'Time left';
   String get pausedTimeLabel => 'Taking a break';

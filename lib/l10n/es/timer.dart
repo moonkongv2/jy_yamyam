@@ -19,6 +19,7 @@ class EsTimerTexts implements TimerTextSet {
   String get exitDialogCancelButton => 'Seguir';
   String get exitDialogConfirmButton => 'Salir';
   String get pauseButton => 'Pausa';
+  String get resumeButton => 'Reanudar';
   String get completeMealButton => 'Comida lista';
   String get runningArrivalLabel => 'Tiempo restante';
   String get pausedTimeLabel => 'Descanso breve';

@@ -18,6 +18,7 @@ class TimerTexts implements TimerTextSet {
   String get exitDialogCancelButton => '계속하기';
   String get exitDialogConfirmButton => '그만하기';
   String get pauseButton => '일시정지';
+  String get resumeButton => '재개';
   String get completeMealButton => '식사 완료';
   String get runningArrivalLabel => '남은 식사 시간';
   String get pausedTimeLabel => '잠깐 쉬는 중';

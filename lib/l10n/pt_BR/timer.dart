@@ -19,6 +19,7 @@ class PtBrTimerTexts implements TimerTextSet {
   String get exitDialogCancelButton => 'Continuar';
   String get exitDialogConfirmButton => 'Sair';
   String get pauseButton => 'Pausar';
+  String get resumeButton => 'Retomar';
   String get completeMealButton => 'Refeição concluída';
   String get runningArrivalLabel => 'Tempo restante';
   String get pausedTimeLabel => 'Pausa rapidinha';
