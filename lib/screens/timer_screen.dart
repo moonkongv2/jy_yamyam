@@ -238,7 +238,6 @@ class _TimerScreenState extends State<TimerScreen>
   final math.Random _motivationRandom = math.Random();
   bool _arrivalPromptShown = false;
   bool _exitPromptShown = false;
-  bool _readyStartBeepFired = false;
   bool _allowExit = false;
   late final MotivationCueController _motivationCueController;
   Timer? _motivationVoiceTimer;
@@ -392,7 +391,6 @@ class _TimerScreenState extends State<TimerScreen>
 
     if (!mounted) return;
 
-    _readyStartBeepFired = true;
     if (_timerConfig.soundEnabled) {
       unawaited(_timerAudioService.playReadyStartBeep());
     }
@@ -411,7 +409,7 @@ class _TimerScreenState extends State<TimerScreen>
     if (!mounted) return;
     unawaited(_timerAudioService.stopCourseLoading());
     unawaited(_timerAudioService.stopReadyStartBeep());
-    _readyStartBeepFired = false;
+
     setState(() {
       _coursePreviewMode = _CoursePreviewMode.none;
       _previewMessageState = _PreviewMessageState.none;

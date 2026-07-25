@@ -294,6 +294,105 @@ void main() {
     expect(audioService.stopBgmCount, 0);
     expect(audioService.stopAllCount, 0);
   });
+
+  testWidgets(
+    '5-minute-plus timer plays course loading audio during startup preview',
+    (tester) async {
+      final audioService = _FakeTimerAudioService();
+
+      await _pumpTimer(
+        tester,
+        timerAudioService: audioService,
+        config: _timerConfig(duration: const Duration(minutes: 10)),
+      );
+      await tester.pump();
+
+      expect(audioService.playCourseLoadingCount, 1);
+    },
+  );
+
+  testWidgets('course loading audio stops before timer BGM starts', (
+    tester,
+  ) async {
+    final audioService = _FakeTimerAudioService();
+
+    await _pumpTimer(
+      tester,
+      timerAudioService: audioService,
+      config: _timerConfig(duration: const Duration(minutes: 10)),
+    );
+    await _finishLongCoursePreview(tester);
+
+    expect(audioService.stopCourseLoadingCount, greaterThanOrEqualTo(1));
+    expect(audioService.startOrResumeBgmCount, 1);
+  });
+
+  testWidgets('ready/go beep plays once before timer start', (tester) async {
+    final audioService = _FakeTimerAudioService();
+
+    await _pumpTimer(tester, timerAudioService: audioService);
+    await _finishCoursePreview(tester);
+
+    expect(audioService.playReadyStartBeepCount, 1);
+    expect(audioService.startOrResumeBgmCount, 1);
+  });
+
+  testWidgets('sound disabled prevents preview audio and BGM', (tester) async {
+    final audioService = _FakeTimerAudioService();
+
+    await _pumpTimer(
+      tester,
+      timerAudioService: audioService,
+      config: _timerConfig(
+        soundEnabled: false,
+        duration: const Duration(minutes: 10),
+      ),
+    );
+    await _finishLongCoursePreview(tester);
+
+    expect(audioService.playCourseLoadingCount, 0);
+    expect(audioService.playReadyStartBeepCount, 0);
+    expect(audioService.startOrResumeBgmCount, 0);
+  });
+
+  testWidgets('restored running/paused sessions do not play preview audio', (
+    tester,
+  ) async {
+    var now = DateTime(2026, 1, 1, 8);
+    final audioService = _FakeTimerAudioService();
+    final session = ActiveMealTimerSession(
+      sessionId: 'restored-preview-audio-session',
+      startedAt: now.subtract(const Duration(minutes: 1)),
+      config: _timerConfig(duration: const Duration(minutes: 10)),
+      state: ActiveMealTimerSessionState.running,
+    );
+
+    await _pumpTimer(
+      tester,
+      now: () => now,
+      restoredSession: session,
+      timerAudioService: audioService,
+    );
+    await tester.pump();
+
+    expect(audioService.playCourseLoadingCount, 0);
+    expect(audioService.playReadyStartBeepCount, 0);
+    expect(audioService.startOrResumeBgmCount, 1);
+  });
+
+  testWidgets(
+    '5-minute-or-shorter timers skip course loading but still play beep',
+    (tester) async {
+      final audioService = _FakeTimerAudioService();
+
+      await _pumpTimer(tester, timerAudioService: audioService);
+      await _finishCoursePreview(tester);
+
+      expect(audioService.playCourseLoadingCount, 0);
+      expect(audioService.playReadyStartBeepCount, 1);
+      expect(audioService.startOrResumeBgmCount, 1);
+    },
+  );
 }
 
 MealTimerConfig _timerConfig({
@@ -365,11 +464,22 @@ Future<void> _finishCoursePreview(WidgetTester tester) async {
   await tester.pump();
 }
 
+Future<void> _finishLongCoursePreview(WidgetTester tester) async {
+  for (var i = 0; i < 30; i += 1) {
+    await tester.pump(const Duration(milliseconds: 250));
+  }
+  await tester.pump();
+}
+
 class _FakeTimerAudioService implements TimerAudioService {
   var startOrResumeBgmCount = 0;
   var pauseBgmCount = 0;
   var stopBgmCount = 0;
   var playMarkerSfxCount = 0;
+  var playCourseLoadingCount = 0;
+  var stopCourseLoadingCount = 0;
+  var playReadyStartBeepCount = 0;
+  var stopReadyStartBeepCount = 0;
   var stopAllCount = 0;
   var disposeCount = 0;
 
@@ -391,6 +501,26 @@ class _FakeTimerAudioService implements TimerAudioService {
   @override
   Future<void> playMarkerSfx() async {
     playMarkerSfxCount += 1;
+  }
+
+  @override
+  Future<void> playCourseLoading() async {
+    playCourseLoadingCount += 1;
+  }
+
+  @override
+  Future<void> stopCourseLoading() async {
+    stopCourseLoadingCount += 1;
+  }
+
+  @override
+  Future<void> playReadyStartBeep() async {
+    playReadyStartBeepCount += 1;
+  }
+
+  @override
+  Future<void> stopReadyStartBeep() async {
+    stopReadyStartBeepCount += 1;
   }
 
   @override
