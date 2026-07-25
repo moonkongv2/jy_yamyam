@@ -264,11 +264,44 @@ void main() {
 
     expect((await store.load())?.config.soundEnabled, isFalse);
   });
+
+  testWidgets('course overview keeps running BGM active', (tester) async {
+    final audioService = _FakeTimerAudioService();
+    final startedAt = DateTime(2026, 1, 1, 8);
+    final now = startedAt.add(const Duration(minutes: 10));
+    final session = ActiveMealTimerSession(
+      sessionId: 'course-overview-audio-session',
+      startedAt: startedAt,
+      config: _timerConfig(duration: const Duration(minutes: 30)),
+      state: ActiveMealTimerSessionState.running,
+    );
+
+    await _pumpTimer(
+      tester,
+      now: () => now,
+      restoredSession: session,
+      timerAudioService: audioService,
+    );
+    await tester.pump();
+
+    expect(audioService.startOrResumeBgmCount, 1);
+
+    await tester.tap(find.byKey(const ValueKey('courseOverviewButton')));
+    await tester.pump(const Duration(milliseconds: 800));
+
+    expect(audioService.startOrResumeBgmCount, 1);
+    expect(audioService.pauseBgmCount, 0);
+    expect(audioService.stopBgmCount, 0);
+    expect(audioService.stopAllCount, 0);
+  });
 }
 
-MealTimerConfig _timerConfig({bool soundEnabled = true}) {
+MealTimerConfig _timerConfig({
+  bool soundEnabled = true,
+  Duration duration = const Duration(minutes: 5),
+}) {
   return MealTimerConfig.defaults().copyWith(
-    duration: const Duration(minutes: 5),
+    duration: duration,
     soundEnabled: soundEnabled,
   );
 }
