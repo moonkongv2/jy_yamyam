@@ -53,6 +53,8 @@ const _motivationVideoIntervalOptions = [
 
 enum _TimerBgmState { stopped, paused, playing }
 
+enum _CoursePreviewMode { none, startup, overview }
+
 MealTimerConfig _normalizeMealTimerConfig(MealTimerConfig config) {
   final duration = MealTimerPolicy.normalizeDuration(config.duration);
   if (duration == config.duration) {
@@ -225,7 +227,8 @@ class _TimerScreenState extends State<TimerScreen>
   late final MealTimerController _controller;
   late final AnimationController _finishDriveController;
   AnimationController? _previewController;
-  bool _isPreviewing = false;
+  _CoursePreviewMode _coursePreviewMode = _CoursePreviewMode.none;
+  double _courseOverviewReturnProgress = 0;
   _PreviewMessageState _previewMessageState = _PreviewMessageState.none;
   late final MotivationAudioService _motivationAudioService;
   late final bool _ownsMotivationAudioService;
@@ -240,15 +243,39 @@ class _TimerScreenState extends State<TimerScreen>
   Timer? _motivationVoiceTimer;
   Timer? _arrivalPromptTimer;
   Timer? _previewTimer;
+  Completer<void>? _previewDelayCompleter;
 
   Future<void> _delay(Duration duration) {
+    _cancelPreviewDelay();
     final completer = Completer<void>();
-    _previewTimer?.cancel();
+    _previewDelayCompleter = completer;
     _previewTimer = Timer(duration, () {
       if (!completer.isCompleted) completer.complete();
+      if (_previewDelayCompleter == completer) {
+        _previewDelayCompleter = null;
+      }
     });
     return completer.future;
   }
+
+  void _cancelPreviewDelay() {
+    _previewTimer?.cancel();
+    _previewTimer = null;
+    final completer = _previewDelayCompleter;
+    _previewDelayCompleter = null;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete();
+    }
+  }
+
+  bool get _isStartupPreviewing =>
+      _coursePreviewMode == _CoursePreviewMode.startup;
+
+  bool get _isCourseOverviewing =>
+      _coursePreviewMode == _CoursePreviewMode.overview;
+
+  bool get _isCameraPreviewActive =>
+      _coursePreviewMode != _CoursePreviewMode.none;
 
   bool _isFinishDriving = false;
   bool _isAppBackgrounded = false;
@@ -333,7 +360,7 @@ class _TimerScreenState extends State<TimerScreen>
 
     if (!mounted) return;
     setState(() {
-      _isPreviewing = true;
+      _coursePreviewMode = _CoursePreviewMode.startup;
     });
 
     if (needsPreview) {
@@ -370,12 +397,119 @@ class _TimerScreenState extends State<TimerScreen>
 
     if (!mounted) return;
     setState(() {
-      _isPreviewing = false;
+      _coursePreviewMode = _CoursePreviewMode.none;
       _previewMessageState = _PreviewMessageState.none;
     });
     _controller.start();
     _syncTimerAudioWithState();
     unawaited(_persistActiveSession());
+  }
+
+  // ignore: unused_element
+  Future<void> _startCourseOverview() async {
+    if (!_canStartCourseOverview) {
+      return;
+    }
+
+    _cancelPreviewDelay();
+    _previewController?.dispose();
+    _previewController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+      value: _controller.progress.clamp(0.0, 1.0).toDouble(),
+    )..addListener(() => setState(() {}));
+
+    setState(() {
+      _coursePreviewMode = _CoursePreviewMode.overview;
+    });
+
+    try {
+      await _previewController!
+          .animateTo(1, curve: Curves.easeInOutCubic)
+          .orCancel;
+    } on TickerCanceled {
+      return;
+    }
+    if (!_shouldContinueCourseOverview()) {
+      return;
+    }
+
+    await _delay(const Duration(milliseconds: 450));
+    if (!_shouldContinueCourseOverview()) {
+      return;
+    }
+
+    _courseOverviewReturnProgress = _controller.progress
+        .clamp(0.0, 1.0)
+        .toDouble();
+    _previewController!.duration = const Duration(milliseconds: 800);
+    try {
+      await _previewController!
+          .animateBack(
+            _courseOverviewReturnProgress,
+            curve: Curves.easeInOutCubic,
+          )
+          .orCancel;
+    } on TickerCanceled {
+      return;
+    }
+    if (!_shouldContinueCourseOverview()) {
+      return;
+    }
+
+    _finishCourseOverview();
+  }
+
+  bool get _canStartCourseOverview {
+    return mounted &&
+        _timerConfig.duration.inMinutes > 5 &&
+        _controller.startedAt != null &&
+        !_isCameraPreviewActive &&
+        !_isFinishDriving &&
+        (_controller.state == MealTimerState.running ||
+            _controller.state == MealTimerState.paused);
+  }
+
+  bool _shouldContinueCourseOverview() {
+    if (!mounted || !_isCourseOverviewing) {
+      return false;
+    }
+
+    if (_controller.state == MealTimerState.arrived ||
+        _controller.state == MealTimerState.completed ||
+        _isFinishDriving) {
+      _cancelCourseOverview();
+      return false;
+    }
+
+    return true;
+  }
+
+  void _finishCourseOverview() {
+    if (!_isCourseOverviewing || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _coursePreviewMode = _CoursePreviewMode.none;
+    });
+  }
+
+  void _cancelCourseOverview() {
+    if (!_isCourseOverviewing) {
+      return;
+    }
+
+    _cancelPreviewDelay();
+    _previewController?.stop();
+    if (!mounted) {
+      _coursePreviewMode = _CoursePreviewMode.none;
+      return;
+    }
+
+    setState(() {
+      _coursePreviewMode = _CoursePreviewMode.none;
+    });
   }
 
   @override
@@ -400,7 +534,7 @@ class _TimerScreenState extends State<TimerScreen>
     WidgetsBinding.instance.removeObserver(this);
     _motivationVoiceTimer?.cancel();
     _arrivalPromptTimer?.cancel();
-    _previewTimer?.cancel();
+    _cancelPreviewDelay();
     unawaited(_disposeTimerAudioService());
     unawaited(_disposeMotivationAudioService());
     unawaited(
@@ -468,6 +602,12 @@ class _TimerScreenState extends State<TimerScreen>
       return;
     }
 
+    if (_isCourseOverviewing &&
+        (_controller.state == MealTimerState.arrived ||
+            _controller.state == MealTimerState.completed)) {
+      _cancelCourseOverview();
+    }
+
     _maybeShowMotivationVideo();
 
     if (_arrivalPromptShown ||
@@ -495,7 +635,10 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _maybeShowMotivationVideo() {
-    if (!widget.motivationMediaAvailable || !mounted || _isFinishDriving) {
+    if (!widget.motivationMediaAvailable ||
+        !mounted ||
+        _isCameraPreviewActive ||
+        _isFinishDriving) {
       return;
     }
 
@@ -696,6 +839,7 @@ class _TimerScreenState extends State<TimerScreen>
     if (_isFinishDriving) {
       return;
     }
+    _cancelCourseOverview();
     _arrivalPromptTimer?.cancel();
 
     final texts = AppTexts.of(context);
@@ -832,7 +976,7 @@ class _TimerScreenState extends State<TimerScreen>
 
   bool get _shouldPlayTimerBgm {
     return mounted &&
-        !_isPreviewing &&
+        !_isStartupPreviewing &&
         !_isFinishDriving &&
         !_isAppBackgrounded &&
         _timerConfig.soundEnabled &&
@@ -912,7 +1056,7 @@ class _TimerScreenState extends State<TimerScreen>
     if (!_timerConfig.soundEnabled ||
         _controller.state != MealTimerState.running ||
         !mounted ||
-        _isPreviewing ||
+        _isStartupPreviewing ||
         _isFinishDriving) {
       return;
     }
@@ -1015,11 +1159,13 @@ class _TimerScreenState extends State<TimerScreen>
             : timerProgress;
         final timerHasStarted = _controller.startedAt != null;
         final canUseTimerControls =
-            timerHasStarted && !_isPreviewing && !_isFinishDriving;
-        final cameraDisplayProgress = _isPreviewing
+            timerHasStarted && !_isStartupPreviewing && !_isFinishDriving;
+        final cameraDisplayProgress = _isCameraPreviewActive
             ? (_previewController?.value ?? 0.0).clamp(0.0, 1.0).toDouble()
             : displayProgress;
-        final vehicleDisplayProgress = _isPreviewing ? 0.0 : displayProgress;
+        final vehicleDisplayProgress = _isStartupPreviewing
+            ? 0.0
+            : displayProgress;
 
         String? previewMessageText;
         switch (_previewMessageState) {
@@ -1043,6 +1189,7 @@ class _TimerScreenState extends State<TimerScreen>
           if (!canUseTimerControls) {
             return;
           }
+          _cancelCourseOverview();
           if (_controller.isPaused) {
             _controller.resume();
           } else {
@@ -1110,12 +1257,14 @@ class _TimerScreenState extends State<TimerScreen>
                     vehicleProgress: vehicleDisplayProgress,
                     vehicle: vehicle,
                     avatar: vehicleAvatar,
-                    motivationVideoAssetPath: _isPreviewing || _isFinishDriving
+                    motivationVideoAssetPath:
+                        _isCameraPreviewActive || _isFinishDriving
                         ? null
                         : widget.motivationMediaAvailable
                         ? _motivationCueController.activeVideoPath
                         : null,
-                    motivationVideoMilestone: _isPreviewing || _isFinishDriving
+                    motivationVideoMilestone:
+                        _isCameraPreviewActive || _isFinishDriving
                         ? null
                         : widget.motivationMediaAvailable
                         ? _motivationCueController.activeMilestone
@@ -1125,7 +1274,7 @@ class _TimerScreenState extends State<TimerScreen>
                     showMotivationVideo:
                         widget.motivationMediaAvailable &&
                         !isLandscape &&
-                        !_isPreviewing,
+                        !_isCameraPreviewActive,
                     ingredients: courseIngredients,
                     ingredientClearProgress: vehicleDisplayProgress,
                     onCourseMarkerPassed: _handleCourseMarkerPassed,
@@ -1188,7 +1337,7 @@ class _TimerScreenState extends State<TimerScreen>
                   final landscapeMotivationVideoLayer =
                       !_isFinishDriving &&
                           widget.motivationMediaAvailable &&
-                          !_isPreviewing &&
+                          !_isCameraPreviewActive &&
                           isLandscape &&
                           _motivationCueController.activeVideoPath != null &&
                           _motivationCueController.activeMilestone != null
