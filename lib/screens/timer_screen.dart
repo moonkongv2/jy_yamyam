@@ -238,6 +238,7 @@ class _TimerScreenState extends State<TimerScreen>
   final math.Random _motivationRandom = math.Random();
   bool _arrivalPromptShown = false;
   bool _exitPromptShown = false;
+  bool _readyStartBeepFired = false;
   bool _allowExit = false;
   late final MotivationCueController _motivationCueController;
   Timer? _motivationVoiceTimer;
@@ -370,6 +371,10 @@ class _TimerScreenState extends State<TimerScreen>
       );
       _previewController!.addListener(() => setState(() {}));
 
+      if (_timerConfig.soundEnabled) {
+        unawaited(_timerAudioService.playCourseLoading());
+      }
+
       await _delay(const Duration(milliseconds: 500));
       if (!mounted) return;
 
@@ -381,21 +386,32 @@ class _TimerScreenState extends State<TimerScreen>
       if (!mounted) return;
       _previewController!.duration = const Duration(milliseconds: 1000);
       await _previewController!.reverse();
+
+      unawaited(_timerAudioService.stopCourseLoading());
     }
 
     if (!mounted) return;
+
+    _readyStartBeepFired = true;
+    if (_timerConfig.soundEnabled) {
+      unawaited(_timerAudioService.playReadyStartBeep());
+    }
+
     setState(() {
       _previewMessageState = _PreviewMessageState.ready;
     });
-    await _delay(const Duration(milliseconds: 700));
+    await _delay(const Duration(milliseconds: 770));
 
     if (!mounted) return;
     setState(() {
       _previewMessageState = _PreviewMessageState.go;
     });
-    await _delay(const Duration(milliseconds: 700));
+    await _delay(const Duration(milliseconds: 770));
 
     if (!mounted) return;
+    unawaited(_timerAudioService.stopCourseLoading());
+    unawaited(_timerAudioService.stopReadyStartBeep());
+    _readyStartBeepFired = false;
     setState(() {
       _coursePreviewMode = _CoursePreviewMode.none;
       _previewMessageState = _PreviewMessageState.none;
@@ -563,6 +579,7 @@ class _TimerScreenState extends State<TimerScreen>
         _isAppBackgrounded = false;
         _controller.refreshFromClock();
         _syncTimerAudioWithState();
+        _resumePreviewAudioIfNeeded();
         unawaited(_persistActiveSession());
         break;
       case AppLifecycleState.inactive:
@@ -571,6 +588,7 @@ class _TimerScreenState extends State<TimerScreen>
       case AppLifecycleState.detached:
         _isAppBackgrounded = true;
         _syncTimerAudioWithState();
+        _stopPreviewAudio();
         unawaited(_persistActiveSession());
         break;
     }
@@ -760,6 +778,7 @@ class _TimerScreenState extends State<TimerScreen>
     });
     widget.onConfigChanged(nextConfig);
     _syncTimerAudioWithState();
+    _syncPreviewAudioWithSoundEnabled(enabled);
     unawaited(_persistActiveSession());
   }
 
@@ -1047,6 +1066,37 @@ class _TimerScreenState extends State<TimerScreen>
     } catch (error, stackTrace) {
       debugPrint('Unable to stop timer audio: $error');
       debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  bool get _isInCourseLoadingPhase =>
+      _isStartupPreviewing && _previewMessageState == _PreviewMessageState.none;
+
+  void _syncPreviewAudioWithSoundEnabled(bool enabled) {
+    if (!_isStartupPreviewing) return;
+
+    if (!enabled) {
+      unawaited(_timerAudioService.stopCourseLoading());
+      unawaited(_timerAudioService.stopReadyStartBeep());
+      return;
+    }
+
+    if (_isInCourseLoadingPhase) {
+      unawaited(_timerAudioService.playCourseLoading());
+    }
+  }
+
+  void _stopPreviewAudio() {
+    if (!_isStartupPreviewing) return;
+    unawaited(_timerAudioService.stopCourseLoading());
+    unawaited(_timerAudioService.stopReadyStartBeep());
+  }
+
+  void _resumePreviewAudioIfNeeded() {
+    if (!_isStartupPreviewing || !_timerConfig.soundEnabled) return;
+
+    if (_isInCourseLoadingPhase) {
+      unawaited(_timerAudioService.playCourseLoading());
     }
   }
 
