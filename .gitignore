@@ -13,8 +13,9 @@
 migrate_working_dir/
 screenshots/
 assets/resources
-docs/
+#docs/
 codex_reviews/
+assets/audio/licenses
 
 # IntelliJ related
 *.iml
