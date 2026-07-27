@@ -13,6 +13,7 @@ import '../models/reward_goal.dart';
 import '../models/reward_item.dart';
 import '../services/local_meal_progress_service.dart';
 import '../services/orientation_service.dart';
+import '../services/result_audio_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_radius.dart';
 import '../theme/app_spacing.dart';
@@ -110,6 +111,7 @@ class ResultScreen extends StatefulWidget {
     required this.mealProgressService,
     required this.onConfigChanged,
     this.introControllerFactory,
+    this.resultAudioService,
     this.orientationService = const SystemOrientationService(),
   });
 
@@ -118,6 +120,7 @@ class ResultScreen extends StatefulWidget {
   final LocalMealProgressService mealProgressService;
   final ValueChanged<MealTimerConfig> onConfigChanged;
   final ResultIntroControllerFactory? introControllerFactory;
+  final ResultAudioService? resultAudioService;
   final OrientationService orientationService;
 
   @override
@@ -128,6 +131,8 @@ class _ResultScreenState extends State<ResultScreen> {
   static const _successImagePath = 'assets/images/result_success.png';
 
   VideoPlayerController? _introController;
+  late final ResultAudioService _resultAudioService;
+  late final bool _ownsResultAudioService;
   late final Future<RecordedMealSession> _recordedSession;
   bool _introFinished = false;
   bool _introFallback = false;
@@ -138,6 +143,9 @@ class _ResultScreenState extends State<ResultScreen> {
   @override
   void initState() {
     super.initState();
+    _resultAudioService =
+        widget.resultAudioService ?? AudioplayersResultAudioService();
+    _ownsResultAudioService = widget.resultAudioService == null;
     unawaited(widget.orientationService.allowMealFlowOrientations());
     _recordedSession = widget.mealProgressService.recordMealResult(
       widget.result,
@@ -176,6 +184,7 @@ class _ResultScreenState extends State<ResultScreen> {
     }
 
     if (value.position >= value.duration) {
+      unawaited(_resultAudioService.stop());
       setState(() => _introFinished = true);
     }
   }
@@ -190,10 +199,14 @@ class _ResultScreenState extends State<ResultScreen> {
       await controller.initialize();
       await controller.setLooping(false);
       await controller.play();
+      if (widget.config.soundEnabled) {
+        unawaited(_resultAudioService.playCrowdCheering());
+      }
       if (mounted) {
         setState(() {});
       }
     } catch (_) {
+      unawaited(_resultAudioService.stop());
       if (mounted) {
         setState(() {
           _introFallback = true;
@@ -209,6 +222,11 @@ class _ResultScreenState extends State<ResultScreen> {
     if (controller != null) {
       controller.removeListener(_handleIntroChanged);
       controller.dispose();
+    }
+    if (_ownsResultAudioService) {
+      unawaited(_resultAudioService.dispose());
+    } else {
+      unawaited(_resultAudioService.stop());
     }
     if (!_handoffOrientation) {
       unawaited(widget.orientationService.lockPortrait());

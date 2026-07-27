@@ -44,6 +44,7 @@ import 'package:jy_yamyam/services/local_meal_progress_service.dart';
 import 'package:jy_yamyam/services/local_settings_service.dart';
 import 'package:jy_yamyam/services/motivation_audio_service.dart';
 import 'package:jy_yamyam/services/orientation_service.dart';
+import 'package:jy_yamyam/services/result_audio_service.dart';
 import 'package:jy_yamyam/services/screen_awake_service.dart';
 import 'package:jy_yamyam/services/timer_audio_service.dart';
 import 'package:jy_yamyam/theme/app_theme.dart';
@@ -828,6 +829,69 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets(
+    'Completed result intro plays crowd cheering when sound enabled',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final resultAudioService = _FakeResultAudioService();
+
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
+          locale: const Locale('ko'),
+          home: ResultScreen(
+            result: _mealResult(completedBeforeArrival: true),
+            config: MealTimerConfig.defaults(),
+            mealProgressService: LocalMealProgressService(),
+            onConfigChanged: (_) {},
+            resultAudioService: resultAudioService,
+            introControllerFactory: (_) => _FakeResultIntroController(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(resultAudioService.playCrowdCheeringCount, 1);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+
+      expect(resultAudioService.stopCount, greaterThanOrEqualTo(1));
+    },
+  );
+
+  testWidgets('Result intro skips crowd cheering when sound is disabled', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final resultAudioService = _FakeResultAudioService();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
+        home: ResultScreen(
+          result: _mealResult(completedBeforeArrival: true),
+          config: MealTimerConfig.defaults().copyWith(soundEnabled: false),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          resultAudioService: resultAudioService,
+          introControllerFactory: (_) => _FakeResultIntroController(),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    expect(resultAudioService.playCrowdCheeringCount, 0);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
   testWidgets('Failed result screen skips the intro video', (tester) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(390, 844);
@@ -839,6 +903,7 @@ void main() {
 
     final service = LocalMealProgressService();
     final introVideoPaths = <String>[];
+    final resultAudioService = _FakeResultAudioService();
 
     await tester.pumpWidget(
       MaterialApp(
@@ -850,6 +915,7 @@ void main() {
           config: MealTimerConfig.defaults(),
           mealProgressService: service,
           onConfigChanged: (_) {},
+          resultAudioService: resultAudioService,
           introControllerFactory: (assetPath) {
             introVideoPaths.add(assetPath);
             return VideoPlayerController.asset(assetPath);
@@ -863,6 +929,7 @@ void main() {
     await tester.pump();
 
     expect(introVideoPaths, isEmpty);
+    expect(resultAudioService.playCrowdCheeringCount, 0);
     expect(find.byKey(const ValueKey('resultIntroScreen')), findsNothing);
     expect(find.text('조금 더 시간이 필요했어'), findsOneWidget);
     expect(find.text('오토바이가 먼저 지나갔어.'), findsOneWidget);
@@ -9433,6 +9500,58 @@ class _FakeTimerAudioService implements TimerAudioService {
   @override
   Future<void> dispose() async {
     disposeCount += 1;
+  }
+}
+
+class _FakeResultAudioService implements ResultAudioService {
+  var playCrowdCheeringCount = 0;
+  var stopCount = 0;
+  var disposeCount = 0;
+
+  @override
+  Future<void> playCrowdCheering() async {
+    playCrowdCheeringCount += 1;
+  }
+
+  @override
+  Future<void> stop() async {
+    stopCount += 1;
+  }
+
+  @override
+  Future<void> dispose() async {
+    disposeCount += 1;
+  }
+}
+
+class _FakeResultIntroController extends VideoPlayerController {
+  _FakeResultIntroController() : super.asset('assets/videos/fake_result.mp4');
+
+  var disposeCount = 0;
+
+  @override
+  Future<void> initialize() async {
+    value = value.copyWith(
+      duration: const Duration(seconds: 4),
+      size: const Size(640, 360),
+      isInitialized: true,
+    );
+  }
+
+  @override
+  Future<void> setLooping(bool looping) async {
+    value = value.copyWith(isLooping: looping);
+  }
+
+  @override
+  Future<void> play() async {
+    value = value.copyWith(isPlaying: true);
+  }
+
+  @override
+  Future<void> dispose() async {
+    disposeCount += 1;
+    await super.dispose();
   }
 }
 
