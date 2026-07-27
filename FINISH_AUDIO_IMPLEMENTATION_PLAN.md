@@ -65,7 +65,7 @@ Status: Done in `df3c953`.
 
 ## Commit 5: Add Sticker Collect Audio
 
-Status: Planned.
+Status: Done in `182527a`.
 
 - Add exact `pubspec.yaml` entry for:
   - `assets/audio/sticker_collect.mp3`
@@ -88,7 +88,7 @@ Status: Planned.
 
 ## Commit 6: Tests And Verification
 
-Status: Planned as the final verification commit.
+Status: Done in this commit.
 
 - Update fake timer audio service counters.
 - Test finish-drive threshold behavior, arrival hold, sound-off suppression, drive SFX stop, and asset registration.

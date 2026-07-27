@@ -62,7 +62,7 @@ void main() {
 
     expect(audioService.pauseBgmCount, 1);
 
-    await tester.tap(find.text('다시 출발'));
+    await tester.tap(find.text('재개'));
     await tester.pump();
 
     expect(audioService.startOrResumeBgmCount, 2);
