@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jy_yamyam/catalogs/result_audio_asset_catalog.dart';
 import 'package:jy_yamyam/catalogs/timer_audio_asset_catalog.dart';
 
 void main() {
@@ -12,18 +13,39 @@ void main() {
         TimerAudioAssetCatalog.courseLoadingAssetPath;
     final readyStartBeepAssetPath =
         TimerAudioAssetCatalog.readyStartBeepAssetPath;
+    final finishDriveShortAssetPath =
+        TimerAudioAssetCatalog.finishDriveShortAssetPath;
+    final finishDriveLongAssetPath =
+        TimerAudioAssetCatalog.finishDriveLongAssetPath;
+    final finishArrivalAssetPath =
+        TimerAudioAssetCatalog.finishArrivalAssetPath;
 
     expect(File(bgmAssetPath).existsSync(), isTrue);
     expect(File(markerAssetPath).existsSync(), isTrue);
     expect(File(courseLoadingAssetPath).existsSync(), isTrue);
     expect(File(readyStartBeepAssetPath).existsSync(), isTrue);
+    expect(File(finishDriveShortAssetPath).existsSync(), isTrue);
+    expect(File(finishDriveLongAssetPath).existsSync(), isTrue);
+    expect(File(finishArrivalAssetPath).existsSync(), isTrue);
     expect(pubspec, contains('    - $bgmAssetPath\n'));
     expect(pubspec, contains('    - $markerAssetPath\n'));
     expect(pubspec, contains('    - $courseLoadingAssetPath\n'));
     expect(pubspec, contains('    - $readyStartBeepAssetPath\n'));
+    expect(pubspec, contains('    - $finishDriveShortAssetPath\n'));
+    expect(pubspec, contains('    - $finishDriveLongAssetPath\n'));
+    expect(pubspec, contains('    - $finishArrivalAssetPath\n'));
     expect(pubspec, isNot(contains('    - assets/audio/timer_bgm/\n')));
     expect(pubspec, isNot(contains('    - assets/audio/marker/\n')));
     expect(pubspec, isNot(contains('_licenses')));
+  });
+
+  test('result audio catalog paths are registered exact runtime assets', () {
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    final crowdCheeringAssetPath =
+        ResultAudioAssetCatalog.crowdCheeringAssetPath;
+
+    expect(File(crowdCheeringAssetPath).existsSync(), isTrue);
+    expect(pubspec, contains('    - $crowdCheeringAssetPath\n'));
   });
 
   test('timer audio metadata points at catalog runtime assets', () {

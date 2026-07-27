@@ -480,6 +480,10 @@ class _FakeTimerAudioService implements TimerAudioService {
   var stopCourseLoadingCount = 0;
   var playReadyStartBeepCount = 0;
   var stopReadyStartBeepCount = 0;
+  var playFinishDriveShortSfxCount = 0;
+  var playFinishDriveLongSfxCount = 0;
+  var stopFinishDriveSfxCount = 0;
+  var playFinishArrivalSfxCount = 0;
   var stopAllCount = 0;
   var disposeCount = 0;
 
@@ -521,6 +525,26 @@ class _FakeTimerAudioService implements TimerAudioService {
   @override
   Future<void> stopReadyStartBeep() async {
     stopReadyStartBeepCount += 1;
+  }
+
+  @override
+  Future<void> playFinishDriveShortSfx() async {
+    playFinishDriveShortSfxCount += 1;
+  }
+
+  @override
+  Future<void> playFinishDriveLongSfx() async {
+    playFinishDriveLongSfxCount += 1;
+  }
+
+  @override
+  Future<void> stopFinishDriveSfx() async {
+    stopFinishDriveSfxCount += 1;
+  }
+
+  @override
+  Future<void> playFinishArrivalSfx() async {
+    playFinishArrivalSfxCount += 1;
   }
 
   @override
