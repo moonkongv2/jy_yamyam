@@ -519,6 +519,9 @@ class _ResultScreenState extends State<ResultScreen> {
                 reward: awardedRewards.first,
                 targetKey: _albumButtonKey,
                 onAnimationFinished: () {
+                  if (widget.config.soundEnabled) {
+                    unawaited(_resultAudioService.playStickerCollect());
+                  }
                   if (mounted) {
                     setState(() {
                       _flyingAnimationFinished = true;

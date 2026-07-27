@@ -892,6 +892,72 @@ void main() {
     await tester.pump();
   });
 
+  testWidgets('Completed result plays sticker collect when sticker lands', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final resultAudioService = _FakeResultAudioService();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
+        home: ResultScreen(
+          result: _mealResult(completedBeforeArrival: true),
+          config: MealTimerConfig.defaults(),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          resultAudioService: resultAudioService,
+          introControllerFactory: (_) {
+            return VideoPlayerController.asset(
+              'assets/videos/missing_result_success.mp4',
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(resultAudioService.playStickerCollectCount, 1);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Sticker collect skips when result sound is disabled', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final resultAudioService = _FakeResultAudioService();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
+        home: ResultScreen(
+          result: _mealResult(completedBeforeArrival: true),
+          config: MealTimerConfig.defaults().copyWith(soundEnabled: false),
+          mealProgressService: LocalMealProgressService(),
+          onConfigChanged: (_) {},
+          resultAudioService: resultAudioService,
+          introControllerFactory: (_) {
+            return VideoPlayerController.asset(
+              'assets/videos/missing_result_success.mp4',
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(resultAudioService.playStickerCollectCount, 0);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
   testWidgets('Failed result screen skips the intro video', (tester) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(390, 844);
@@ -930,6 +996,7 @@ void main() {
 
     expect(introVideoPaths, isEmpty);
     expect(resultAudioService.playCrowdCheeringCount, 0);
+    expect(resultAudioService.playStickerCollectCount, 0);
     expect(find.byKey(const ValueKey('resultIntroScreen')), findsNothing);
     expect(find.text('조금 더 시간이 필요했어'), findsOneWidget);
     expect(find.text('오토바이가 먼저 지나갔어.'), findsOneWidget);
@@ -9505,12 +9572,18 @@ class _FakeTimerAudioService implements TimerAudioService {
 
 class _FakeResultAudioService implements ResultAudioService {
   var playCrowdCheeringCount = 0;
+  var playStickerCollectCount = 0;
   var stopCount = 0;
   var disposeCount = 0;
 
   @override
   Future<void> playCrowdCheering() async {
     playCrowdCheeringCount += 1;
+  }
+
+  @override
+  Future<void> playStickerCollect() async {
+    playStickerCollectCount += 1;
   }
 
   @override

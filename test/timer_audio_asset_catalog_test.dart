@@ -43,9 +43,13 @@ void main() {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     final crowdCheeringAssetPath =
         ResultAudioAssetCatalog.crowdCheeringAssetPath;
+    final stickerCollectAssetPath =
+        ResultAudioAssetCatalog.stickerCollectAssetPath;
 
     expect(File(crowdCheeringAssetPath).existsSync(), isTrue);
+    expect(File(stickerCollectAssetPath).existsSync(), isTrue);
     expect(pubspec, contains('    - $crowdCheeringAssetPath\n'));
+    expect(pubspec, contains('    - $stickerCollectAssetPath\n'));
   });
 
   test('timer audio metadata points at catalog runtime assets', () {
