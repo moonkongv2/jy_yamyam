@@ -45,6 +45,7 @@ import 'package:jy_yamyam/services/local_settings_service.dart';
 import 'package:jy_yamyam/services/motivation_audio_service.dart';
 import 'package:jy_yamyam/services/orientation_service.dart';
 import 'package:jy_yamyam/services/screen_awake_service.dart';
+import 'package:jy_yamyam/services/timer_audio_service.dart';
 import 'package:jy_yamyam/theme/app_theme.dart';
 import 'package:jy_yamyam/theme/app_spacing.dart';
 import 'package:jy_yamyam/utils/motivation_video_schedule.dart'
@@ -6354,6 +6355,7 @@ void main() {
     tester,
   ) async {
     var now = DateTime(2026);
+    final timerAudioService = _FakeTimerAudioService();
 
     await tester.pumpWidget(
       MaterialApp(
@@ -6367,6 +6369,7 @@ void main() {
           ),
           mealProgressService: LocalMealProgressService(),
           now: () => now,
+          timerAudioService: timerAudioService,
           onConfigChanged: (_) {},
         ),
       ),
@@ -6390,9 +6393,130 @@ void main() {
       greaterThan(0.99),
     );
 
+    await tester.pump(const Duration(milliseconds: 3));
+    await tester.pump();
+
+    expect(find.byType(ResultScreen), findsNothing);
+    expect(tester.widget<RoadView>(find.byType(RoadView)).progress, 1);
+
+    await tester.pump(const Duration(milliseconds: 999));
+
+    expect(find.byType(ResultScreen), findsNothing);
+
     await tester.pump(const Duration(milliseconds: 2));
     await tester.pump();
 
+    expect(find.byType(ResultScreen), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Fast finish drive plays short SFX for medium finish duration', (
+    tester,
+  ) async {
+    var now = DateTime(2026);
+    final timerAudioService = _FakeTimerAudioService();
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
+        home: TimerScreen(
+          motivationMediaAvailable: true,
+          config: MealTimerConfig.defaults().copyWith(
+            duration: const Duration(minutes: 5),
+          ),
+          mealProgressService: LocalMealProgressService(),
+          now: () => now,
+          timerAudioService: timerAudioService,
+          onConfigChanged: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+    await _finishCoursePreview(tester);
+    now = now.add(const Duration(minutes: 2, seconds: 30));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
+    await tester.pump();
+    await tester.tap(find.byType(FilledButton).last);
+    await tester.pump();
+    await tester.pump();
+
+    expect(timerAudioService.playFinishDriveShortSfxCount, 1);
+    expect(timerAudioService.playFinishDriveLongSfxCount, 0);
+    expect(timerAudioService.playFinishArrivalSfxCount, 0);
+
+    final driveDuration = finishDriveDurationForProgress(0.5);
+    await tester.pump(driveDuration + const Duration(milliseconds: 2));
+    await tester.pump();
+
+    expect(timerAudioService.stopFinishDriveSfxCount, 1);
+    expect(timerAudioService.playFinishArrivalSfxCount, 1);
+    expect(find.byType(ResultScreen), findsNothing);
+
+    await tester.pump(const Duration(milliseconds: 1001));
+    await tester.pump();
+
+    expect(find.byType(ResultScreen), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Fast finish drive chooses long SFX and skips near-finish SFX', (
+    tester,
+  ) async {
+    final longAudioService = _FakeTimerAudioService();
+    await _pumpCompletedBeforeArrivalTimer(
+      tester,
+      elapsed: Duration.zero,
+      timerAudioService: longAudioService,
+    );
+
+    expect(longAudioService.playFinishDriveShortSfxCount, 0);
+    expect(longAudioService.playFinishDriveLongSfxCount, 1);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+
+    final nearFinishAudioService = _FakeTimerAudioService();
+    await _pumpCompletedBeforeArrivalTimer(
+      tester,
+      elapsed: const Duration(minutes: 4, seconds: 30),
+      timerAudioService: nearFinishAudioService,
+    );
+
+    expect(nearFinishAudioService.playFinishDriveShortSfxCount, 0);
+    expect(nearFinishAudioService.playFinishDriveLongSfxCount, 0);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
+  testWidgets('Fast finish drive sound disabled skips finish SFX', (
+    tester,
+  ) async {
+    final timerAudioService = _FakeTimerAudioService();
+    await _pumpCompletedBeforeArrivalTimer(
+      tester,
+      elapsed: Duration.zero,
+      timerAudioService: timerAudioService,
+      soundEnabled: false,
+    );
+
+    final driveDuration = finishDriveDurationForProgress(0);
+    await tester.pump(driveDuration + const Duration(milliseconds: 2));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 1001));
+    await tester.pump();
+
+    expect(timerAudioService.playFinishDriveShortSfxCount, 0);
+    expect(timerAudioService.playFinishDriveLongSfxCount, 0);
+    expect(timerAudioService.playFinishArrivalSfxCount, 0);
     expect(find.byType(ResultScreen), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -9167,6 +9291,44 @@ Future<void> _finishCoursePreview(WidgetTester tester) async {
   await tester.pump();
 }
 
+Future<void> _pumpCompletedBeforeArrivalTimer(
+  WidgetTester tester, {
+  required Duration elapsed,
+  required _FakeTimerAudioService timerAudioService,
+  bool soundEnabled = true,
+}) async {
+  var now = DateTime(2026);
+
+  await tester.pumpWidget(
+    MaterialApp(
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      supportedLocales: AppTexts.supportedLocales,
+      locale: const Locale('ko'),
+      home: TimerScreen(
+        motivationMediaAvailable: true,
+        config: MealTimerConfig.defaults().copyWith(
+          duration: const Duration(minutes: 5),
+          soundEnabled: soundEnabled,
+        ),
+        mealProgressService: LocalMealProgressService(),
+        now: () => now,
+        timerAudioService: timerAudioService,
+        onConfigChanged: (_) {},
+      ),
+    ),
+  );
+  await tester.pump();
+  await _finishCoursePreview(tester);
+  now = now.add(elapsed);
+  await tester.pump(const Duration(milliseconds: 250));
+
+  tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
+  await tester.pump();
+  await tester.tap(find.byType(FilledButton).last);
+  await tester.pump();
+  await tester.pump();
+}
+
 class _FakeScreenAwakeService implements ScreenAwakeService {
   final List<bool> enabledValues = [];
 
@@ -9203,6 +9365,69 @@ class _FakeMotivationAudioService implements MotivationAudioService {
   @override
   Future<void> stop() async {
     stopCount += 1;
+  }
+
+  @override
+  Future<void> dispose() async {
+    disposeCount += 1;
+  }
+}
+
+class _FakeTimerAudioService implements TimerAudioService {
+  var playFinishDriveShortSfxCount = 0;
+  var playFinishDriveLongSfxCount = 0;
+  var stopFinishDriveSfxCount = 0;
+  var playFinishArrivalSfxCount = 0;
+  var stopAllCount = 0;
+  var disposeCount = 0;
+
+  @override
+  Future<void> startOrResumeBgm() async {}
+
+  @override
+  Future<void> pauseBgm() async {}
+
+  @override
+  Future<void> stopBgm() async {}
+
+  @override
+  Future<void> playMarkerSfx() async {}
+
+  @override
+  Future<void> playCourseLoading() async {}
+
+  @override
+  Future<void> stopCourseLoading() async {}
+
+  @override
+  Future<void> playReadyStartBeep() async {}
+
+  @override
+  Future<void> stopReadyStartBeep() async {}
+
+  @override
+  Future<void> playFinishDriveShortSfx() async {
+    playFinishDriveShortSfxCount += 1;
+  }
+
+  @override
+  Future<void> playFinishDriveLongSfx() async {
+    playFinishDriveLongSfxCount += 1;
+  }
+
+  @override
+  Future<void> stopFinishDriveSfx() async {
+    stopFinishDriveSfxCount += 1;
+  }
+
+  @override
+  Future<void> playFinishArrivalSfx() async {
+    playFinishArrivalSfxCount += 1;
+  }
+
+  @override
+  Future<void> stopAll() async {
+    stopAllCount += 1;
   }
 
   @override

@@ -42,6 +42,9 @@ const _landscapeCourseCanvasSize = Size(1200, 520);
 const _compactLandscapeControlsWidth = 72.0;
 const _compactLandscapeControlsRightInset =
     _compactLandscapeControlsWidth + AppSpacing.xl;
+const _finishDriveShortSfxMinimumDuration = Duration(milliseconds: 1500);
+const _finishDriveLongSfxMinimumDuration = Duration(milliseconds: 2500);
+const _finishArrivalHoldDuration = Duration(milliseconds: 1000);
 
 const motivationMinimumVideoInterval = Duration(seconds: 10);
 const motivationVoiceStartDelay = Duration(milliseconds: 350);
@@ -930,13 +933,16 @@ class _TimerScreenState extends State<TimerScreen>
   void _startFinishDrive(MealSessionResult result) {
     _motivationVoiceTimer?.cancel();
     unawaited(_motivationAudioService.stop());
-    unawaited(_stopAllTimerAudio());
+    final stopTimerAudio = _stopAllTimerAudio();
 
     _finishDriveStartProgress = _controller.progress.clamp(0.0, 1.0).toDouble();
+    final finishDriveDuration = finishDriveDurationForProgress(
+      _finishDriveStartProgress,
+    );
     _pendingFinishDriveResult = result;
     _finishDriveController
       ..stop()
-      ..duration = finishDriveDurationForProgress(_finishDriveStartProgress)
+      ..duration = finishDriveDuration
       ..reset();
     _finishDriveAnimation =
         Tween<double>(begin: _finishDriveStartProgress, end: 1).animate(
@@ -950,7 +956,30 @@ class _TimerScreenState extends State<TimerScreen>
       _isFinishDriving = true;
       _motivationCueController.completeActiveCue();
     });
+    if (_timerConfig.soundEnabled) {
+      unawaited(
+        stopTimerAudio.then((_) {
+          if (!mounted || !_isFinishDriving) {
+            return;
+          }
+          _playFinishDriveSfx(finishDriveDuration);
+        }),
+      );
+    }
     _finishDriveController.forward();
+  }
+
+  void _playFinishDriveSfx(Duration finishDriveDuration) {
+    if (finishDriveDuration < _finishDriveShortSfxMinimumDuration) {
+      return;
+    }
+
+    if (finishDriveDuration < _finishDriveLongSfxMinimumDuration) {
+      unawaited(_timerAudioService.playFinishDriveShortSfx());
+      return;
+    }
+
+    unawaited(_timerAudioService.playFinishDriveLongSfx());
   }
 
   void _handleFinishDriveStatusChanged(AnimationStatus status) {
@@ -958,9 +987,22 @@ class _TimerScreenState extends State<TimerScreen>
       return;
     }
 
+    unawaited(_completeFinishDrive());
+  }
+
+  Future<void> _completeFinishDrive() async {
     final result = _pendingFinishDriveResult;
     _pendingFinishDriveResult = null;
-    if (result != null && mounted) {
+    await _timerAudioService.stopFinishDriveSfx();
+    if (!mounted || !_isFinishDriving || result == null) {
+      return;
+    }
+
+    if (_timerConfig.soundEnabled) {
+      unawaited(_timerAudioService.playFinishArrivalSfx());
+    }
+    await Future<void>.delayed(_finishArrivalHoldDuration);
+    if (mounted && _isFinishDriving) {
       _openResult(result);
     }
   }
