@@ -94,14 +94,17 @@ Repository-local license metadata lives next to each audio asset under `_license
 - Flutter
 - Dart
 - Material 3
-- Custom local text bundles for Korean and English
+- Custom local text bundles for supported locales
 - `shared_preferences` for local settings, progress, history, vehicle stickers, and rewards
 - `video_player` for splash, motivation, and result videos
-- `audioplayers` for gated motivation voice playback
+- `audioplayers` for timer, motivation, result, and sticker sound playback
 - `image_picker`, `path_provider`, and `image` for custom avatar image import and normalization
 - `wakelock_plus` for the keep-screen-awake timer setting
+- `flutter_svg` for SVG asset rendering
 - `flutter_launcher_icons` for launcher icon generation
 - `in_app_purchase` for the one-time vehicle pack purchase and restore flow
+- `url_launcher` for privacy policy and support links
+- `package_info_plus` for app version display
 - Cal Sans bundled font
 
 ## Project Structure
@@ -124,8 +127,8 @@ lib/
   l10n/
     app_texts.dart                   # Locale selection and text bundle wiring
     text_sets.dart                   # Text interfaces
-    en/, ko/                         # English and Korean copy
-    en/user_guide.dart, ko/user_guide.dart # Parent guide copy
+    en/, ko/, ja/, es/, pt_BR/        # Supported locale copy
+    */user_guide.dart                # Parent guide copy
   models/
     meal_timer_config.dart           # User timer, vehicle, avatar, and display settings
     active_meal_timer_session.dart   # Persisted active timer session data
@@ -147,7 +150,7 @@ lib/
     meal_history_screen.dart         # Stored meal record list
     timer_screen.dart                # Active meal ride experience
     result_screen.dart               # Completion feedback and rewards
-    settings_screen.dart             # Timer, sound, display, and avatar settings
+    settings_screen.dart             # Timer, sound, display, avatar, support, legal, and purchase settings
     user_guide_screen.dart           # In-app parent guide and usage rules
     avatar_setup_screen.dart         # Custom avatar upload, adjustment, and prompt flow
     reward_goal_screen.dart          # Reward goal creation and management
@@ -158,8 +161,13 @@ lib/
     local_avatar_image_service.dart  # Local avatar image normalization and storage
     local_settings_service.dart      # SharedPreferences wrapper for settings
     local_meal_progress_service.dart # Local history, vehicle sticker, and reward persistence
+    local_purchase_entitlement_store.dart # Local vehicle-pack entitlement persistence
     motivation_audio_service.dart    # Motivation voice playback wrapper
+    result_audio_service.dart        # Result and sticker reward SFX playback wrapper
     timer_audio_service.dart         # Timer BGM and marker SFX playback wrapper
+    in_app_purchase_client.dart      # in_app_purchase adapter for vehicle pack purchases
+    external_link_launcher.dart      # Privacy policy and support link launcher
+    app_version_service.dart         # Package version label loader
     screen_awake_service.dart        # Wakelock wrapper
   theme/
     app_colors.dart                  # Role-based color tokens
@@ -262,4 +270,4 @@ dart run flutter_launcher_icons
 
 ## Status
 
-This is an active Flutter prototype with a polished kid-friendly UI. Core flows are covered by focused unit and widget tests, including first launch, home actions, vehicle selection, custom avatars, active timer restore, timer copy, course progress, motivation media catalogs, localization fallback, vehicle stickers, and reward persistence.
+This is an active Flutter prototype with a polished kid-friendly UI. Core flows are covered by focused unit and widget tests, including first launch, home actions, vehicle selection, custom avatars, active timer restore, timer copy, course progress, timer/result audio, motivation media catalogs, localization fallback, legal/support settings, vehicle-pack purchase and restore wiring, vehicle stickers, and reward persistence.

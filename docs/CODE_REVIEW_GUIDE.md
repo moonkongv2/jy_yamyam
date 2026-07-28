@@ -25,12 +25,14 @@ The app is local-first. There is no backend. Most state is stored in `SharedPref
 - Settings persistence is handled by `LocalSettingsService`.
 - Custom avatar files are normalized and stored through `LocalAvatarImageService`.
 - Vehicle-specific avatar settings are stored per vehicle, not globally.
+- Settings also contains guardian-gated purchase/restore, support, privacy policy, and app version flows.
 
 Review focus:
 
 - Invalid or missing stored values should fall back safely.
 - New settings should preserve existing stored settings.
-- UI changes should update Korean and English text sets together.
+- UI changes should update all supported locale text sets together.
+- Purchase, restore, privacy, and support links should remain behind the guardian gate.
 
 ### Vehicle Selection
 
@@ -99,18 +101,30 @@ Review focus:
 - Sound-disabled mode should not play voice.
 - Timing changes should keep the minimum interval behavior covered by tests.
 
+### Timer and Result Audio
+
+- Timer audio asset paths are in `TimerAudioAssetCatalog`.
+- Timer BGM, course-marker SFX, course preview cues, and finish-drive cues are coordinated by `TimerAudioService` and `TimerScreen`.
+- Result and sticker reward SFX are coordinated by `ResultAudioService` and `ResultScreen`.
+
+Review focus:
+
+- Sound-disabled mode should stop or suppress all audio cues.
+- Timer BGM should only loop while a meal timer is actively running.
+- Marker and reward SFX should suppress duplicate playback across rebuilds, restores, and animation handoffs.
+- Runtime audio assets should stay registered in `pubspec.yaml`; license evidence under `_licenses/` should stay out of the app bundle.
+
 ## Localization Review
 
 Text is not generated from ARB files. It is implemented through typed text sets:
 
 - Interfaces: `lib/l10n/text_sets.dart`
 - Wiring: `lib/l10n/app_texts.dart`
-- Korean: `lib/l10n/ko/`
-- English: `lib/l10n/en/`
+- Supported locale copy: `lib/l10n/en/`, `lib/l10n/ko/`, `lib/l10n/ja/`, `lib/l10n/es/`, `lib/l10n/pt_BR/`
 
 Review checklist:
 
-- Interface changes must update both Korean and English implementations.
+- Interface changes must update every supported locale implementation.
 - User-facing behavior changes should update guide/help copy if needed.
 - Avoid hardcoded display text in screens unless existing local pattern does so.
 - Reward names should use `RewardDefinition.labelForLanguage`.
@@ -122,6 +136,7 @@ Important local stores:
 - Settings: `LocalSettingsService`
 - Active timer: `ActiveMealTimerSessionStore`
 - Progress, history, inventory, goals: `LocalMealProgressService`
+- Vehicle-pack entitlement: `LocalPurchaseEntitlementStore`
 
 Review checklist:
 
@@ -130,6 +145,7 @@ Review checklist:
 - Avoid deleting or rewriting stored data unless the task requires migration.
 - New stored fields should have safe fallbacks for old data.
 - Date and duration values should remain parseable and deterministic in tests.
+- Purchase entitlement metadata should preserve unlock state while tolerating missing optional fields.
 
 ## UI Review
 
@@ -163,6 +179,12 @@ Focused test files:
 - `test/timer_completion_flow_controller_test.dart`: completion flow decisions.
 - `test/active_meal_timer_session_store_test.dart`: active session persistence.
 - `test/local_avatar_image_service_test.dart`: avatar file normalization/storage.
+- `test/local_purchase_entitlement_store_test.dart`: vehicle-pack entitlement persistence.
+- `test/vehicle_pack_purchase_controller_test.dart`: purchase and restore state transitions.
+- `test/settings_legal_support_test.dart`: settings support, privacy, restore, and version rows.
+- `test/purchase_localization_test.dart`: purchase, legal/support, and expanded locale coverage.
+- `test/timer_audio_lifecycle_test.dart`: timer audio start, pause, resume, and stop behavior.
+- `test/timer_audio_asset_catalog_test.dart`: timer/result audio asset registration.
 - `test/reward_sticker_image_test.dart`: sticker image rendering variants.
 - `test/widget_test.dart`: app flow, localization, vehicle catalog, result, rewards, history, and screen integration.
 
@@ -177,12 +199,14 @@ When a PR touches a specific flow, prefer adding a focused test near the existin
 - Custom avatar per-vehicle storage and fallback.
 - Localization interface churn.
 - Media asset catalogs and missing asset fallbacks.
+- Purchase entitlement, restore, and guardian-gated external-link flows.
+- Timer/result audio lifecycle and duplicate playback suppression.
 - Layout changes in compact portrait or landscape result/timer screens.
 
 ## PR Review Checklist
 
 - Behavior matches the product rule, not only the visible UI.
-- Korean and English copy both compile and stay consistent.
+- All supported locale copy compiles and stays consistent.
 - Shared catalog sources are used instead of duplicated lists.
 - Local stored data remains backward-tolerant unless migration is intentional.
 - Unknown IDs and missing assets fall back safely.
@@ -200,4 +224,6 @@ For UI or flow changes, manually exercise the smallest matching flow:
 - Sticker collection: uncollected silhouettes, collected counts, catalog order.
 - Reward goal: create goal -> complete meal -> goal slot fills -> goal earned.
 - Timer lifecycle: start -> pause -> resume -> background/restore -> complete.
-- Localization: repeat the affected screen in Korean and English.
+- Purchase/support: locked vehicle -> guardian gate -> purchase/restore, support link, privacy link.
+- Audio: start -> course preview -> marker crossing -> finish -> result sticker.
+- Localization: repeat the affected screen in each supported locale when copy changed.
