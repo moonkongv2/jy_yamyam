@@ -53,6 +53,7 @@ import 'package:jy_yamyam/utils/motivation_video_schedule.dart'
     as motivation_schedule;
 import 'package:jy_yamyam/widgets/app/app_bouncy_button.dart';
 import 'package:jy_yamyam/widgets/avatar/avatar_composite_preview.dart';
+import 'package:jy_yamyam/widgets/avatar/rider_guide_bottom_sheet.dart';
 import 'package:jy_yamyam/widgets/goal_star_pulse.dart';
 import 'package:jy_yamyam/widgets/road_painter.dart';
 import 'package:jy_yamyam/widgets/road_view.dart';
@@ -3286,10 +3287,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('우리 아이 라이더 만들기'), findsOneWidget);
-    expect(
-      find.text('외부 AI 서비스에서 냠냠 라이더에 사용할 아이 라이더 이미지를 만든 뒤 업로드해 주세요.'),
-      findsOneWidget,
-    );
+    expect(find.text(AppTexts.ko.avatarSetup.intro), findsOneWidget);
     expect(find.text('기본 이미지 미리보기'), findsOneWidget);
     await _dismissAvatarGuideIfVisible(tester);
 
@@ -3324,7 +3322,7 @@ void main() {
       locale: const Locale('en'),
     );
 
-    expect(find.text("Create Your Child's Rider Image"), findsOneWidget);
+    expect(find.text(AppTexts.en.avatarSetup.title), findsOneWidget);
     expect(find.text('우리 아이 라이더 만들기'), findsNothing);
     expect(find.text('Selected vehicle'), findsOneWidget);
     expect(find.text('Default image preview'), findsOneWidget);
@@ -3332,8 +3330,15 @@ void main() {
     await tester.tap(find.text('Use custom rider'));
     await tester.pump();
 
+    await tester.scrollUntilVisible(
+      find.text(AppTexts.en.avatarSetup.guideTitle),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(AppTexts.en.avatarSetup.guideTitle), findsOneWidget);
+
     await _scrollAvatarPromptToggleIntoView(tester);
-    expect(find.text('Rider image guide'), findsOneWidget);
     expect(find.text('Rider image prompt (example)'), findsOneWidget);
     expect(find.text('Open prompt'), findsNothing);
     expect(find.text('Copy prompt'), findsNothing);
@@ -3835,20 +3840,35 @@ void main() {
       ),
     );
 
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('userGuideSettingsTile')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
     expect(find.byKey(const ValueKey('userGuideSettingsTile')), findsOneWidget);
-    expect(find.text('사용 안내'), findsOneWidget);
-    expect(find.text('식재료, 응원 영상, 스티커 규칙을 확인해요.'), findsOneWidget);
+    expect(find.text(AppTexts.ko.settings.userGuide), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('userGuideSettingsTile')));
     await tester.pumpAndSettle();
 
     expect(find.byType(UserGuideScreen), findsOneWidget);
-    expect(find.text('사용 안내'), findsOneWidget);
-    expect(find.text('보호자 가이드'), findsOneWidget);
+    expect(find.text(AppTexts.ko.userGuide.title), findsOneWidget);
+    expect(find.text(AppTexts.ko.userGuide.subtitle), findsOneWidget);
     expect(
       find.textContaining('부모님뿐 아니라 아이의 식사를 함께 돕는 보호자도 참고할 수 있어요.'),
       findsOneWidget,
     );
+
+    await tester.scrollUntilVisible(
+      find.text(AppTexts.ko.userGuide.guardianTipsTitle),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppTexts.ko.userGuide.guardianTipsTitle), findsOneWidget);
   });
 
   testWidgets('User guide uses English localization', (tester) async {
@@ -4541,13 +4561,13 @@ void main() {
 
     await _startApp(tester, const Locale('ko'));
 
-    await tester.tap(_vehicleChoiceFinder('police_car'));
+    await tester.tap(_vehicleChoiceFinder('supercar'));
     await tester.pump();
 
     final preferences = await SharedPreferences.getInstance();
-    expect(preferences.getString('vehicleId'), 'police_car');
+    expect(preferences.getString('vehicleId'), 'supercar');
     expect(
-      _assetImage(VehicleCatalog.policeCar.selectionImagePath),
+      _assetImage(VehicleCatalog.supercar.selectionImagePath),
       findsNWidgets(2),
     );
     expect(
@@ -9179,19 +9199,20 @@ Future<void> _pumpAvatarSetupScreen(
 
 Future<void> _dismissAvatarGuideIfVisible(WidgetTester tester) async {
   await tester.pumpAndSettle();
-  final guideTitle = find.text('우리 아이 라이더 만들기 안내');
-  if (guideTitle.evaluate().isEmpty) {
+  final guide = find.byType(RiderGuideBottomSheet);
+  if (guide.evaluate().isEmpty) {
     return;
   }
-  Navigator.of(tester.element(guideTitle)).pop();
+  Navigator.of(tester.element(guide)).pop();
   await tester.pumpAndSettle();
 }
 
 Future<void> _selectCustomAvatarMode(WidgetTester tester) async {
-  final customMode = find.text('직접 만든 라이더 사용');
-  await tester.ensureVisible(customMode);
-  await tester.pumpAndSettle();
-  await tester.tap(customMode);
+  tester
+      .widget<SegmentedButton<AvatarImageMode>>(
+        find.byType(SegmentedButton<AvatarImageMode>),
+      )
+      .onSelectionChanged!({AvatarImageMode.custom});
   await tester.pump();
 }
 
