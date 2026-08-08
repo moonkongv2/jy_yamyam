@@ -93,7 +93,7 @@ flutter:
     - assets/audio/finish_arrival.mp3
     - assets/audio/crowd_cheering.mp3
     - assets/audio/sticker_collect.mp3
-    - assets/audio/timer_bgm/timer_bgm_01.mp3
+    - assets/audio/timer_bgm/timer_bgm_short.mp3
     - assets/audio/marker/marker_01.mp3
     - assets/audio/sticker_popup.mp3
     - assets/videos/

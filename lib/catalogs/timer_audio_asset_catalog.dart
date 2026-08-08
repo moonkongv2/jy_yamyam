@@ -1,5 +1,6 @@
 abstract final class TimerAudioAssetCatalog {
-  static const String bgmAssetPath = 'assets/audio/timer_bgm/timer_bgm_01.mp3';
+  static const String bgmAssetPath =
+      'assets/audio/timer_bgm/timer_bgm_short.mp3';
   static const String markerAssetPath = 'assets/audio/marker/marker_01.mp3';
   static const String courseLoadingAssetPath =
       'assets/audio/course_loading.mp3';
