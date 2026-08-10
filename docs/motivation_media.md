@@ -60,6 +60,8 @@ assets:
   - assets/audio/motivation/
 ```
 
+Launch-required splash and result videos are registered individually in `pubspec.yaml`; keep those explicit entries when restoring the motivation asset groups.
+
 To restore motivation media:
 
 1. Confirm the source files still exist under `assets/videos/motivation/` and `assets/audio/motivation/`.
