@@ -5,9 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:jy_yamyam/catalogs/meal_ingredient_catalog.dart';
 import 'package:jy_yamyam/l10n/app_texts.dart';
-import 'package:jy_yamyam/models/active_meal_timer_session.dart';
 import 'package:jy_yamyam/models/meal_completion_status.dart';
 import 'package:jy_yamyam/models/meal_session_result.dart';
 import 'package:jy_yamyam/models/meal_timer_config.dart';
@@ -16,15 +14,12 @@ import 'package:jy_yamyam/models/reward_item.dart';
 import 'package:jy_yamyam/screens/home_screen.dart';
 import 'package:jy_yamyam/screens/meal_history_screen.dart';
 import 'package:jy_yamyam/screens/reward_goal_screen.dart';
-import 'package:jy_yamyam/screens/result_screen.dart';
 import 'package:jy_yamyam/screens/sticker_collection_screen.dart';
 import 'package:jy_yamyam/screens/timer_screen.dart';
-import 'package:jy_yamyam/services/active_meal_timer_session_store.dart';
 import 'package:jy_yamyam/services/local_meal_progress_service.dart';
 import 'package:jy_yamyam/services/motivation_audio_service.dart';
 import 'package:jy_yamyam/services/orientation_service.dart';
 import 'package:jy_yamyam/services/screen_awake_service.dart';
-import 'package:jy_yamyam/services/timer_audio_service.dart';
 import 'package:jy_yamyam/theme/app_theme.dart';
 import 'package:jy_yamyam/widgets/goal_star_pulse.dart';
 import 'package:jy_yamyam/widgets/road_painter.dart';
@@ -35,1059 +30,9 @@ import 'package:jy_yamyam/widgets/timer_control_bar.dart';
 import 'package:jy_yamyam/widgets/vehicle_widget.dart';
 
 import 'helpers/meal_result_fixture.dart';
-import 'helpers/test_image_fixture.dart';
+import 'helpers/timer_screen_test_harness.dart';
 
 void main() {
-  test('Arrival dialog copy uses the selected vehicle label', () {
-    final timerTexts = AppTexts.ko.timer;
-
-    expect(timerTexts.arrivalDialogMessage('경찰차'), '경찰차가 지나갔어. 식사를 마무리했어?');
-    expect(timerTexts.arrivalDialogMessage('포크레인'), '포크레인이 지나갔어. 식사를 마무리했어?');
-  });
-
-  test('Timer arrival dialog copy uses the configured vehicle', () {
-    expect(
-      timerArrivalDialogMessage(
-        texts: AppTexts.ko.timer,
-        vehicleId: 'excavator',
-        languageCode: 'ko',
-      ),
-      '포크레인이 지나갔어. 식사를 마무리했어?',
-    );
-    expect(
-      timerArrivalDialogMessage(
-        texts: AppTexts.en.timer,
-        vehicleId: 'police_car',
-        languageCode: 'en',
-      ),
-      'Time is up. Did you finish your meal?',
-    );
-  });
-
-  testWidgets('Timer screen does not apply avatar saved for another vehicle', (
-    tester,
-  ) async {
-    final avatarFile = createTemporaryAvatarImage();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            vehicleId: 'excavator',
-            avatarMode: AvatarImageMode.custom,
-            customAvatarImagePath: avatarFile.path,
-            customAvatarVehicleId: 'police_car',
-          ),
-          mealProgressService: LocalMealProgressService(),
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.byType(RoadView), findsOneWidget);
-    expect(
-      tester.widget<RoadView>(find.byType(RoadView)).avatar.mode,
-      AvatarImageMode.defaultImage,
-    );
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('Timer screen applies avatar config for selected vehicle', (
-    tester,
-  ) async {
-    final avatarFile = createTemporaryAvatarImage();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            vehicleId: 'fire_truck',
-            avatarMode: AvatarImageMode.custom,
-            customAvatarsByVehicle: {
-              'fire_truck': VehicleAvatarConfig(
-                imagePath: avatarFile.path,
-                scale: 1.4,
-                offsetX: 0.11,
-                offsetY: -0.07,
-                rotationDegrees: 9.0,
-              ),
-            },
-          ),
-          mealProgressService: LocalMealProgressService(),
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-
-    final roadView = tester.widget<RoadView>(find.byType(RoadView));
-    expect(roadView.avatar.mode, AvatarImageMode.custom);
-    expect(roadView.avatar.imagePath, avatarFile.path);
-    expect(roadView.avatar.scale, 1.4);
-    expect(roadView.avatar.offsetX, 0.11);
-    expect(roadView.avatar.offsetY, -0.07);
-    expect(roadView.avatar.rotationDegrees, 9.0);
-  });
-
-  testWidgets('TimerScreen passes course ingredient ids to road ingredients', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            courseIngredientIds: const ['carrot', 'egg'],
-          ),
-          mealProgressService: LocalMealProgressService(),
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-
-    final roadView = tester.widget<RoadView>(find.byType(RoadView));
-    expect(
-      roadView.ingredients,
-      hasLength(
-        MealIngredientCatalog.courseSlotCountForDuration(
-          MealTimerConfig.defaults().duration,
-        ),
-      ),
-    );
-    expect(roadView.ingredients.map((ingredient) => ingredient.id).toSet(), {
-      'carrot',
-      'egg',
-    });
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('TimerScreen hides road ingredients when course mode is off', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            courseIngredientMode: CourseIngredientMode.off,
-            courseIngredientIds: const [],
-          ),
-          mealProgressService: LocalMealProgressService(),
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-
-    final roadView = tester.widget<RoadView>(find.byType(RoadView));
-    expect(roadView.ingredients, isEmpty);
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('TimerScreen passes configured duration to the road course', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(minutes: 60),
-          ),
-          mealProgressService: LocalMealProgressService(),
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-
-    final roadView = tester.widget<RoadView>(find.byType(RoadView));
-    expect(roadView.courseDuration, const Duration(minutes: 60));
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('TimerScreen saves an active session when started', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    final startedAt = DateTime(2026, 6, 10, 8);
-    final store = ActiveMealTimerSessionStore();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(minutes: 35),
-            childName: '지율',
-            vehicleId: 'bus',
-          ),
-          mealProgressService: LocalMealProgressService(),
-          now: () => startedAt,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(await store.load(), isNull);
-    await _finishCoursePreview(tester);
-
-    final session = await store.load();
-    expect(session, isNotNull);
-    expect(session!.startedAt, startedAt);
-    expect(session.duration, const Duration(minutes: 35));
-    expect(session.config.childName, '지율');
-    expect(session.config.vehicleId, 'bus');
-    expect(session.state, ActiveMealTimerSessionState.running);
-    expect(session.totalPausedDuration, Duration.zero);
-    expect(session.pausedAt, isNull);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('TimerScreen updates active session when paused and resumed', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    var now = DateTime(2026, 6, 10, 8);
-    final store = ActiveMealTimerSessionStore();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(minutes: 35),
-          ),
-          mealProgressService: LocalMealProgressService(),
-          now: () => now,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-    await _finishCoursePreview(tester);
-
-    now = now.add(const Duration(minutes: 5));
-    await tester.pump(const Duration(milliseconds: 250));
-    tester
-        .widget<TimerControlBar>(find.byType(TimerControlBar))
-        .onPauseResume!();
-    await tester.pump();
-
-    final pausedSession = await store.load();
-    expect(pausedSession, isNotNull);
-    expect(pausedSession!.state, ActiveMealTimerSessionState.paused);
-    expect(pausedSession.pausedAt, now);
-    expect(pausedSession.totalPausedDuration, Duration.zero);
-
-    now = now.add(const Duration(minutes: 3));
-    tester
-        .widget<TimerControlBar>(find.byType(TimerControlBar))
-        .onPauseResume!();
-    await tester.pump();
-
-    final resumedSession = await store.load();
-    expect(resumedSession, isNotNull);
-    expect(resumedSession!.state, ActiveMealTimerSessionState.running);
-    expect(resumedSession.pausedAt, isNull);
-    expect(resumedSession.totalPausedDuration, const Duration(minutes: 3));
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('TimerScreen clears active session after completion', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    final store = ActiveMealTimerSessionStore();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(minutes: 10),
-          ),
-          mealProgressService: LocalMealProgressService(),
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-    await _finishCoursePreview(tester);
-    expect(await store.load(), isNotNull);
-
-    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
-    await tester.pump();
-    await tester.tap(find.byType(FilledButton).last);
-    await tester.pump();
-
-    expect(await store.load(), isNull);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('TimerScreen restores progress from an active session', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    addTearDown(() async {
-      await const ActiveMealTimerSessionStore().clear();
-    });
-    final startedAt = DateTime(2026, 6, 10, 8);
-    final now = startedAt.add(const Duration(minutes: 20));
-    final session = ActiveMealTimerSession(
-      sessionId: 'active-session',
-      startedAt: startedAt,
-      config: MealTimerConfig.defaults().copyWith(
-        duration: const Duration(minutes: 60),
-        vehicleId: 'bus',
-      ),
-      state: ActiveMealTimerSessionState.running,
-    );
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults(),
-          restoredSession: session,
-          mealProgressService: LocalMealProgressService(),
-          now: () => now,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-
-    final roadView = tester.widget<RoadView>(find.byType(RoadView));
-    expect(roadView.courseDuration, const Duration(minutes: 60));
-    expect(roadView.vehicle.id, 'bus');
-    expect(roadView.progress, closeTo(1 / 3, 0.01));
-    expect(
-      tester.widget<TimerScreen>(find.byType(TimerScreen)).restoredSession,
-      session,
-    );
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('TimerScreen shows course overview for long running timers', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(600, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
-    SharedPreferences.setMockInitialValues({});
-    final startedAt = DateTime(2026, 6, 10, 8);
-    final now = startedAt.add(const Duration(minutes: 10));
-    final session = ActiveMealTimerSession(
-      sessionId: 'course-overview-session',
-      startedAt: startedAt,
-      config: MealTimerConfig.defaults().copyWith(
-        duration: const Duration(minutes: 30),
-      ),
-      state: ActiveMealTimerSessionState.running,
-    );
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults(),
-          restoredSession: session,
-          mealProgressService: LocalMealProgressService(),
-          now: () => now,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.byKey(const ValueKey('courseOverviewButton')), findsOneWidget);
-
-    final button = tester.widget<IconButton>(
-      find.byKey(const ValueKey('courseOverviewButton')),
-    );
-    expect(button.onPressed, isNotNull);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('TimerScreen hides course overview for five minute timers', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(600, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
-    SharedPreferences.setMockInitialValues({});
-    final startedAt = DateTime(2026, 6, 10, 8);
-    final now = startedAt.add(const Duration(minutes: 1));
-    final session = ActiveMealTimerSession(
-      sessionId: 'short-course-session',
-      startedAt: startedAt,
-      config: MealTimerConfig.defaults().copyWith(
-        duration: const Duration(minutes: 5),
-      ),
-      state: ActiveMealTimerSessionState.running,
-    );
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults(),
-          restoredSession: session,
-          mealProgressService: LocalMealProgressService(),
-          now: () => now,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.byKey(const ValueKey('courseOverviewButton')), findsNothing);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('TimerScreen course overview moves camera but not vehicle', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(600, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
-    SharedPreferences.setMockInitialValues({});
-    final startedAt = DateTime(2026, 6, 10, 8);
-    final now = startedAt.add(const Duration(minutes: 10));
-    final session = ActiveMealTimerSession(
-      sessionId: 'course-overview-camera-session',
-      startedAt: startedAt,
-      config: MealTimerConfig.defaults().copyWith(
-        duration: const Duration(minutes: 30),
-      ),
-      state: ActiveMealTimerSessionState.running,
-    );
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults(),
-          restoredSession: session,
-          mealProgressService: LocalMealProgressService(),
-          now: () => now,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-
-    var roadView = tester.widget<RoadView>(find.byType(RoadView));
-    expect(roadView.cameraProgress, closeTo(1 / 3, 0.01));
-    expect(roadView.vehicleProgress, closeTo(1 / 3, 0.01));
-
-    tester
-        .widget<IconButton>(find.byKey(const ValueKey('courseOverviewButton')))
-        .onPressed!();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 800));
-
-    roadView = tester.widget<RoadView>(find.byType(RoadView));
-    expect(roadView.cameraProgress, greaterThan(roadView.vehicleProgress));
-    expect(roadView.vehicleProgress, closeTo(1 / 3, 0.01));
-
-    tester
-        .widget<TimerControlBar>(find.byType(TimerControlBar))
-        .onPauseResume!();
-    await tester.pump();
-
-    roadView = tester.widget<RoadView>(find.byType(RoadView));
-    expect(roadView.cameraProgress, closeTo(roadView.vehicleProgress, 0.01));
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('TimerScreen resumes ticking from a restored paused session', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    addTearDown(() async {
-      await const ActiveMealTimerSessionStore().clear();
-    });
-    var now = DateTime(2026, 6, 10, 8, 30);
-    final session = ActiveMealTimerSession(
-      sessionId: 'paused-session',
-      startedAt: DateTime(2026, 6, 10, 8),
-      config: MealTimerConfig.defaults().copyWith(
-        duration: const Duration(minutes: 30),
-      ),
-      state: ActiveMealTimerSessionState.paused,
-      pausedAt: DateTime(2026, 6, 10, 8, 10),
-    );
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults(),
-          restoredSession: session,
-          mealProgressService: LocalMealProgressService(),
-          now: () => now,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-
-    expect(
-      tester.widget<RoadView>(find.byType(RoadView)).progress,
-      closeTo(1 / 3, 0.01),
-    );
-
-    tester
-        .widget<TimerControlBar>(find.byType(TimerControlBar))
-        .onPauseResume!();
-    await tester.pump();
-
-    now = now.add(const Duration(minutes: 2));
-    await tester.pump(const Duration(milliseconds: 40));
-
-    expect(
-      tester.widget<RoadView>(find.byType(RoadView)).progress,
-      closeTo(0.4, 0.01),
-    );
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('TimerScreen refreshes elapsed time when app resumes', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    addTearDown(() async {
-      await const ActiveMealTimerSessionStore().clear();
-    });
-    var now = DateTime(2026, 6, 10, 8);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(minutes: 25),
-          ),
-          mealProgressService: LocalMealProgressService(),
-          now: () => now,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-    await _finishCoursePreview(tester);
-
-    expect(tester.widget<RoadView>(find.byType(RoadView)).progress, 0);
-
-    now = now.add(const Duration(minutes: 10));
-    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-    await tester.pump();
-
-    expect(
-      tester.widget<RoadView>(find.byType(RoadView)).progress,
-      closeTo(0.4, 0.01),
-    );
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('Meal done before arrival does not immediately push result', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(minutes: 10),
-          ),
-          mealProgressService: LocalMealProgressService(),
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-    await _finishCoursePreview(tester);
-
-    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
-    await tester.pump();
-    await tester.tap(find.byType(FilledButton).last);
-    await tester.pump();
-
-    expect(find.byType(TimerScreen), findsOneWidget);
-    expect(find.byType(ResultScreen), findsNothing);
-    expect(
-      tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete,
-      isNull,
-    );
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('Fast finish drive animates display progress to finish', (
-    tester,
-  ) async {
-    var now = DateTime(2026);
-    final timerAudioService = _FakeTimerAudioService();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(seconds: 100),
-          ),
-          mealProgressService: LocalMealProgressService(),
-          now: () => now,
-          timerAudioService: timerAudioService,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-    await _finishCoursePreview(tester);
-    now = now.add(const Duration(seconds: 150));
-    await tester.pump(const Duration(milliseconds: 250));
-
-    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
-    await tester.pump();
-    await tester.tap(find.byType(FilledButton).last);
-    await tester.pump();
-
-    final driveDuration = finishDriveDurationForProgress(0.5);
-    await tester.pump(driveDuration - const Duration(milliseconds: 1));
-
-    expect(find.byType(ResultScreen), findsNothing);
-    expect(
-      tester.widget<RoadView>(find.byType(RoadView)).progress,
-      greaterThan(0.99),
-    );
-
-    await tester.pump(const Duration(milliseconds: 3));
-    await tester.pump();
-
-    expect(find.byType(ResultScreen), findsNothing);
-    expect(tester.widget<RoadView>(find.byType(RoadView)).progress, 1);
-
-    await tester.pump(const Duration(milliseconds: 999));
-
-    expect(find.byType(ResultScreen), findsNothing);
-
-    await tester.pump(const Duration(milliseconds: 2));
-    await tester.pump();
-
-    expect(find.byType(ResultScreen), findsOneWidget);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('Fast finish drive plays short SFX for medium finish duration', (
-    tester,
-  ) async {
-    var now = DateTime(2026);
-    final timerAudioService = _FakeTimerAudioService();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(minutes: 5),
-          ),
-          mealProgressService: LocalMealProgressService(),
-          now: () => now,
-          timerAudioService: timerAudioService,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-    await _finishCoursePreview(tester);
-    now = now.add(const Duration(minutes: 2, seconds: 30));
-    await tester.pump(const Duration(milliseconds: 250));
-
-    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
-    await tester.pump();
-    await tester.tap(find.byType(FilledButton).last);
-    await tester.pump();
-    await tester.pump();
-
-    expect(timerAudioService.playFinishDriveShortSfxCount, 1);
-    expect(timerAudioService.playFinishDriveLongSfxCount, 0);
-    expect(timerAudioService.playFinishArrivalSfxCount, 0);
-
-    final driveDuration = finishDriveDurationForProgress(0.5);
-    await tester.pump(driveDuration + const Duration(milliseconds: 2));
-    await tester.pump();
-
-    expect(timerAudioService.stopFinishDriveSfxCount, 1);
-    expect(timerAudioService.playFinishArrivalSfxCount, 1);
-    expect(find.byType(ResultScreen), findsNothing);
-
-    await tester.pump(const Duration(milliseconds: 1001));
-    await tester.pump();
-
-    expect(find.byType(ResultScreen), findsOneWidget);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('Fast finish drive chooses long SFX and skips near-finish SFX', (
-    tester,
-  ) async {
-    final longAudioService = _FakeTimerAudioService();
-    await _pumpCompletedBeforeArrivalTimer(
-      tester,
-      elapsed: Duration.zero,
-      timerAudioService: longAudioService,
-    );
-
-    expect(longAudioService.playFinishDriveShortSfxCount, 0);
-    expect(longAudioService.playFinishDriveLongSfxCount, 1);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-
-    final nearFinishAudioService = _FakeTimerAudioService();
-    await _pumpCompletedBeforeArrivalTimer(
-      tester,
-      elapsed: const Duration(minutes: 4, seconds: 30),
-      timerAudioService: nearFinishAudioService,
-    );
-
-    expect(nearFinishAudioService.playFinishDriveShortSfxCount, 0);
-    expect(nearFinishAudioService.playFinishDriveLongSfxCount, 0);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('Fast finish drive sound disabled skips finish SFX', (
-    tester,
-  ) async {
-    final timerAudioService = _FakeTimerAudioService();
-    await _pumpCompletedBeforeArrivalTimer(
-      tester,
-      elapsed: Duration.zero,
-      timerAudioService: timerAudioService,
-      soundEnabled: false,
-    );
-
-    final driveDuration = finishDriveDurationForProgress(0);
-    await tester.pump(driveDuration + const Duration(milliseconds: 2));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 1001));
-    await tester.pump();
-
-    expect(timerAudioService.playFinishDriveShortSfxCount, 0);
-    expect(timerAudioService.playFinishDriveLongSfxCount, 0);
-    expect(timerAudioService.playFinishArrivalSfxCount, 0);
-    expect(find.byType(ResultScreen), findsOneWidget);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('Controls are disabled during fast finish drive', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(minutes: 10),
-          ),
-          mealProgressService: LocalMealProgressService(),
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-    await _finishCoursePreview(tester);
-
-    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
-    await tester.pump();
-    await tester.tap(find.byType(FilledButton).last);
-    await tester.pump();
-
-    final controls = tester.widget<TimerControlBar>(
-      find.byType(TimerControlBar),
-    );
-    expect(controls.onPauseResume, isNull);
-    expect(controls.onComplete, isNull);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('Completing after arrival opens result without fast finish', (
-    tester,
-  ) async {
-    var now = DateTime(2026);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(minutes: 5),
-          ),
-          mealProgressService: LocalMealProgressService(),
-          now: () => now,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-    await _finishCoursePreview(tester);
-    now = now.add(const Duration(minutes: 6));
-    await tester.pump(const Duration(milliseconds: 250));
-
-    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
-    await tester.pump();
-    await tester.tap(find.byType(FilledButton).last);
-    await tester.pump();
-    await tester.pump();
-
-    expect(find.byType(ResultScreen), findsOneWidget);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('Timer records directly selected ingredients on completion', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-
-    var now = DateTime(2026);
-    final service = LocalMealProgressService();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(minutes: 5),
-            courseIngredientMode: CourseIngredientMode.manual,
-            courseIngredientIds: const ['carrot', 'egg'],
-            selectedCourseIngredientIds: const ['carrot', 'egg'],
-          ),
-          mealProgressService: service,
-          now: () => now,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-    await _finishCoursePreview(tester);
-    now = now.add(const Duration(minutes: 6));
-    await tester.pump(const Duration(milliseconds: 250));
-
-    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
-    await tester.pump();
-    await tester.tap(find.byType(FilledButton).last);
-    await tester.pump();
-    await tester.pump();
-
-    final snapshot = await service.loadSnapshot();
-    expect(snapshot.history.single.selectedIngredientIds, ['carrot', 'egg']);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('Timer awards sticker for the configured vehicle on completion', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-
-    var now = DateTime(2026);
-    final service = LocalMealProgressService();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(minutes: 5),
-            vehicleId: 'bus',
-          ),
-          mealProgressService: service,
-          now: () => now,
-          onConfigChanged: (_) {},
-        ),
-      ),
-    );
-    await tester.pump();
-    await _finishCoursePreview(tester);
-    now = now.add(const Duration(minutes: 6));
-    await tester.pump(const Duration(milliseconds: 250));
-
-    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
-    await tester.pump();
-    await tester.tap(find.byType(FilledButton).last);
-    await tester.pump();
-    await tester.pump();
-
-    final snapshot = await service.loadSnapshot();
-    expect(snapshot.history.single.rewardIds, ['sticker_vehicle_bus']);
-    expect(snapshot.inventory.single.rewardId, 'sticker_vehicle_bus');
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-  });
-
-  testWidgets('Timer hands orientation control to result screen', (
-    tester,
-  ) async {
-    var now = DateTime(2026);
-    final orientationService = _FakeOrientationService();
-
-    await tester.pumpWidget(
-      MaterialApp(
-        localizationsDelegates: GlobalMaterialLocalizations.delegates,
-        supportedLocales: AppTexts.supportedLocales,
-        locale: const Locale('ko'),
-        home: TimerScreen(
-          motivationMediaAvailable: true,
-          config: MealTimerConfig.defaults().copyWith(
-            duration: const Duration(minutes: 5),
-          ),
-          mealProgressService: LocalMealProgressService(),
-          now: () => now,
-          onConfigChanged: (_) {},
-          orientationService: orientationService,
-        ),
-      ),
-    );
-    await tester.pump();
-    await _finishCoursePreview(tester);
-    now = now.add(const Duration(minutes: 6));
-    await tester.pump(const Duration(milliseconds: 250));
-
-    tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
-    await tester.pump();
-    await tester.tap(find.byType(FilledButton).last);
-    await tester.pump();
-    await tester.pump();
-
-    expect(find.byType(ResultScreen), findsOneWidget);
-    expect(orientationService.calls, [
-      'allowMealFlowOrientations',
-      'allowMealFlowOrientations',
-    ]);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
-
-    expect(orientationService.calls, [
-      'allowMealFlowOrientations',
-      'allowMealFlowOrientations',
-      'lockPortrait',
-    ]);
-  });
-
   testWidgets('Timer screen plays motivation voice after video starts', (
     tester,
   ) async {
@@ -1113,7 +58,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await _finishCoursePreview(tester);
+    await finishCoursePreview(tester);
     now = now.add(const Duration(seconds: 30));
     await tester.pump(const Duration(milliseconds: 250));
 
@@ -1158,7 +103,7 @@ void main() {
         ),
       );
       await tester.pump();
-      await _finishCoursePreview(tester);
+      await finishCoursePreview(tester);
 
       now = now.add(const Duration(minutes: 2, seconds: 59));
       await tester.pump(const Duration(milliseconds: 250));
@@ -1214,7 +159,7 @@ void main() {
         ),
       );
       await tester.pump();
-      await _finishCoursePreview(tester);
+      await finishCoursePreview(tester);
 
       now = now.add(const Duration(minutes: 2));
       await tester.pump(const Duration(milliseconds: 250));
@@ -1269,7 +214,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await _finishCoursePreview(tester);
+    await finishCoursePreview(tester);
 
     now = now.add(const Duration(minutes: 3));
     await tester.pump(const Duration(milliseconds: 250));
@@ -1331,7 +276,7 @@ void main() {
         ),
       );
       await tester.pump();
-      await _finishCoursePreview(tester);
+      await finishCoursePreview(tester);
 
       now = now.add(const Duration(minutes: 3));
       await tester.pump(const Duration(milliseconds: 250));
@@ -1392,7 +337,7 @@ void main() {
         ),
       );
       await tester.pump();
-      await _finishCoursePreview(tester);
+      await finishCoursePreview(tester);
 
       now = now.add(const Duration(minutes: 2));
       await tester.pump(const Duration(milliseconds: 250));
@@ -1459,7 +404,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await _finishCoursePreview(tester);
+    await finishCoursePreview(tester);
 
     now = now.add(const Duration(minutes: 3));
     await tester.pump(const Duration(milliseconds: 250));
@@ -1500,7 +445,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await _finishCoursePreview(tester);
+    await finishCoursePreview(tester);
     now = now.add(const Duration(minutes: 20));
     await tester.pump(const Duration(milliseconds: 250));
 
@@ -1664,7 +609,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await _finishCoursePreview(tester);
+    await finishCoursePreview(tester);
 
     now = now.add(const Duration(seconds: 50));
     await tester.pump(const Duration(milliseconds: 250));
@@ -1717,7 +662,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await _finishCoursePreview(tester);
+    await finishCoursePreview(tester);
 
     expect(tester.getSize(find.byType(RoadView)), const Size(1200, 520));
     expect(
@@ -2016,7 +961,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await _finishCoursePreview(tester);
+    await finishCoursePreview(tester);
 
     expect(find.text("Today's Yamyam Ride"), findsOneWidget);
     expect(find.text('Pause'), findsOneWidget);
@@ -2040,7 +985,7 @@ void main() {
       ),
     );
     await tester.pump();
-    await _finishCoursePreview(tester);
+    await finishCoursePreview(tester);
 
     await tester.ensureVisible(find.text('Pause'));
     await tester.pump();
@@ -3236,52 +2181,6 @@ Future<void> _pumpOpenResultStickerAlbumSheet(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _finishCoursePreview(WidgetTester tester) async {
-  await tester.pump();
-  for (var i = 0; i < 30; i += 1) {
-    await tester.pump(const Duration(milliseconds: 250));
-  }
-  await tester.pump();
-}
-
-Future<void> _pumpCompletedBeforeArrivalTimer(
-  WidgetTester tester, {
-  required Duration elapsed,
-  required _FakeTimerAudioService timerAudioService,
-  bool soundEnabled = true,
-}) async {
-  var now = DateTime(2026);
-
-  await tester.pumpWidget(
-    MaterialApp(
-      localizationsDelegates: GlobalMaterialLocalizations.delegates,
-      supportedLocales: AppTexts.supportedLocales,
-      locale: const Locale('ko'),
-      home: TimerScreen(
-        motivationMediaAvailable: true,
-        config: MealTimerConfig.defaults().copyWith(
-          duration: const Duration(minutes: 5),
-          soundEnabled: soundEnabled,
-        ),
-        mealProgressService: LocalMealProgressService(),
-        now: () => now,
-        timerAudioService: timerAudioService,
-        onConfigChanged: (_) {},
-      ),
-    ),
-  );
-  await tester.pump();
-  await _finishCoursePreview(tester);
-  now = now.add(elapsed);
-  await tester.pump(const Duration(milliseconds: 250));
-
-  tester.widget<TimerControlBar>(find.byType(TimerControlBar)).onComplete!();
-  await tester.pump();
-  await tester.tap(find.byType(FilledButton).last);
-  await tester.pump();
-  await tester.pump();
-}
-
 class _FakeScreenAwakeService implements ScreenAwakeService {
   final List<bool> enabledValues = [];
 
@@ -3318,69 +2217,6 @@ class _FakeMotivationAudioService implements MotivationAudioService {
   @override
   Future<void> stop() async {
     stopCount += 1;
-  }
-
-  @override
-  Future<void> dispose() async {
-    disposeCount += 1;
-  }
-}
-
-class _FakeTimerAudioService implements TimerAudioService {
-  var playFinishDriveShortSfxCount = 0;
-  var playFinishDriveLongSfxCount = 0;
-  var stopFinishDriveSfxCount = 0;
-  var playFinishArrivalSfxCount = 0;
-  var stopAllCount = 0;
-  var disposeCount = 0;
-
-  @override
-  Future<void> startOrResumeBgm() async {}
-
-  @override
-  Future<void> pauseBgm() async {}
-
-  @override
-  Future<void> stopBgm() async {}
-
-  @override
-  Future<void> playMarkerSfx() async {}
-
-  @override
-  Future<void> playCourseLoading() async {}
-
-  @override
-  Future<void> stopCourseLoading() async {}
-
-  @override
-  Future<void> playReadyStartBeep() async {}
-
-  @override
-  Future<void> stopReadyStartBeep() async {}
-
-  @override
-  Future<void> playFinishDriveShortSfx() async {
-    playFinishDriveShortSfxCount += 1;
-  }
-
-  @override
-  Future<void> playFinishDriveLongSfx() async {
-    playFinishDriveLongSfxCount += 1;
-  }
-
-  @override
-  Future<void> stopFinishDriveSfx() async {
-    stopFinishDriveSfxCount += 1;
-  }
-
-  @override
-  Future<void> playFinishArrivalSfx() async {
-    playFinishArrivalSfxCount += 1;
-  }
-
-  @override
-  Future<void> stopAll() async {
-    stopAllCount += 1;
   }
 
   @override
