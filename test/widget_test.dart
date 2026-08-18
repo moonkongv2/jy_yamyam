@@ -10,14 +10,12 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
-import 'package:jy_yamyam/app.dart';
 import 'package:jy_yamyam/catalogs/avatar_prompt_catalog.dart';
 import 'package:jy_yamyam/catalogs/meal_ingredient_catalog.dart';
 import 'package:jy_yamyam/catalogs/motivation_asset_catalog.dart';
 import 'package:jy_yamyam/catalogs/vehicle_catalog.dart';
 import 'package:jy_yamyam/constants/child_name_limits.dart';
 import 'package:jy_yamyam/l10n/app_texts.dart';
-import 'package:jy_yamyam/main.dart' as app;
 import 'package:jy_yamyam/models/active_meal_timer_session.dart';
 import 'package:jy_yamyam/models/meal_completion_status.dart';
 import 'package:jy_yamyam/models/meal_progress_snapshot.dart';
@@ -63,6 +61,10 @@ import 'package:jy_yamyam/widgets/result_sticker_album_sheet.dart';
 import 'package:jy_yamyam/widgets/timer_control_bar.dart';
 import 'package:jy_yamyam/widgets/vehicle_selection_card.dart';
 import 'package:jy_yamyam/widgets/vehicle_widget.dart';
+
+import 'helpers/app_test_harness.dart';
+import 'helpers/meal_result_fixture.dart';
+import 'helpers/test_image_fixture.dart';
 
 void main() {
   test('Default config uses default avatar image settings', () {
@@ -776,7 +778,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(completedBeforeArrival: true),
+          result: mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -809,7 +811,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(completedBeforeArrival: false),
+          result: mealResult(completedBeforeArrival: false),
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -842,7 +844,7 @@ void main() {
           supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
           home: ResultScreen(
-            result: _mealResult(completedBeforeArrival: true),
+            result: mealResult(completedBeforeArrival: true),
             config: MealTimerConfig.defaults(),
             mealProgressService: LocalMealProgressService(),
             onConfigChanged: (_) {},
@@ -875,7 +877,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(completedBeforeArrival: true),
+          result: mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults().copyWith(soundEnabled: false),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -905,7 +907,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(completedBeforeArrival: true),
+          result: mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -938,7 +940,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(completedBeforeArrival: true),
+          result: mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults().copyWith(soundEnabled: false),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -978,7 +980,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(mealCompleted: false),
+          result: mealResult(mealCompleted: false),
           config: MealTimerConfig.defaults(),
           mealProgressService: service,
           onConfigChanged: (_) {},
@@ -1036,7 +1038,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(completedBeforeArrival: true),
+          result: mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -1073,7 +1075,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(completedBeforeArrival: true),
+          result: mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -1123,7 +1125,7 @@ void main() {
           supportedLocales: AppTexts.supportedLocales,
           locale: const Locale('ko'),
           home: ResultScreen(
-            result: _mealResult(completedBeforeArrival: true),
+            result: mealResult(completedBeforeArrival: true),
             config: MealTimerConfig.defaults().copyWith(vehicleId: 'supercar'),
             mealProgressService: LocalMealProgressService(),
             onConfigChanged: (_) {},
@@ -1175,7 +1177,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(mealCompleted: false),
+          result: mealResult(mealCompleted: false),
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -1220,7 +1222,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: ResultScreen(
-          result: _mealResult(completedBeforeArrival: true),
+          result: mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -1268,7 +1270,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('en'),
         home: ResultScreen(
-          result: _mealResult(mealCompleted: false),
+          result: mealResult(mealCompleted: false),
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -1305,7 +1307,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(mealCompleted: false),
+          result: mealResult(mealCompleted: false),
           config: MealTimerConfig.defaults().copyWith(vehicleId: 'bus'),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -1352,7 +1354,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(completedBeforeArrival: true),
+          result: mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -1440,7 +1442,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(completedBeforeArrival: true),
+          result: mealResult(completedBeforeArrival: true),
           config: MealTimerConfig.defaults().copyWith(
             vehicleId: 'missing_vehicle',
           ),
@@ -1471,7 +1473,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: ResultScreen(
-          result: _mealResult(mealCompleted: false),
+          result: mealResult(mealCompleted: false),
           config: MealTimerConfig.defaults(),
           mealProgressService: LocalMealProgressService(),
           onConfigChanged: (_) {},
@@ -1974,7 +1976,7 @@ void main() {
   testWidgets('First launch asks for child name before home', (tester) async {
     SharedPreferences.setMockInitialValues({'hasSeenFirstRunOnboarding': true});
 
-    await _startApp(tester, const Locale('ko'), completeChildNameSetup: false);
+    await startApp(tester, const Locale('ko'), completeChildNameSetup: false);
 
     expect(find.text('누가 냠냠 라이더를 탈까?'), findsOneWidget);
     expect(find.text('이름 저장'), findsOneWidget);
@@ -1992,7 +1994,7 @@ void main() {
   testWidgets('Child name setup limits input length', (tester) async {
     SharedPreferences.setMockInitialValues({'hasSeenFirstRunOnboarding': true});
 
-    await _startApp(tester, const Locale('en'), completeChildNameSetup: false);
+    await startApp(tester, const Locale('en'), completeChildNameSetup: false);
 
     final longName = 'a' * (childNameMaxLength + 4);
     await tester.enterText(find.byType(TextField), longName);
@@ -2015,7 +2017,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _pumpYamyamApp(
+    await pumpYamyamApp(
       tester,
       initialConfig: MealTimerConfig.defaults(),
       initialHasSeenFirstRunOnboarding: false,
@@ -2033,7 +2035,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _pumpYamyamApp(
+    await pumpYamyamApp(
       tester,
       initialConfig: MealTimerConfig.defaults(),
       initialHasSeenFirstRunOnboarding: false,
@@ -2064,7 +2066,7 @@ void main() {
     (tester) async {
       SharedPreferences.setMockInitialValues({});
 
-      await _pumpYamyamApp(
+      await pumpYamyamApp(
         tester,
         initialConfig: MealTimerConfig.defaults(),
         initialHasSeenFirstRunOnboarding: false,
@@ -2093,7 +2095,7 @@ void main() {
   testWidgets('Saved child name skips first-run onboarding', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _pumpYamyamApp(
+    await pumpYamyamApp(
       tester,
       initialConfig: MealTimerConfig.defaults().copyWith(childName: '지율'),
       initialHasSeenFirstRunOnboarding: false,
@@ -2111,7 +2113,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _pumpYamyamApp(
+    await pumpYamyamApp(
       tester,
       initialConfig: MealTimerConfig.defaults(),
       initialHasSeenFirstRunOnboarding: true,
@@ -2127,7 +2129,7 @@ void main() {
   testWidgets('Home screen shows meal timer actions', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _startApp(tester, const Locale('ko'));
+    await startApp(tester, const Locale('ko'));
 
     expect(find.byKey(const ValueKey('homeLogo')), findsOneWidget);
     expect(find.text('기본 얼굴 사용 중'), findsOneWidget);
@@ -3112,7 +3114,7 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    final avatarFile = _createTemporaryAvatarImage();
+    final avatarFile = createTemporaryAvatarImage();
 
     await tester.pumpWidget(
       MaterialApp(
@@ -3230,7 +3232,7 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    final avatarFile = _createTemporaryAvatarImage();
+    final avatarFile = createTemporaryAvatarImage();
 
     await tester.pumpWidget(
       MaterialApp(
@@ -3279,7 +3281,7 @@ void main() {
   testWidgets('Home avatar CTA opens avatar setup screen', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _startApp(tester, const Locale('ko'));
+    await startApp(tester, const Locale('ko'));
 
     await tester.ensureVisible(find.text('만들기'));
     await tester.pumpAndSettle();
@@ -3444,7 +3446,7 @@ void main() {
     tester,
   ) async {
     MealTimerConfig? changedConfig;
-    final avatarFile = _createTemporaryAvatarImage();
+    final avatarFile = createTemporaryAvatarImage();
     await _pumpAvatarSetupScreen(
       tester,
       MealTimerConfig.defaults(),
@@ -3475,7 +3477,7 @@ void main() {
   });
 
   testWidgets('Avatar setup initializes from custom config', (tester) async {
-    final avatarFile = _createTemporaryAvatarImage();
+    final avatarFile = createTemporaryAvatarImage();
     await _pumpAvatarSetupScreen(
       tester,
       MealTimerConfig.defaults().copyWith(
@@ -3519,7 +3521,7 @@ void main() {
   testWidgets('Avatar setup size slider updates local adjustment state', (
     tester,
   ) async {
-    final avatarFile = _createTemporaryAvatarImage();
+    final avatarFile = createTemporaryAvatarImage();
     await _pumpAvatarSetupScreen(
       tester,
       MealTimerConfig.defaults().copyWith(
@@ -3541,7 +3543,7 @@ void main() {
   testWidgets('Avatar setup reset button resets adjustment controls', (
     tester,
   ) async {
-    final avatarFile = _createTemporaryAvatarImage();
+    final avatarFile = createTemporaryAvatarImage();
     await _pumpAvatarSetupScreen(
       tester,
       MealTimerConfig.defaults().copyWith(
@@ -3571,7 +3573,7 @@ void main() {
     tester,
   ) async {
     MealTimerConfig? changedConfig;
-    final avatarFile = _createTemporaryAvatarImage();
+    final avatarFile = createTemporaryAvatarImage();
     await _pumpAvatarSetupScreen(
       tester,
       MealTimerConfig.defaults().copyWith(
@@ -3617,7 +3619,7 @@ void main() {
     tester,
   ) async {
     MealTimerConfig? changedConfig;
-    final avatarFile = _createTemporaryAvatarImage();
+    final avatarFile = createTemporaryAvatarImage();
     await _pumpAvatarSetupScreen(
       tester,
       MealTimerConfig.defaults().copyWith(
@@ -3652,8 +3654,8 @@ void main() {
 
   testWidgets('Avatar setup stores custom avatars per vehicle', (tester) async {
     MealTimerConfig? changedConfig;
-    final busAvatarFile = _createTemporaryAvatarImage();
-    final fireTruckAvatarFile = _createTemporaryAvatarImage();
+    final busAvatarFile = createTemporaryAvatarImage();
+    final fireTruckAvatarFile = createTemporaryAvatarImage();
     await _pumpAvatarSetupScreen(
       tester,
       MealTimerConfig.defaults().copyWith(
@@ -3716,8 +3718,8 @@ void main() {
     'Avatar setup default image clears only selected vehicle avatar',
     (tester) async {
       MealTimerConfig? changedConfig;
-      final busAvatarFile = _createTemporaryAvatarImage();
-      final fireTruckAvatarFile = _createTemporaryAvatarImage();
+      final busAvatarFile = createTemporaryAvatarImage();
+      final fireTruckAvatarFile = createTemporaryAvatarImage();
       await _pumpAvatarSetupScreen(
         tester,
         MealTimerConfig.defaults().copyWith(
@@ -3800,7 +3802,7 @@ void main() {
   testWidgets('Remaining time setting can be turned off', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _startApp(tester, const Locale('ko'));
+    await startApp(tester, const Locale('ko'));
 
     await tester.tap(find.byTooltip('설정'));
     await tester.pumpAndSettle();
@@ -4239,7 +4241,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _startApp(tester, const Locale('ko'));
+    await startApp(tester, const Locale('ko'));
 
     await tester.tap(find.byTooltip('설정'));
     await tester.pumpAndSettle();
@@ -4256,7 +4258,7 @@ void main() {
   testWidgets('Settings screen hides custom avatar state when active', (
     tester,
   ) async {
-    final avatarFile = _createTemporaryAvatarImage();
+    final avatarFile = createTemporaryAvatarImage();
 
     await tester.pumpWidget(
       MaterialApp(
@@ -4289,7 +4291,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _startApp(tester, const Locale('ko'));
+    await startApp(tester, const Locale('ko'));
 
     expect(find.text('빠방 고르기'), findsNothing);
     expect(find.text('오토바이'), findsNothing);
@@ -4395,8 +4397,8 @@ void main() {
   testWidgets(
     'Vehicle selection card renders custom avatars on saved choices',
     (tester) async {
-      final busAvatarFile = _createTemporaryAvatarImage();
-      final fireTruckAvatarFile = _createTemporaryAvatarImage();
+      final busAvatarFile = createTemporaryAvatarImage();
+      final fireTruckAvatarFile = createTemporaryAvatarImage();
       final avatarConfigs = {
         'bus': VehicleAvatarConfig(
           imagePath: busAvatarFile.path,
@@ -4559,7 +4561,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _startApp(tester, const Locale('ko'));
+    await startApp(tester, const Locale('ko'));
 
     await tester.tap(_vehicleChoiceFinder('supercar'));
     await tester.pump();
@@ -4613,7 +4615,7 @@ void main() {
   testWidgets('Child name can be changed in settings', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _startApp(tester, const Locale('ko'));
+    await startApp(tester, const Locale('ko'));
 
     await tester.tap(find.byTooltip('설정'));
     await tester.pumpAndSettle();
@@ -4640,7 +4642,7 @@ void main() {
   testWidgets('Child name settings limits input length', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _startApp(tester, const Locale('ko'));
+    await startApp(tester, const Locale('ko'));
 
     await tester.tap(find.byTooltip('설정'));
     await tester.pumpAndSettle();
@@ -4666,7 +4668,7 @@ void main() {
   ) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _startApp(tester, const Locale('ko'));
+    await startApp(tester, const Locale('ko'));
 
     await tester.tap(find.byTooltip('설정'));
     await tester.pumpAndSettle();
@@ -5585,7 +5587,7 @@ void main() {
   testWidgets('Road view renders custom avatar overlay from local file', (
     tester,
   ) async {
-    final avatarFile = _createTemporaryAvatarImage();
+    final avatarFile = createTemporaryAvatarImage();
 
     await tester.pumpWidget(
       MaterialApp(
@@ -5867,7 +5869,7 @@ void main() {
   testWidgets('Timer screen does not apply avatar saved for another vehicle', (
     tester,
   ) async {
-    final avatarFile = _createTemporaryAvatarImage();
+    final avatarFile = createTemporaryAvatarImage();
 
     await tester.pumpWidget(
       MaterialApp(
@@ -5902,7 +5904,7 @@ void main() {
   testWidgets('Timer screen applies avatar config for selected vehicle', (
     tester,
   ) async {
-    final avatarFile = _createTemporaryAvatarImage();
+    final avatarFile = createTemporaryAvatarImage();
 
     await tester.pumpWidget(
       MaterialApp(
@@ -7794,7 +7796,7 @@ void main() {
   testWidgets('English locale shows English home copy', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _startApp(tester, const Locale('en'));
+    await startApp(tester, const Locale('en'));
 
     expect(find.byKey(const ValueKey('homeLogo')), findsOneWidget);
     expect(find.text(AppTexts.en.home.heroMissionTitle('지율')), findsOneWidget);
@@ -7874,7 +7876,7 @@ void main() {
   testWidgets('Unsupported locale falls back to English', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
-    await _startApp(tester, const Locale('fr'));
+    await startApp(tester, const Locale('fr'));
 
     expect(find.byKey(const ValueKey('homeLogo')), findsOneWidget);
     await tester.drag(find.byType(ListView), const Offset(0, -500));
@@ -7958,7 +7960,7 @@ void main() {
 
     final service = LocalMealProgressService();
     final recordedSession = await service.recordMealResult(
-      _mealResult(),
+      mealResult(),
       vehicleId: 'missing_vehicle',
     );
 
@@ -7971,7 +7973,7 @@ void main() {
 
     final service = LocalMealProgressService();
     final recordedSession = await service.recordMealResult(
-      _mealResult(
+      mealResult(
         actualDuration: const Duration(minutes: 20),
         completedBeforeArrival: false,
         completionStatus: MealCompletionStatus.completedAtArrival,
@@ -7995,7 +7997,7 @@ void main() {
 
     final service = LocalMealProgressService();
     final recordedSession = await service.recordMealResult(
-      _mealResult(selectedIngredientIds: const ['carrot', 'egg']),
+      mealResult(selectedIngredientIds: const ['carrot', 'egg']),
       vehicleId: 'motorcycle',
     );
     final snapshot = await service.loadSnapshot();
@@ -8013,7 +8015,7 @@ void main() {
       rewardText: '아이스크림',
     );
     final recordedSession = await service.recordMealResult(
-      _mealResult(),
+      mealResult(),
       vehicleId: 'motorcycle',
     );
     final beforeDelete = await service.loadSnapshot();
@@ -8051,7 +8053,7 @@ void main() {
       SharedPreferences.setMockInitialValues({});
 
       final service = LocalMealProgressService();
-      await service.recordMealResult(_mealResult(), vehicleId: 'motorcycle');
+      await service.recordMealResult(mealResult(), vehicleId: 'motorcycle');
 
       final deleted = await service.deleteMealHistoryEntry('missing-meal');
       final snapshot = await service.loadSnapshot();
@@ -8071,7 +8073,7 @@ void main() {
     );
 
     final recordedSession = await service.recordMealResult(
-      _mealResult(),
+      mealResult(),
       vehicleId: 'motorcycle',
     );
     final snapshot = await service.loadSnapshot();
@@ -8092,7 +8094,7 @@ void main() {
     await service.createRewardGoal(requiredStickerCount: 7, rewardText: '딸기');
 
     final recordedSession = await service.recordMealResult(
-      _mealResult(),
+      mealResult(),
       vehicleId: 'motorcycle',
     );
     final snapshot = await service.loadSnapshot();
@@ -8278,7 +8280,7 @@ void main() {
     );
 
     final recordedSession = await service.recordMealResult(
-      _mealResult(
+      mealResult(
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 13),
       ),
@@ -8300,7 +8302,7 @@ void main() {
     );
 
     final recordedSession = await service.recordMealResult(
-      _mealResult(mealCompleted: false),
+      mealResult(mealCompleted: false),
       vehicleId: 'motorcycle',
     );
     final snapshot = await service.loadSnapshot();
@@ -8319,11 +8321,11 @@ void main() {
     );
 
     await service.recordMealResult(
-      _mealResult(endedAt: DateTime(2026, 5, 4, 12)),
+      mealResult(endedAt: DateTime(2026, 5, 4, 12)),
       vehicleId: 'motorcycle',
     );
     final recordedSession = await service.recordMealResult(
-      _mealResult(endedAt: DateTime(2026, 5, 4, 13)),
+      mealResult(endedAt: DateTime(2026, 5, 4, 13)),
       vehicleId: 'motorcycle',
     );
     final snapshot = await service.loadSnapshot();
@@ -8342,7 +8344,7 @@ void main() {
       requiredStickerCount: 1,
       rewardText: '아이스크림',
     );
-    await service.recordMealResult(_mealResult(), vehicleId: 'motorcycle');
+    await service.recordMealResult(mealResult(), vehicleId: 'motorcycle');
 
     final usedGoal = await service.useEarnedRewardGoal();
     final snapshot = await service.loadSnapshot();
@@ -8386,9 +8388,9 @@ void main() {
         requiredStickerCount: 5,
         rewardText: '아이스크림',
       );
-      await service.recordMealResult(_mealResult(), vehicleId: 'motorcycle');
+      await service.recordMealResult(mealResult(), vehicleId: 'motorcycle');
       await service.recordMealResult(
-        _mealResult(endedAt: DateTime(2026, 5, 4, 13)),
+        mealResult(endedAt: DateTime(2026, 5, 4, 13)),
         vehicleId: 'motorcycle',
       );
 
@@ -8433,7 +8435,7 @@ void main() {
     );
 
     final recordedSession = await service.recordMealResult(
-      _mealResult(),
+      mealResult(),
       vehicleId: 'motorcycle',
     );
     final snapshot = await service.loadSnapshot();
@@ -8453,11 +8455,11 @@ void main() {
 
       final service = LocalMealProgressService();
       await service.recordMealResult(
-        _mealResult(endedAt: DateTime(2026, 5, 4, 12, 20)),
+        mealResult(endedAt: DateTime(2026, 5, 4, 12, 20)),
         vehicleId: 'bus',
       );
       await service.recordMealResult(
-        _mealResult(endedAt: DateTime(2026, 5, 4, 13, 20)),
+        mealResult(endedAt: DateTime(2026, 5, 4, 13, 20)),
         vehicleId: 'bus',
       );
 
@@ -8476,11 +8478,11 @@ void main() {
 
       final service = LocalMealProgressService();
       await service.recordMealResult(
-        _mealResult(endedAt: DateTime(2026, 5, 4, 12, 20)),
+        mealResult(endedAt: DateTime(2026, 5, 4, 12, 20)),
         vehicleId: 'motorcycle',
       );
       await service.recordMealResult(
-        _mealResult(endedAt: DateTime(2026, 5, 4, 13, 20)),
+        mealResult(endedAt: DateTime(2026, 5, 4, 13, 20)),
         vehicleId: 'fire_truck',
       );
 
@@ -8662,7 +8664,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
     await service.recordMealResult(
-      _mealResult(
+      mealResult(
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 25),
       ),
@@ -8702,7 +8704,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
     await service.recordMealResult(
-      _mealResult(
+      mealResult(
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 25),
         mealCompleted: false,
@@ -8769,7 +8771,7 @@ void main() {
       requiredStickerCount: 1,
       rewardText: 'ice cream',
     );
-    await service.recordMealResult(_mealResult(), vehicleId: 'motorcycle');
+    await service.recordMealResult(mealResult(), vehicleId: 'motorcycle');
 
     await tester.pumpWidget(
       MaterialApp(
@@ -8831,7 +8833,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
     await service.recordMealResult(
-      _mealResult(
+      mealResult(
         startedAt: DateTime(2026, 5, 4, 12),
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 25),
@@ -8867,7 +8869,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
     await service.recordMealResult(
-      _mealResult(
+      mealResult(
         startedAt: DateTime(2026, 5, 4, 12),
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 18),
@@ -8899,7 +8901,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
     final recordedSession = await service.recordMealResult(
-      _mealResult(
+      mealResult(
         startedAt: DateTime(2026, 5, 4, 12),
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 25),
@@ -8942,7 +8944,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
     final recordedSession = await service.recordMealResult(
-      _mealResult(
+      mealResult(
         startedAt: DateTime(2026, 5, 4, 12),
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 25),
@@ -8979,7 +8981,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
     await service.recordMealResult(
-      _mealResult(
+      mealResult(
         startedAt: DateTime(2026, 5, 4, 12),
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 20),
@@ -9011,7 +9013,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
     await service.recordMealResult(
-      _mealResult(
+      mealResult(
         startedAt: DateTime(2026, 5, 4, 12),
         targetDuration: const Duration(minutes: 20),
         actualDuration: const Duration(minutes: 25),
@@ -9035,31 +9037,6 @@ void main() {
     expect(find.text('차량 스티커 없음'), findsOneWidget);
     expect(find.text('초과 +05:00'), findsNothing);
   });
-}
-
-MealSessionResult _mealResult({
-  DateTime? startedAt,
-  DateTime? endedAt,
-  Duration targetDuration = const Duration(minutes: 20),
-  Duration actualDuration = const Duration(minutes: 25),
-  bool completedBeforeArrival = false,
-  bool mealCompleted = true,
-  MealCompletionStatus? completionStatus,
-  List<String> selectedIngredientIds = const [],
-}) {
-  final resolvedStartedAt = startedAt ?? DateTime(2026, 5, 4, 12);
-  final resolvedEndedAt = endedAt ?? resolvedStartedAt.add(actualDuration);
-
-  return MealSessionResult(
-    startedAt: resolvedStartedAt,
-    endedAt: resolvedEndedAt,
-    targetDuration: targetDuration,
-    actualDuration: actualDuration,
-    completedBeforeArrival: completedBeforeArrival,
-    mealCompleted: mealCompleted,
-    completionStatus: completionStatus,
-    selectedIngredientIds: selectedIngredientIds,
-  );
 }
 
 Future<void> _pumpOpenResultStickerAlbumSheet(WidgetTester tester) async {
@@ -9105,68 +9082,6 @@ Future<ui.Image> _createTestFootprintImage() async {
   final image = await picture.toImage(16, 16);
   picture.dispose();
   return image;
-}
-
-Future<void> _startApp(
-  WidgetTester tester,
-  Locale locale, {
-  bool completeChildNameSetup = true,
-}) async {
-  tester.binding.platformDispatcher.localeTestValue = locale;
-  tester.binding.platformDispatcher.localesTestValue = [locale];
-  addTearDown(tester.binding.platformDispatcher.clearLocaleTestValue);
-  addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
-
-  await app.main();
-  await tester.pump(const Duration(milliseconds: 3500));
-  await tester.pumpAndSettle();
-  if (find
-          .byKey(const ValueKey('firstRunOnboardingScreen'))
-          .evaluate()
-          .isNotEmpty &&
-      completeChildNameSetup) {
-    final skipButton = find.byKey(
-      const ValueKey('firstRunOnboardingSkipButton'),
-    );
-    await tester.ensureVisible(skipButton);
-    await tester.pumpAndSettle();
-    await tester.tap(skipButton);
-    await tester.pumpAndSettle();
-  }
-  if (!completeChildNameSetup || find.byType(TextField).evaluate().isEmpty) {
-    return;
-  }
-
-  await tester.enterText(find.byType(TextField), '지율');
-  await tester.pump();
-  await tester.tap(find.byType(FilledButton).first);
-  await tester.pumpAndSettle();
-}
-
-Future<void> _pumpYamyamApp(
-  WidgetTester tester, {
-  required MealTimerConfig initialConfig,
-  required bool initialHasSeenFirstRunOnboarding,
-  Locale locale = const Locale('ko'),
-  bool motivationMediaAvailable = true,
-}) async {
-  tester.binding.platformDispatcher.localeTestValue = locale;
-  tester.binding.platformDispatcher.localesTestValue = [locale];
-  addTearDown(tester.binding.platformDispatcher.clearLocaleTestValue);
-  addTearDown(tester.binding.platformDispatcher.clearLocalesTestValue);
-
-  await tester.pumpWidget(
-    YamyamRiderApp(
-      settingsService: LocalSettingsService(),
-      mealProgressService: LocalMealProgressService(),
-      activeSessionStore: const ActiveMealTimerSessionStore(),
-      initialConfig: initialConfig,
-      initialHasSeenFirstRunOnboarding: initialHasSeenFirstRunOnboarding,
-      motivationMediaAvailable: motivationMediaAvailable,
-      showSplashOnStart: false,
-    ),
-  );
-  await tester.pumpAndSettle();
 }
 
 Future<void> _pumpAvatarSetupScreen(
@@ -9316,90 +9231,6 @@ Slider _avatarSlider(WidgetTester tester, String keyValue) {
 double _avatarSliderValue(WidgetTester tester, String keyValue) {
   return _avatarSlider(tester, keyValue).value;
 }
-
-File _createTemporaryAvatarImage() {
-  final temporaryDirectory = Directory.systemTemp.createTempSync(
-    'road_avatar_test_',
-  );
-  final avatarFile = File('${temporaryDirectory.path}/avatar.png');
-  avatarFile.writeAsBytesSync(_transparentPngBytes);
-  addTearDown(() {
-    if (temporaryDirectory.existsSync()) {
-      temporaryDirectory.deleteSync(recursive: true);
-    }
-  });
-  return avatarFile;
-}
-
-final _transparentPngBytes = Uint8List.fromList([
-  0x89,
-  0x50,
-  0x4E,
-  0x47,
-  0x0D,
-  0x0A,
-  0x1A,
-  0x0A,
-  0x00,
-  0x00,
-  0x00,
-  0x0D,
-  0x49,
-  0x48,
-  0x44,
-  0x52,
-  0x00,
-  0x00,
-  0x00,
-  0x01,
-  0x00,
-  0x00,
-  0x00,
-  0x01,
-  0x08,
-  0x06,
-  0x00,
-  0x00,
-  0x00,
-  0x1F,
-  0x15,
-  0xC4,
-  0x89,
-  0x00,
-  0x00,
-  0x00,
-  0x0A,
-  0x49,
-  0x44,
-  0x41,
-  0x54,
-  0x78,
-  0x9C,
-  0x63,
-  0x00,
-  0x01,
-  0x00,
-  0x00,
-  0x05,
-  0x00,
-  0x01,
-  0x0D,
-  0x0A,
-  0x2D,
-  0xB4,
-  0x00,
-  0x00,
-  0x00,
-  0x00,
-  0x49,
-  0x45,
-  0x4E,
-  0x44,
-  0xAE,
-  0x42,
-  0x60,
-  0x82,
-]);
 
 Material _vehicleChoiceMaterial(WidgetTester tester, String vehicleId) {
   return tester.widget<Material>(_vehicleChoiceFinder(vehicleId));
