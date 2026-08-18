@@ -311,6 +311,88 @@ void main() {
     );
   });
 
+  final portraitResultLayoutCases = [
+    for (final locale in AppTexts.supportedLocales)
+      (locale: locale, size: const Size(393, 852), textScale: 1.0),
+    (locale: const Locale('es'), size: const Size(430, 932), textScale: 1.3),
+    (
+      locale: const Locale('pt', 'BR'),
+      size: const Size(430, 932),
+      textScale: 1.3,
+    ),
+  ];
+
+  for (final layoutCase in portraitResultLayoutCases) {
+    testWidgets('Portrait result title stays clear of sticker album for '
+        '${layoutCase.locale.toLanguageTag()} at '
+        '${layoutCase.textScale}x text scale', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      tester.view.physicalSize = layoutCase.size;
+      tester.view.devicePixelRatio = 1;
+      tester.view.padding = const FakeViewPadding(top: 59, bottom: 34);
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+        tester.view.resetPadding();
+      });
+
+      final service = LocalMealProgressService();
+      await service.createRewardGoal(
+        requiredStickerCount: 5,
+        rewardText: 'Reward',
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
+          locale: layoutCase.locale,
+          builder: (context, child) {
+            return MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(layoutCase.textScale)),
+              child: child!,
+            );
+          },
+          home: ResultScreen(
+            result: mealResult(completedBeforeArrival: true),
+            config: MealTimerConfig.defaults().copyWith(soundEnabled: false),
+            mealProgressService: service,
+            onConfigChanged: (_) {},
+            introControllerFactory: (_) {
+              return VideoPlayerController.asset(
+                'assets/videos/missing_result_success.mp4',
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final title = find.text(
+        AppTexts.forLocale(layoutCase.locale).result.title(true),
+      );
+      final stickerAlbumButton = find.byType(ResultStickerAlbumButton);
+
+      expect(title, findsOneWidget);
+      expect(stickerAlbumButton, findsOneWidget);
+      expect(
+        tester.getRect(title).overlaps(tester.getRect(stickerAlbumButton)),
+        isFalse,
+      );
+      expect(tester.takeException(), isNull);
+
+      final homeButton = find.byType(OutlinedButton).last;
+      await tester.ensureVisible(homeButton);
+      await tester.pumpAndSettle();
+
+      final homeRect = tester.getRect(homeButton);
+      expect(homeRect.top, greaterThanOrEqualTo(59));
+      expect(homeRect.bottom, lessThanOrEqualTo(layoutCase.size.height - 34));
+    });
+  }
+
   testWidgets('Completed result help explains sticker reward', (tester) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(390, 844);

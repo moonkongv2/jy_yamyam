@@ -37,6 +37,7 @@ const _successResultBackgroundPortraitPath =
 const _failureRiderImageBasePath = 'assets/images/riders';
 const _compactLandscapeRewardWidth = 228.0;
 const _compactLandscapeMessageWidth = 420.0;
+const _portraitAlbumButtonClearance = 48.0;
 const _resultVideoPathsByVehicle = {
   'motorcycle': 'assets/videos/result_motorcycle_success.mp4',
   'fire_truck': 'assets/videos/result_fire_truck_success.mp4',
@@ -311,6 +312,10 @@ class _ResultScreenState extends State<ResultScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            if (isPortraitSuccess)
+                              const SizedBox(
+                                height: _portraitAlbumButtonClearance,
+                              ),
                             const Spacer(),
                             Card(
                               color: AppColors.transparent,
