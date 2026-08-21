@@ -5,6 +5,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:jy_yamyam/controllers/vehicle_pack_purchase_controller.dart';
+import 'package:jy_yamyam/l10n/app_texts.dart';
 import 'package:jy_yamyam/models/purchase_entitlement.dart';
 import 'package:jy_yamyam/services/local_purchase_entitlement_store.dart';
 import 'package:jy_yamyam/widgets/purchases/vehicle_pack_purchase_sheet.dart';
@@ -22,13 +23,41 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(harness.client.queriedProductIdSets, isNotEmpty);
-    expect(find.text('Vehicle Pack'), findsOneWidget);
+    expect(find.text('차량팩'), findsOneWidget);
     expect(find.text(r'$2.99'), findsOneWidget);
     expect(find.text('소방차'), findsOneWidget);
     expect(find.text('버스'), findsOneWidget);
     expect(find.text('오토바이'), findsNothing);
     expect(find.text('슈퍼카'), findsNothing);
   });
+
+  const localizedTitles = [
+    (locale: Locale('ko'), title: '차량팩'),
+    (locale: Locale('en'), title: 'Vehicle Pack'),
+    (locale: Locale('ja'), title: 'のりものパック'),
+    (locale: Locale('es'), title: 'Pack de vehículos'),
+    (locale: Locale('pt', 'BR'), title: 'Pacote de veículos'),
+  ];
+
+  for (final entry in localizedTitles) {
+    testWidgets(
+      'Vehicle pack title follows ${entry.locale} app locale instead of store title',
+      (tester) async {
+        final controller = _StaticPurchaseController(
+          VehiclePackPurchaseState(
+            entitlement: const PurchaseEntitlement.locked(),
+            productDetails: fakeProductDetails(title: 'Store Product Title'),
+          ),
+        );
+        addTearDown(controller.dispose);
+
+        await _pumpController(tester, controller, locale: entry.locale);
+
+        expect(find.text(entry.title), findsOneWidget);
+        expect(find.text('Store Product Title'), findsNothing);
+      },
+    );
+  }
 
   testWidgets('Vehicle pack purchase sheet starts purchase and restore', (
     tester,
@@ -275,12 +304,13 @@ Future<void> _pumpSheet(
 
 Future<void> _pumpController(
   WidgetTester tester,
-  VehiclePackPurchaseController controller,
-) async {
+  VehiclePackPurchaseController controller, {
+  Locale locale = const Locale('ko'),
+}) async {
   await tester.pumpWidget(
     MaterialApp(
-      locale: const Locale('ko'),
-      supportedLocales: const [Locale('ko'), Locale('en')],
+      locale: locale,
+      supportedLocales: AppTexts.supportedLocales,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

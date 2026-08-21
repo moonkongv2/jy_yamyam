@@ -103,9 +103,7 @@ class _VehiclePackPurchaseSheetState extends State<VehiclePackPurchaseSheet> {
     final textTheme = Theme.of(context).textTheme;
     final productDetails = state.productDetails;
     final priceText = productDetails?.price ?? texts.vehiclePackLoadingPrice;
-    final titleText = productDetails?.title.trim().isNotEmpty == true
-        ? productDetails!.title
-        : texts.vehiclePackTitle;
+    final titleText = texts.vehiclePackTitle;
     final isBusy =
         state.status == VehiclePackPurchaseStatus.loadingProduct ||
         state.status == VehiclePackPurchaseStatus.purchasePending ||
