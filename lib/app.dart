@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -45,7 +47,8 @@ class YamyamRiderApp extends StatefulWidget {
   State<YamyamRiderApp> createState() => _YamyamRiderAppState();
 }
 
-class _YamyamRiderAppState extends State<YamyamRiderApp> {
+class _YamyamRiderAppState extends State<YamyamRiderApp>
+    with WidgetsBindingObserver {
   late MealTimerConfig _config = widget.initialConfig;
   late PurchaseEntitlement _purchaseEntitlement =
       widget.purchaseController?.entitlement ??
@@ -57,6 +60,8 @@ class _YamyamRiderAppState extends State<YamyamRiderApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(widget.purchaseController?.reconcilePurchases());
     widget.purchaseController?.addListener(_syncPurchaseEntitlement);
   }
 
@@ -66,6 +71,7 @@ class _YamyamRiderAppState extends State<YamyamRiderApp> {
     if (oldWidget.purchaseController != widget.purchaseController) {
       oldWidget.purchaseController?.removeListener(_syncPurchaseEntitlement);
       widget.purchaseController?.addListener(_syncPurchaseEntitlement);
+      unawaited(widget.purchaseController?.reconcilePurchases());
       _purchaseEntitlement =
           widget.purchaseController?.entitlement ??
           widget.initialPurchaseEntitlement;
@@ -78,8 +84,16 @@ class _YamyamRiderAppState extends State<YamyamRiderApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.purchaseController?.removeListener(_syncPurchaseEntitlement);
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(widget.purchaseController?.reconcilePurchases());
+    }
   }
 
   void _syncPurchaseEntitlement() {

@@ -1,4 +1,6 @@
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_platform_interface/in_app_purchase_platform_interface.dart'
+    show InAppPurchasePlatform;
 import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:in_app_purchase_android/billing_client_wrappers.dart';
@@ -65,8 +67,24 @@ class InAppPurchaseClient
   }
 
   @override
-  Future<void> completePurchase(PurchaseDetails purchase) {
-    return _inAppPurchase.completePurchase(purchase);
+  Future<void> completePurchase(PurchaseDetails purchase) async {
+    if (purchase is GooglePlayPurchaseDetails) {
+      if (purchase.billingClientPurchase.isAcknowledged ||
+          purchase.billingClientPurchase.purchaseState !=
+              PurchaseStateWrapper.purchased) {
+        return;
+      }
+      final result =
+          await (InAppPurchasePlatform.instance as InAppPurchaseAndroidPlatform)
+              .completePurchase(purchase);
+      if (result.responseCode != BillingResponse.ok) {
+        throw StateError(
+          'Purchase acknowledgement failed: ${result.responseCode}',
+        );
+      }
+      return;
+    }
+    await _inAppPurchase.completePurchase(purchase);
   }
 }
 

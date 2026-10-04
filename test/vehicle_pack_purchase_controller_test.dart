@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -302,6 +303,51 @@ void main() {
       expect(controller.state.productDetails, productDetails);
       expect(client.queriedProductIdSets, [IapProductIds.all]);
       expect(await store.load(), const PurchaseEntitlement.locked());
+    },
+  );
+
+  test('startup queries coalesce and preserve pending ownership', () async {
+    SharedPreferences.setMockInitialValues({});
+    final client = FakeIapPurchaseClient()
+      ..supportsPurchaseReconciliation = true;
+    addTearDown(client.dispose);
+    final query = Completer<List<PurchaseDetails>>();
+    client.onQueryOwnedPurchases = () => query.future;
+    final controller = _controller(client);
+    addTearDown(controller.dispose);
+    final first = controller.reconcilePurchases();
+    final second = controller.reconcilePurchases();
+    await pumpEventQueue();
+    expect(client.queryOwnedPurchasesCallCount, 1);
+    query.complete([
+      fakePurchaseDetails(
+        status: PurchaseStatus.pending,
+        pendingCompletePurchase: true,
+      ),
+    ]);
+    await Future.wait([first, second]);
+    expect(controller.entitlement.vehiclePackUnlocked, isFalse);
+    expect(client.completedPurchases, isEmpty);
+  });
+
+  test(
+    'failed completion retries on resume after entitlement is cached',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final client = FakeIapPurchaseClient()
+        ..completePurchaseError = StateError('offline');
+      addTearDown(client.dispose);
+      final controller = _controller(client);
+      addTearDown(controller.dispose);
+      controller.startListening();
+      final purchase = fakePurchaseDetails(pendingCompletePurchase: true);
+      client.emitPurchases([purchase]);
+      await pumpEventQueue();
+      expect(controller.entitlement.vehiclePackUnlocked, isTrue);
+      expect(client.completedPurchases, isEmpty);
+      client.completePurchaseError = null;
+      await controller.reconcilePurchases();
+      expect(client.completedPurchases, [purchase]);
     },
   );
 

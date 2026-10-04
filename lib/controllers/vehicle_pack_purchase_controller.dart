@@ -82,6 +82,10 @@ class VehiclePackPurchaseController extends ChangeNotifier {
   VehiclePackPurchaseState _state;
   Future<void> _purchaseQueue = Future<void>.value();
   Future<void>? _productLoad;
+  Future<void>? _reconciliation;
+  Timer? _completionRetryTimer;
+  final Map<String, PurchaseDetails> _failedCompletions = {};
+  int _completionRetryCount = 0;
   bool _disposed = false;
   bool _requestInFlight = false;
   Completer<void>? _restoreBatch;
@@ -307,6 +311,28 @@ class VehiclePackPurchaseController extends ChangeNotifier {
     }
   }
 
+  Future<void> reconcilePurchases() {
+    if (_disposed) return Future<void>.value();
+    return _reconciliation ??= _reconcilePurchases().whenComplete(
+      () => _reconciliation = null,
+    );
+  }
+
+  Future<void> _reconcilePurchases() async {
+    startListening();
+    await _enqueuePurchases(_failedCompletions.values.toList());
+    if (_purchaseClient is! PurchaseReconciliationClient) return;
+    final client = _purchaseClient as PurchaseReconciliationClient;
+    if (!client.supportsPurchaseReconciliation) return;
+    try {
+      final purchases = await client.queryOwnedPurchases();
+      await _enqueuePurchases(purchases);
+    } catch (error) {
+      // Offline queries must not revoke cached ownership or override purchase UI.
+      debugPrint('Purchase reconciliation failed: $error');
+    }
+  }
+
   Future<void> _enqueuePurchases(List<PurchaseDetails> purchases) {
     return _purchaseQueue = _purchaseQueue.then((_) async {
       if (!_disposed) await _handlePurchaseUpdates(purchases);
@@ -418,7 +444,27 @@ class VehiclePackPurchaseController extends ChangeNotifier {
 
     try {
       await _purchaseClient.completePurchase(purchase);
+      _failedCompletions.remove(
+        purchase.verificationData.serverVerificationData,
+      );
+      if (_failedCompletions.isEmpty) {
+        _completionRetryTimer?.cancel();
+        _completionRetryCount = 0;
+      }
     } catch (error) {
+      if (_disposed) return;
+      _failedCompletions[purchase.verificationData.serverVerificationData] =
+          purchase;
+      if (_completionRetryTimer?.isActive != true &&
+          _completionRetryCount < 3) {
+        _completionRetryCount++;
+        _completionRetryTimer = Timer(
+          Duration(seconds: 2 * _completionRetryCount),
+          () {
+            unawaited(reconcilePurchases());
+          },
+        );
+      }
       _setState(
         _state.copyWith(
           status: VehiclePackPurchaseStatus.error,
@@ -464,6 +510,7 @@ class VehiclePackPurchaseController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _completionRetryTimer?.cancel();
     _purchaseSubscription?.cancel();
     super.dispose();
   }

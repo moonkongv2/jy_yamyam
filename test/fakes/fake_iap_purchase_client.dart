@@ -4,7 +4,8 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:jy_yamyam/constants/iap_product_ids.dart';
 import 'package:jy_yamyam/services/iap_purchase_client.dart';
 
-class FakeIapPurchaseClient implements IapPurchaseClient {
+class FakeIapPurchaseClient
+    implements IapPurchaseClient, PurchaseReconciliationClient {
   FakeIapPurchaseClient({
     this.available = true,
     ProductDetailsResponse? productDetailsResponse,
@@ -18,6 +19,17 @@ class FakeIapPurchaseClient implements IapPurchaseClient {
 
   final StreamController<List<PurchaseDetails>> _purchaseController =
       StreamController<List<PurchaseDetails>>.broadcast();
+
+  @override
+  bool supportsPurchaseReconciliation = false;
+  Future<List<PurchaseDetails>> Function()? onQueryOwnedPurchases;
+  int queryOwnedPurchasesCallCount = 0;
+
+  @override
+  Future<List<PurchaseDetails>> queryOwnedPurchases() async {
+    queryOwnedPurchasesCallCount++;
+    return await onQueryOwnedPurchases?.call() ?? const [];
+  }
 
   bool available;
   ProductDetailsResponse productDetailsResponse;
