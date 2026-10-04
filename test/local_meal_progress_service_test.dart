@@ -11,6 +11,68 @@ import 'package:jy_yamyam/services/local_meal_progress_service.dart';
 import 'helpers/meal_result_fixture.dart';
 
 void main() {
+  test('concurrent retries award an identified session exactly once', () async {
+    SharedPreferences.setMockInitialValues({});
+    final service = LocalMealProgressService();
+    await service.createRewardGoal(
+      requiredStickerCount: 2,
+      rewardText: 'Picnic',
+    );
+    final result = mealResult().copyWith(sessionId: 'stable-session');
+    await Future.wait([
+      service.recordMealResult(result, vehicleId: 'motorcycle'),
+      LocalMealProgressService().recordMealResult(
+        result,
+        vehicleId: 'motorcycle',
+      ),
+    ]);
+    final snapshot = await service.loadSnapshot();
+    expect(snapshot.history, hasLength(1));
+    expect(snapshot.inventory.single.count, 1);
+    expect(snapshot.activeRewardGoals.single.filledSlots, hasLength(1));
+  });
+
+  test(
+    'journal restores all keys even when history was already applied',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final service = LocalMealProgressService();
+      final result = mealResult().copyWith(sessionId: 'recover-session');
+      await service.createRewardGoal(
+        requiredStickerCount: 1,
+        rewardText: 'Picnic',
+      );
+      await service.recordMealResult(result, vehicleId: 'motorcycle');
+      final preferences = await SharedPreferences.getInstance();
+      final journal = {
+        for (final key in [
+          'mealHistory',
+          'rewardInventory',
+          'activeRewardGoals',
+          'earnedRewardGoals',
+        ])
+          key: preferences.getStringList(key) ?? <String>[],
+      };
+      SharedPreferences.setMockInitialValues({
+        'mealHistory': journal['mealHistory']!,
+        'rewardInventory': <String>[],
+        'mealCompletionJournal': jsonEncode(journal),
+      });
+      final recovered = await LocalMealProgressService().loadSnapshot();
+      expect(recovered.history.single.id, 'recover-session');
+      expect(recovered.inventory.single.count, 1);
+      expect(recovered.earnedRewardGoals.single.filledSlots, hasLength(1));
+      await service.recordMealResult(result, vehicleId: 'motorcycle');
+      expect((await service.loadSnapshot()).inventory.single.count, 1);
+      expect(
+        (await SharedPreferences.getInstance()).containsKey(
+          'mealCompletionJournal',
+        ),
+        isFalse,
+      );
+    },
+  );
+
   test('Fast meal awards the selected vehicle sticker', () async {
     SharedPreferences.setMockInitialValues({});
 

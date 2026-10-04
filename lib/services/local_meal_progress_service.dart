@@ -20,63 +20,111 @@ class LocalMealProgressService {
   static const _usedRewardGoalsKey = 'usedRewardGoals';
   static const maxActiveRewardGoals = 2;
 
-  Future<MealProgressSnapshot> loadSnapshot() async {
-    final preferences = await SharedPreferences.getInstance();
+  static const _completionJournalKey = 'mealCompletionJournal';
+  // SharedPreferences instances identify one storage lifetime (including test resets).
+  static final _operationQueues = Expando<Future<void>>();
 
-    return MealProgressSnapshot(
-      history: _decodeList(
-        preferences.getStringList(_historyKey),
-        MealHistoryEntry.fromJson,
-      ),
-      inventory: _decodeList(
-        preferences.getStringList(_inventoryKey),
-        RewardInventoryItem.fromJson,
-      ),
-      activeRewardGoals: _loadActiveRewardGoals(preferences),
-      earnedRewardGoals: _loadEarnedRewardGoals(preferences),
-      usedRewardGoals: _loadUsedRewardGoals(preferences),
+  Future<T> _withPreferences<T>(
+    Future<T> Function(SharedPreferences) operation,
+  ) async {
+    final preferences = await SharedPreferences.getInstance();
+    final previous = _operationQueues[preferences] ?? Future<void>.value();
+    final result = previous.then((_) async {
+      await _recoverCompletion(preferences);
+      return operation(preferences);
+    });
+    _operationQueues[preferences] = result.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace __) {},
     );
+    return result;
+  }
+
+  void _requireWrite(bool success) {
+    if (!success) throw StateError('Unable to persist meal completion.');
+  }
+
+  Future<void> _recoverCompletion(SharedPreferences preferences) async {
+    final raw = preferences.getString(_completionJournalKey);
+    if (raw == null) return;
+    final journal = jsonDecode(raw) as Map<String, dynamic>;
+    for (final key in [
+      _historyKey,
+      _inventoryKey,
+      _activeRewardGoalsKey,
+      _earnedRewardGoalsKey,
+    ]) {
+      final values = (journal[key] as List).cast<String>();
+      _requireWrite(await preferences.setStringList(key, values));
+    }
+    _requireWrite(await preferences.remove(_legacyActiveRewardGoalKey));
+    _requireWrite(await preferences.remove(_completionJournalKey));
+  }
+
+  Future<MealProgressSnapshot> loadSnapshot() async {
+    return _withPreferences((preferences) async {
+      return MealProgressSnapshot(
+        history: _decodeList(
+          preferences.getStringList(_historyKey),
+          MealHistoryEntry.fromJson,
+        ),
+        inventory: _decodeList(
+          preferences.getStringList(_inventoryKey),
+          RewardInventoryItem.fromJson,
+        ),
+        activeRewardGoals: _loadActiveRewardGoals(preferences),
+        earnedRewardGoals: _loadEarnedRewardGoals(preferences),
+        usedRewardGoals: _loadUsedRewardGoals(preferences),
+      );
+    });
   }
 
   Future<RewardGoal?> loadActiveRewardGoal() async {
-    final preferences = await SharedPreferences.getInstance();
-    final goals = _loadActiveRewardGoals(preferences);
-    return goals.isEmpty ? null : goals.first;
+    return _withPreferences((preferences) async {
+      final goals = _loadActiveRewardGoals(preferences);
+      return goals.isEmpty ? null : goals.first;
+    });
   }
 
   Future<List<RewardGoal>> loadActiveRewardGoals() async {
-    final preferences = await SharedPreferences.getInstance();
-    return _loadActiveRewardGoals(preferences);
+    return _withPreferences((preferences) async {
+      return _loadActiveRewardGoals(preferences);
+    });
   }
 
   Future<RewardGoal> createRewardGoal({
     required int requiredStickerCount,
     required String rewardText,
   }) async {
-    final trimmedRewardText = rewardText.trim();
-    if (trimmedRewardText.isEmpty) {
-      throw ArgumentError.value(rewardText, 'rewardText');
-    }
+    return _withPreferences((preferences) async {
+      final trimmedRewardText = rewardText.trim();
+      if (trimmedRewardText.isEmpty) {
+        throw ArgumentError.value(rewardText, 'rewardText');
+      }
 
-    final preferences = await SharedPreferences.getInstance();
-    final activeGoals = _loadActiveRewardGoals(preferences).toList();
-    if (activeGoals.length >= maxActiveRewardGoals) {
-      throw StateError('Up to two active reward goals are supported.');
-    }
+      final activeGoals = _loadActiveRewardGoals(preferences).toList();
+      if (activeGoals.length >= maxActiveRewardGoals) {
+        throw StateError('Up to two active reward goals are supported.');
+      }
 
-    final now = DateTime.now();
-    final goal = RewardGoal(
-      id: now.microsecondsSinceEpoch.toString(),
-      rewardText: trimmedRewardText,
-      requiredStickerCount: requiredStickerCount.clamp(1, 20).toInt(),
-      filledSlots: const [],
-      createdAt: now,
-      status: RewardGoalStatus.active,
-    );
-    activeGoals.add(goal);
-    await _saveRewardGoalList(preferences, _activeRewardGoalsKey, activeGoals);
-    await preferences.remove(_legacyActiveRewardGoalKey);
-    return goal;
+      final now = DateTime.now();
+      final goal = RewardGoal(
+        id: now.microsecondsSinceEpoch.toString(),
+        rewardText: trimmedRewardText,
+        requiredStickerCount: requiredStickerCount.clamp(1, 20).toInt(),
+        filledSlots: const [],
+        createdAt: now,
+        status: RewardGoalStatus.active,
+      );
+      activeGoals.add(goal);
+      await _saveRewardGoalList(
+        preferences,
+        _activeRewardGoalsKey,
+        activeGoals,
+      );
+      await preferences.remove(_legacyActiveRewardGoalKey);
+      return goal;
+    });
   }
 
   Future<RewardGoal?> updateActiveRewardGoal({
@@ -84,78 +132,86 @@ class LocalMealProgressService {
     required int requiredStickerCount,
     required String rewardText,
   }) async {
-    final trimmedRewardText = rewardText.trim();
-    if (trimmedRewardText.isEmpty) {
-      throw ArgumentError.value(rewardText, 'rewardText');
-    }
+    return _withPreferences((preferences) async {
+      final trimmedRewardText = rewardText.trim();
+      if (trimmedRewardText.isEmpty) {
+        throw ArgumentError.value(rewardText, 'rewardText');
+      }
 
-    final preferences = await SharedPreferences.getInstance();
-    final activeGoals = _loadActiveRewardGoals(preferences).toList();
-    if (activeGoals.isEmpty) {
-      return null;
-    }
+      final activeGoals = _loadActiveRewardGoals(preferences).toList();
+      if (activeGoals.isEmpty) {
+        return null;
+      }
 
-    final targetIndex = goalId == null
-        ? 0
-        : activeGoals.indexWhere((goal) => goal.id == goalId);
-    if (targetIndex == -1) {
-      return null;
-    }
+      final targetIndex = goalId == null
+          ? 0
+          : activeGoals.indexWhere((goal) => goal.id == goalId);
+      if (targetIndex == -1) {
+        return null;
+      }
 
-    final activeGoal = activeGoals[targetIndex];
-    final nextRequiredStickerCount = requiredStickerCount.clamp(1, 20).toInt();
-    final isEarned = activeGoal.filledCount >= nextRequiredStickerCount;
-    final updatedGoal = activeGoal.copyWith(
-      rewardText: trimmedRewardText,
-      requiredStickerCount: nextRequiredStickerCount,
-      status: isEarned ? RewardGoalStatus.earned : RewardGoalStatus.active,
-      earnedAt: isEarned ? activeGoal.earnedAt ?? DateTime.now() : null,
-      readyAt: isEarned ? activeGoal.readyAt ?? DateTime.now() : null,
-    );
-    if (isEarned) {
-      activeGoals.removeAt(targetIndex);
-      final earnedGoals = _loadEarnedRewardGoals(preferences).toList()
-        ..insert(0, updatedGoal);
-      await _saveRewardGoalList(
-        preferences,
-        _activeRewardGoalsKey,
-        activeGoals,
+      final activeGoal = activeGoals[targetIndex];
+      final nextRequiredStickerCount = requiredStickerCount
+          .clamp(1, 20)
+          .toInt();
+      final isEarned = activeGoal.filledCount >= nextRequiredStickerCount;
+      final updatedGoal = activeGoal.copyWith(
+        rewardText: trimmedRewardText,
+        requiredStickerCount: nextRequiredStickerCount,
+        status: isEarned ? RewardGoalStatus.earned : RewardGoalStatus.active,
+        earnedAt: isEarned ? activeGoal.earnedAt ?? DateTime.now() : null,
+        readyAt: isEarned ? activeGoal.readyAt ?? DateTime.now() : null,
       );
-      await _saveRewardGoalList(
-        preferences,
-        _earnedRewardGoalsKey,
-        earnedGoals,
-      );
-    } else {
-      activeGoals[targetIndex] = updatedGoal;
-      await _saveRewardGoalList(
-        preferences,
-        _activeRewardGoalsKey,
-        activeGoals,
-      );
-    }
-    await preferences.remove(_legacyActiveRewardGoalKey);
-    return updatedGoal;
+      if (isEarned) {
+        activeGoals.removeAt(targetIndex);
+        final earnedGoals = _loadEarnedRewardGoals(preferences).toList()
+          ..insert(0, updatedGoal);
+        await _saveRewardGoalList(
+          preferences,
+          _activeRewardGoalsKey,
+          activeGoals,
+        );
+        await _saveRewardGoalList(
+          preferences,
+          _earnedRewardGoalsKey,
+          earnedGoals,
+        );
+      } else {
+        activeGoals[targetIndex] = updatedGoal;
+        await _saveRewardGoalList(
+          preferences,
+          _activeRewardGoalsKey,
+          activeGoals,
+        );
+      }
+      await preferences.remove(_legacyActiveRewardGoalKey);
+      return updatedGoal;
+    });
   }
 
   Future<RewardGoal?> cancelActiveRewardGoal({String? goalId}) async {
-    final preferences = await SharedPreferences.getInstance();
-    final activeGoals = _loadActiveRewardGoals(preferences).toList();
-    if (activeGoals.isEmpty) {
-      return null;
-    }
+    return _withPreferences((preferences) async {
+      final activeGoals = _loadActiveRewardGoals(preferences).toList();
+      if (activeGoals.isEmpty) {
+        return null;
+      }
 
-    final targetIndex = goalId == null
-        ? 0
-        : activeGoals.indexWhere((goal) => goal.id == goalId);
-    if (targetIndex == -1) {
-      return null;
-    }
+      final targetIndex = goalId == null
+          ? 0
+          : activeGoals.indexWhere((goal) => goal.id == goalId);
+      if (targetIndex == -1) {
+        return null;
+      }
 
-    final canceledGoal = activeGoals.removeAt(targetIndex);
-    await _saveRewardGoalList(preferences, _activeRewardGoalsKey, activeGoals);
-    await preferences.remove(_legacyActiveRewardGoalKey);
-    return canceledGoal;
+      final canceledGoal = activeGoals.removeAt(targetIndex);
+      await _saveRewardGoalList(
+        preferences,
+        _activeRewardGoalsKey,
+        activeGoals,
+      );
+      await preferences.remove(_legacyActiveRewardGoalKey);
+      return canceledGoal;
+    });
   }
 
   Future<RewardGoal?> redeemActiveRewardGoal() async {
@@ -163,127 +219,168 @@ class LocalMealProgressService {
   }
 
   Future<RewardGoal?> useEarnedRewardGoal({String? goalId}) async {
-    final preferences = await SharedPreferences.getInstance();
-    final earnedGoals = _loadEarnedRewardGoals(preferences).toList();
-    if (earnedGoals.isEmpty) {
-      return null;
-    }
+    return _withPreferences((preferences) async {
+      final earnedGoals = _loadEarnedRewardGoals(preferences).toList();
+      if (earnedGoals.isEmpty) {
+        return null;
+      }
 
-    final targetIndex = goalId == null
-        ? 0
-        : earnedGoals.indexWhere((goal) => goal.id == goalId);
-    if (targetIndex == -1) {
-      return null;
-    }
+      final targetIndex = goalId == null
+          ? 0
+          : earnedGoals.indexWhere((goal) => goal.id == goalId);
+      if (targetIndex == -1) {
+        return null;
+      }
 
-    final earnedGoal = earnedGoals.removeAt(targetIndex);
-    final usedGoal = earnedGoal.copyWith(
-      status: RewardGoalStatus.used,
-      usedAt: DateTime.now(),
-      redeemedAt: DateTime.now(),
-    );
-    final usedGoals = _loadUsedRewardGoals(preferences).toList()
-      ..insert(0, usedGoal);
+      final earnedGoal = earnedGoals.removeAt(targetIndex);
+      final usedGoal = earnedGoal.copyWith(
+        status: RewardGoalStatus.used,
+        usedAt: DateTime.now(),
+        redeemedAt: DateTime.now(),
+      );
+      final usedGoals = _loadUsedRewardGoals(preferences).toList()
+        ..insert(0, usedGoal);
 
-    await _saveRewardGoalList(preferences, _earnedRewardGoalsKey, earnedGoals);
-    await _saveRewardGoalList(preferences, _usedRewardGoalsKey, usedGoals);
-    return usedGoal;
+      await _saveRewardGoalList(
+        preferences,
+        _earnedRewardGoalsKey,
+        earnedGoals,
+      );
+      await _saveRewardGoalList(preferences, _usedRewardGoalsKey, usedGoals);
+      return usedGoal;
+    });
   }
 
   Future<void> clearActiveRewardGoal() async {
-    final preferences = await SharedPreferences.getInstance();
-    await preferences.remove(_legacyActiveRewardGoalKey);
-    await preferences.remove(_activeRewardGoalsKey);
+    return _withPreferences((preferences) async {
+      await preferences.remove(_legacyActiveRewardGoalKey);
+      await preferences.remove(_activeRewardGoalsKey);
+    });
   }
 
   Future<bool> deleteMealHistoryEntry(String entryId) async {
-    final preferences = await SharedPreferences.getInstance();
-    final history = _decodeList(
-      preferences.getStringList(_historyKey),
-      MealHistoryEntry.fromJson,
-    ).toList();
-    final index = history.indexWhere((entry) => entry.id == entryId);
-    if (index == -1) {
-      return false;
-    }
+    return _withPreferences((preferences) async {
+      final history = _decodeList(
+        preferences.getStringList(_historyKey),
+        MealHistoryEntry.fromJson,
+      ).toList();
+      final index = history.indexWhere((entry) => entry.id == entryId);
+      if (index == -1) {
+        return false;
+      }
 
-    history.removeAt(index);
-    await preferences.setStringList(
-      _historyKey,
-      history.map((entry) => jsonEncode(entry.toJson())).toList(),
-    );
-    return true;
+      history.removeAt(index);
+      await preferences.setStringList(
+        _historyKey,
+        history.map((entry) => jsonEncode(entry.toJson())).toList(),
+      );
+      return true;
+    });
   }
 
   Future<RecordedMealSession> recordMealResult(
     MealSessionResult result, {
     required String vehicleId,
   }) async {
-    final preferences = await SharedPreferences.getInstance();
-    final history = _decodeList(
-      preferences.getStringList(_historyKey),
-      MealHistoryEntry.fromJson,
-    ).toList();
-    final inventory = _decodeList(
-      preferences.getStringList(_inventoryKey),
-      RewardInventoryItem.fromJson,
-    ).toList();
-    final activeRewardGoals = _loadActiveRewardGoals(preferences).toList();
-    final earnedRewardGoals = _loadEarnedRewardGoals(preferences).toList();
+    return _withPreferences((preferences) async {
+      final history = _decodeList(
+        preferences.getStringList(_historyKey),
+        MealHistoryEntry.fromJson,
+      ).toList();
+      final inventory = _decodeList(
+        preferences.getStringList(_inventoryKey),
+        RewardInventoryItem.fromJson,
+      ).toList();
+      final activeRewardGoals = _loadActiveRewardGoals(preferences).toList();
+      final earnedRewardGoals = _loadEarnedRewardGoals(preferences).toList();
 
-    final awardedRewards = _selectRewards(result, vehicleId: vehicleId);
-    final entry = MealHistoryEntry(
-      id: result.endedAt.microsecondsSinceEpoch.toString(),
-      startedAt: result.startedAt,
-      endedAt: result.endedAt,
-      targetDuration: result.targetDuration,
-      actualDuration: result.actualDuration,
-      completedBeforeArrival: result.completedBeforeArrival,
-      mealCompleted: result.mealCompleted,
-      completionStatus: result.completionStatus,
-      rewardIds: awardedRewards.map((reward) => reward.id).toList(),
-      selectedIngredientIds: result.selectedIngredientIds,
-    );
+      if (result.sessionId != null) {
+        final existing = history
+            .where((entry) => entry.id == result.sessionId)
+            .firstOrNull;
+        if (existing != null) {
+          final relatedActive = activeRewardGoals
+              .where(
+                (goal) => goal.filledSlots.any(
+                  (slot) => slot.mealSessionId == existing.id,
+                ),
+              )
+              .toList();
+          final relatedEarned = earnedRewardGoals
+              .where(
+                (goal) => goal.filledSlots.any(
+                  (slot) => slot.mealSessionId == existing.id,
+                ),
+              )
+              .toList();
+          return RecordedMealSession(
+            entry: existing,
+            awardedRewards: existing.rewardIds
+                .map(RewardCatalog.findById)
+                .whereType<RewardDefinition>()
+                .toList(),
+            updatedRewardGoals: relatedActive,
+            earnedRewardGoals: relatedEarned,
+            inventory: inventory,
+          );
+        }
+      }
 
-    history.insert(0, entry);
-    _addRewardsToInventory(inventory, awardedRewards, result.endedAt);
-    final goalUpdate = _fillRewardGoalSlotsIfEligible(
-      goals: activeRewardGoals,
-      awardedRewards: awardedRewards,
-      result: result,
-      mealSessionId: entry.id,
-    );
-
-    await preferences.setStringList(
-      _historyKey,
-      history.map((entry) => jsonEncode(entry.toJson())).toList(),
-    );
-    await preferences.setStringList(
-      _inventoryKey,
-      inventory.map((item) => jsonEncode(item.toJson())).toList(),
-    );
-    if (goalUpdate.changed) {
-      earnedRewardGoals.insertAll(0, goalUpdate.earnedGoals);
-      await _saveRewardGoalList(
-        preferences,
-        _activeRewardGoalsKey,
-        goalUpdate.activeGoals,
+      final awardedRewards = _selectRewards(result, vehicleId: vehicleId);
+      final entry = MealHistoryEntry(
+        id:
+            result.sessionId ??
+            result.endedAt.microsecondsSinceEpoch.toString(),
+        startedAt: result.startedAt,
+        endedAt: result.endedAt,
+        targetDuration: result.targetDuration,
+        actualDuration: result.actualDuration,
+        completedBeforeArrival: result.completedBeforeArrival,
+        mealCompleted: result.mealCompleted,
+        completionStatus: result.completionStatus,
+        rewardIds: awardedRewards.map((reward) => reward.id).toList(),
+        selectedIngredientIds: result.selectedIngredientIds,
       );
-      await _saveRewardGoalList(
-        preferences,
-        _earnedRewardGoalsKey,
-        earnedRewardGoals,
-      );
-      await preferences.remove(_legacyActiveRewardGoalKey);
-    }
 
-    return RecordedMealSession(
-      entry: entry,
-      awardedRewards: awardedRewards,
-      updatedRewardGoals: goalUpdate.updatedGoals,
-      earnedRewardGoals: goalUpdate.earnedGoals,
-      inventory: inventory,
-    );
+      history.insert(0, entry);
+      _addRewardsToInventory(inventory, awardedRewards, result.endedAt);
+      final goalUpdate = _fillRewardGoalSlotsIfEligible(
+        goals: activeRewardGoals,
+        awardedRewards: awardedRewards,
+        result: result,
+        mealSessionId: entry.id,
+      );
+
+      if (goalUpdate.changed) {
+        earnedRewardGoals.insertAll(0, goalUpdate.earnedGoals);
+      }
+      final journal = <String, Object?>{
+        _historyKey: history
+            .map((entry) => jsonEncode(entry.toJson()))
+            .toList(),
+        _inventoryKey: inventory
+            .map((item) => jsonEncode(item.toJson()))
+            .toList(),
+        _activeRewardGoalsKey: goalUpdate.activeGoals
+            .map((goal) => jsonEncode(goal.toJson()))
+            .toList(),
+        _earnedRewardGoalsKey: earnedRewardGoals
+            .map((goal) => jsonEncode(goal.toJson()))
+            .toList(),
+      };
+      _requireWrite(
+        await preferences.setString(_completionJournalKey, jsonEncode(journal)),
+      );
+      await _recoverCompletion(preferences);
+
+      return RecordedMealSession(
+        entry: entry,
+        awardedRewards: awardedRewards,
+        updatedRewardGoals: goalUpdate.updatedGoals,
+        earnedRewardGoals: goalUpdate.earnedGoals,
+        inventory: inventory,
+      );
+    });
   }
 
   List<RewardDefinition> _selectRewards(
