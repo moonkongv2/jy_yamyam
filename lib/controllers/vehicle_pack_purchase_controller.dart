@@ -80,6 +80,11 @@ class VehiclePackPurchaseController extends ChangeNotifier {
 
   StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
   VehiclePackPurchaseState _state;
+  Future<void> _purchaseQueue = Future<void>.value();
+  Future<void>? _productLoad;
+  bool _disposed = false;
+  bool _requestInFlight = false;
+  Completer<void>? _restoreBatch;
 
   VehiclePackPurchaseState get state => _state;
   PurchaseEntitlement get entitlement => _state.entitlement;
@@ -91,7 +96,16 @@ class VehiclePackPurchaseController extends ChangeNotifier {
     }
 
     _purchaseSubscription = _purchaseClient.purchaseStream.listen(
-      _handlePurchaseUpdates,
+      (purchases) {
+        final restoreBatch = _restoreBatch;
+        unawaited(
+          _enqueuePurchases(purchases).then((_) {
+            if (restoreBatch != null && !restoreBatch.isCompleted) {
+              restoreBatch.complete();
+            }
+          }),
+        );
+      },
       onError: (Object error) {
         _setState(
           _state.copyWith(
@@ -103,8 +117,14 @@ class VehiclePackPurchaseController extends ChangeNotifier {
     );
   }
 
-  Future<void> loadProductDetails({
-    bool preserveStatusOnSuccess = false,
+  Future<void> loadProductDetails({bool preserveStatusOnSuccess = false}) {
+    return _productLoad ??= _loadProductDetails(
+      preserveStatusOnSuccess: preserveStatusOnSuccess,
+    ).whenComplete(() => _productLoad = null);
+  }
+
+  Future<void> _loadProductDetails({
+    required bool preserveStatusOnSuccess,
   }) async {
     final preservedStatus = preserveStatusOnSuccess ? _state.status : null;
     if (!preserveStatusOnSuccess) {
@@ -156,7 +176,11 @@ class VehiclePackPurchaseController extends ChangeNotifier {
 
       _setState(
         _state.copyWith(
-          status: preservedStatus ?? VehiclePackPurchaseStatus.productReady,
+          status:
+              _state.status == VehiclePackPurchaseStatus.loadingProduct ||
+                  _state.status == VehiclePackPurchaseStatus.idle
+              ? preservedStatus ?? VehiclePackPurchaseStatus.productReady
+              : _state.status,
           productDetails: productDetails,
           errorMessage: null,
         ),
@@ -172,32 +196,69 @@ class VehiclePackPurchaseController extends ChangeNotifier {
   }
 
   Future<bool> buyVehiclePack({String? applicationUserName}) async {
-    var productDetails = _state.productDetails;
-    if (productDetails == null) {
-      await loadProductDetails();
-      productDetails = _state.productDetails;
-    }
-    if (productDetails == null) {
+    if (_disposed ||
+        _requestInFlight ||
+        _state.vehiclePackUnlocked ||
+        _state.isPurchasePending ||
+        _state.status == VehiclePackPurchaseStatus.restoring) {
       return false;
     }
-
+    _requestInFlight = true;
     try {
-      return await _purchaseClient.buyNonConsumable(
-        productDetails: productDetails,
-        applicationUserName: applicationUserName,
-      );
-    } catch (error) {
-      _setState(
-        _state.copyWith(
-          status: VehiclePackPurchaseStatus.error,
-          errorMessage: error.toString(),
-        ),
-      );
-      return false;
+      var productDetails = _state.productDetails;
+      if (productDetails == null) {
+        await loadProductDetails();
+        productDetails = _state.productDetails;
+      }
+      if (productDetails == null) {
+        return false;
+      }
+
+      try {
+        _setState(
+          _state.copyWith(
+            status: VehiclePackPurchaseStatus.purchasePending,
+            errorMessage: null,
+          ),
+        );
+        final started = await _purchaseClient.buyNonConsumable(
+          productDetails: productDetails,
+          applicationUserName: applicationUserName,
+        );
+        if (!started && _state.isPurchasePending) {
+          _setState(
+            _state.copyWith(
+              status: VehiclePackPurchaseStatus.error,
+              errorMessage: 'Purchase request was not started.',
+            ),
+          );
+        }
+        return started;
+      } catch (error) {
+        _setState(
+          _state.copyWith(
+            status: VehiclePackPurchaseStatus.error,
+            errorMessage: error.toString(),
+          ),
+        );
+        return false;
+      }
+    } finally {
+      _requestInFlight = false;
     }
   }
 
   Future<void> restorePurchases({String? applicationUserName}) async {
+    if (_disposed ||
+        _requestInFlight ||
+        _state.isPurchasePending ||
+        _state.status == VehiclePackPurchaseStatus.restoring) {
+      return;
+    }
+    _requestInFlight = true;
+    startListening();
+    final restoreBatch = Completer<void>();
+    _restoreBatch = restoreBatch;
     _setState(
       _state.copyWith(
         status: VehiclePackPurchaseStatus.restoring,
@@ -210,7 +271,16 @@ class VehiclePackPurchaseController extends ChangeNotifier {
         applicationUserName: applicationUserName,
       );
       if (restored != null) {
-        await _handlePurchaseUpdates(restored);
+        await _enqueuePurchases(
+          restored.map((purchase) {
+            if (purchase.status == PurchaseStatus.purchased) {
+              purchase.status = PurchaseStatus.restored;
+            }
+            return purchase;
+          }).toList(),
+        );
+      } else {
+        await restoreBatch.future.timeout(const Duration(seconds: 5));
       }
       if (_state.status == VehiclePackPurchaseStatus.restoring &&
           !_state.vehiclePackUnlocked) {
@@ -231,7 +301,16 @@ class VehiclePackPurchaseController extends ChangeNotifier {
           errorMessage: error.toString(),
         ),
       );
+    } finally {
+      _requestInFlight = false;
+      if (identical(_restoreBatch, restoreBatch)) _restoreBatch = null;
     }
+  }
+
+  Future<void> _enqueuePurchases(List<PurchaseDetails> purchases) {
+    return _purchaseQueue = _purchaseQueue.then((_) async {
+      if (!_disposed) await _handlePurchaseUpdates(purchases);
+    });
   }
 
   Future<void> _handlePurchaseUpdates(List<PurchaseDetails> purchases) async {
@@ -240,7 +319,17 @@ class VehiclePackPurchaseController extends ChangeNotifier {
         continue;
       }
 
-      await _handlePurchaseUpdate(purchase);
+      if (_disposed) return;
+      try {
+        await _handlePurchaseUpdate(purchase);
+      } catch (error) {
+        _setState(
+          _state.copyWith(
+            status: VehiclePackPurchaseStatus.error,
+            errorMessage: error.toString(),
+          ),
+        );
+      }
     }
   }
 
@@ -367,12 +456,14 @@ class VehiclePackPurchaseController extends ChangeNotifier {
   }
 
   void _setState(VehiclePackPurchaseState state) {
+    if (_disposed) return;
     _state = state;
     notifyListeners();
   }
 
   @override
   void dispose() {
+    _disposed = true;
     _purchaseSubscription?.cancel();
     super.dispose();
   }

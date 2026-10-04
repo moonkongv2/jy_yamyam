@@ -97,7 +97,7 @@ class FakeIapPurchaseClient implements IapPurchaseClient {
 
     restoreApplicationUserNames.add(applicationUserName);
     await onRestorePurchases?.call(applicationUserName);
-    return null;
+    return onRestorePurchases == null ? const [] : null;
   }
 
   @override

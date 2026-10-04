@@ -305,6 +305,42 @@ void main() {
     },
   );
 
+  test('only one simultaneous purchase request reaches the store', () async {
+    SharedPreferences.setMockInitialValues({});
+    final client = FakeIapPurchaseClient(
+      productDetailsResponse: ProductDetailsResponse(
+        productDetails: [fakeProductDetails()],
+        notFoundIDs: const [],
+      ),
+    );
+    addTearDown(client.dispose);
+    final controller = _controller(client);
+    addTearDown(controller.dispose);
+    final first = controller.buyVehiclePack();
+    expect(await controller.buyVehiclePack(), isFalse);
+    expect(await first, isTrue);
+    expect(client.boughtProducts, hasLength(1));
+    expect(await controller.buyVehiclePack(), isFalse);
+  });
+
+  test('false purchase response releases busy state for retry', () async {
+    SharedPreferences.setMockInitialValues({});
+    final client = FakeIapPurchaseClient(
+      buyNonConsumableResult: false,
+      productDetailsResponse: ProductDetailsResponse(
+        productDetails: [fakeProductDetails()],
+        notFoundIDs: const [],
+      ),
+    );
+    addTearDown(client.dispose);
+    final controller = _controller(client);
+    addTearDown(controller.dispose);
+    expect(await controller.buyVehiclePack(), isFalse);
+    expect(controller.state.status, VehiclePackPurchaseStatus.error);
+    client.buyNonConsumableResult = true;
+    expect(await controller.buyVehiclePack(), isTrue);
+  });
+
   test(
     'Vehicle pack purchase controller keeps restored state after restore',
     () async {
@@ -320,6 +356,7 @@ void main() {
         pendingCompletePurchase: true,
       );
 
+      client.onRestorePurchases = (_) async {};
       controller.startListening();
       final restore = controller.restorePurchases(
         applicationUserName: 'guardian',

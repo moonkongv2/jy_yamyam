@@ -71,6 +71,18 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('vehiclePackBuyButton')));
     await tester.pump();
     expect(harness.client.boughtProducts, [harness.productDetails]);
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.byKey(const ValueKey('vehiclePackRestoreButton')),
+          )
+          .onPressed,
+      isNull,
+    );
+    harness.client.emitPurchases([
+      fakePurchaseDetails(status: PurchaseStatus.canceled),
+    ]);
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('vehiclePackRestoreButton')));
     await tester.pump();
