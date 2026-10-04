@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 import 'package:jy_yamyam/models/meal_completion_status.dart';
 import 'package:jy_yamyam/models/meal_session_result.dart';
@@ -11,6 +12,36 @@ import 'package:jy_yamyam/services/local_meal_progress_service.dart';
 import 'helpers/meal_result_fixture.dart';
 
 void main() {
+  test(
+    'failed inventory write leaves a journal that retries without duplicate rewards',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final original = SharedPreferencesStorePlatform.instance;
+      final disk = _FailInventoryOnceStore();
+      SharedPreferencesStorePlatform.instance = disk;
+      addTearDown(() => SharedPreferencesStorePlatform.instance = original);
+      final service = LocalMealProgressService();
+      final result = mealResult().copyWith(sessionId: 'failed-write');
+      await expectLater(
+        service.recordMealResult(result, vehicleId: 'motorcycle'),
+        throwsStateError,
+      );
+      final partialDisk = await disk.getAll();
+      expect(partialDisk.containsKey('flutter.mealHistory'), isTrue);
+      expect(partialDisk.containsKey('flutter.rewardInventory'), isFalse);
+      expect(partialDisk.containsKey('flutter.mealCompletionJournal'), isTrue);
+      await (await SharedPreferences.getInstance()).reload();
+      await service.recordMealResult(result, vehicleId: 'motorcycle');
+      final snapshot = await service.loadSnapshot();
+      expect(snapshot.history, hasLength(1));
+      expect(snapshot.inventory.single.count, 1);
+      expect(
+        (await disk.getAll()).containsKey('flutter.mealCompletionJournal'),
+        isFalse,
+      );
+    },
+  );
+
   test('concurrent retries award an identified session exactly once', () async {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
@@ -685,4 +716,17 @@ void main() {
       expect(snapshot.inventory.map((item) => item.count), [1, 1]);
     },
   );
+}
+
+class _FailInventoryOnceStore extends InMemorySharedPreferencesStore {
+  _FailInventoryOnceStore() : super.empty();
+  bool _fail = true;
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async {
+    if (_fail && key == 'flutter.rewardInventory') {
+      _fail = false;
+      return false;
+    }
+    return super.setValue(valueType, key, value);
+  }
 }

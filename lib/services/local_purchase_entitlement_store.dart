@@ -33,12 +33,8 @@ class LocalPurchaseEntitlementStore {
 
   Future<void> save(PurchaseEntitlement entitlement) async {
     final preferences = await SharedPreferences.getInstance();
-    await preferences.setBool(
-      _vehiclePackUnlockedKey,
-      entitlement.vehiclePackUnlocked,
-    );
-
     if (!entitlement.vehiclePackUnlocked) {
+      _requireWrite(await preferences.setBool(_vehiclePackUnlockedKey, false));
       await _removeMetadata(preferences);
       return;
     }
@@ -60,6 +56,7 @@ class LocalPurchaseEntitlementStore {
       _transactionIdKey,
       entitlement.transactionId,
     );
+    _requireWrite(await preferences.setBool(_vehiclePackUnlockedKey, true));
   }
 
   Future<void> clear() async {
@@ -90,6 +87,10 @@ class LocalPurchaseEntitlementStore {
     return DateTime.tryParse(value);
   }
 
+  void _requireWrite(bool success) {
+    if (!success) throw StateError('Unable to cache purchase entitlement.');
+  }
+
   Future<void> _setOptionalString(
     SharedPreferences preferences,
     String key,
@@ -101,7 +102,7 @@ class LocalPurchaseEntitlementStore {
       return;
     }
 
-    await preferences.setString(key, normalizedValue);
+    _requireWrite(await preferences.setString(key, normalizedValue));
   }
 
   Future<void> _setOptionalDateTime(
@@ -114,6 +115,6 @@ class LocalPurchaseEntitlementStore {
       return;
     }
 
-    await preferences.setString(key, value.toIso8601String());
+    _requireWrite(await preferences.setString(key, value.toIso8601String()));
   }
 }

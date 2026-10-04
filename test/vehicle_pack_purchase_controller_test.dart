@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 
 import 'package:jy_yamyam/constants/iap_product_ids.dart';
 import 'package:jy_yamyam/controllers/vehicle_pack_purchase_controller.dart';
@@ -306,6 +307,68 @@ void main() {
     },
   );
 
+  test(
+    'empty restore releases busy state while preserving cached ownership',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final client = FakeIapPurchaseClient();
+      addTearDown(client.dispose);
+      final controller = _controller(client);
+      addTearDown(controller.dispose);
+      controller.startListening();
+      client.emitPurchases([fakePurchaseDetails()]);
+      await pumpEventQueue();
+      await controller.restorePurchases();
+      expect(
+        controller.state.status,
+        VehiclePackPurchaseStatus.restoreNotFound,
+      );
+      expect(controller.entitlement.vehiclePackUnlocked, isTrue);
+    },
+  );
+
+  test('false disk write never grants or acknowledges the purchase', () async {
+    SharedPreferences.setMockInitialValues({});
+    final original = SharedPreferencesStorePlatform.instance;
+    SharedPreferencesStorePlatform.instance = _RejectingPreferencesStore();
+    addTearDown(() => SharedPreferencesStorePlatform.instance = original);
+    final client = FakeIapPurchaseClient();
+    addTearDown(client.dispose);
+    final controller = _controller(client);
+    addTearDown(controller.dispose);
+    controller.startListening();
+    client.emitPurchases([fakePurchaseDetails(pendingCompletePurchase: true)]);
+    await pumpEventQueue();
+    expect(controller.entitlement.vehiclePackUnlocked, isFalse);
+    expect(controller.state.status, VehiclePackPurchaseStatus.error);
+    expect(client.completedPurchases, isEmpty);
+  });
+
+  test(
+    'late unavailable price query preserves pending transaction state',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final client = FakeIapPurchaseClient(
+        productDetailsResponse: ProductDetailsResponse(
+          productDetails: [fakeProductDetails()],
+          notFoundIDs: const [],
+        ),
+      );
+      addTearDown(client.dispose);
+      final controller = _controller(client);
+      addTearDown(controller.dispose);
+      await controller.buyVehiclePack();
+      client.available = false;
+      await controller.loadProductDetails();
+      expect(
+        controller.state.status,
+        VehiclePackPurchaseStatus.purchasePending,
+      );
+      expect(await controller.buyVehiclePack(), isFalse);
+      expect(client.boughtProducts, hasLength(1));
+    },
+  );
+
   test('startup queries coalesce and preserve pending ownership', () async {
     SharedPreferences.setMockInitialValues({});
     final client = FakeIapPurchaseClient()
@@ -442,4 +505,11 @@ class _ThrowingPurchaseEntitlementStore extends LocalPurchaseEntitlementStore {
   Future<void> save(PurchaseEntitlement entitlement) {
     throw StateError('Unable to cache purchase.');
   }
+}
+
+class _RejectingPreferencesStore extends InMemorySharedPreferencesStore {
+  _RejectingPreferencesStore() : super.empty();
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async =>
+      false;
 }

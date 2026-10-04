@@ -132,7 +132,7 @@ class VehiclePackPurchaseController extends ChangeNotifier {
   }) async {
     final preservedStatus = preserveStatusOnSuccess ? _state.status : null;
     if (!preserveStatusOnSuccess) {
-      _setState(
+      _setProductState(
         _state.copyWith(
           status: VehiclePackPurchaseStatus.loadingProduct,
           errorMessage: null,
@@ -143,7 +143,7 @@ class VehiclePackPurchaseController extends ChangeNotifier {
     try {
       final isAvailable = await _purchaseClient.isAvailable();
       if (!isAvailable) {
-        _setState(
+        _setProductState(
           _state.copyWith(
             status: VehiclePackPurchaseStatus.storeUnavailable,
             productDetails: null,
@@ -156,7 +156,7 @@ class VehiclePackPurchaseController extends ChangeNotifier {
         IapProductIds.all,
       );
       if (response.error != null) {
-        _setState(
+        _setProductState(
           _state.copyWith(
             status: VehiclePackPurchaseStatus.error,
             errorMessage: response.error.toString(),
@@ -169,7 +169,7 @@ class VehiclePackPurchaseController extends ChangeNotifier {
         response.productDetails,
       );
       if (productDetails == null) {
-        _setState(
+        _setProductState(
           _state.copyWith(
             status: VehiclePackPurchaseStatus.productNotFound,
             productDetails: null,
@@ -178,7 +178,7 @@ class VehiclePackPurchaseController extends ChangeNotifier {
         return;
       }
 
-      _setState(
+      _setProductState(
         _state.copyWith(
           status:
               _state.status == VehiclePackPurchaseStatus.loadingProduct ||
@@ -190,13 +190,25 @@ class VehiclePackPurchaseController extends ChangeNotifier {
         ),
       );
     } catch (error) {
-      _setState(
+      _setProductState(
         _state.copyWith(
           status: VehiclePackPurchaseStatus.error,
           errorMessage: error.toString(),
         ),
       );
     }
+  }
+
+  void _setProductState(VehiclePackPurchaseState state) {
+    if (_state.isPurchasePending ||
+        _state.status == VehiclePackPurchaseStatus.restoring ||
+        _state.vehiclePackUnlocked) {
+      state = state.copyWith(
+        status: _state.status,
+        errorMessage: _state.errorMessage,
+      );
+    }
+    _setState(state);
   }
 
   Future<bool> buyVehiclePack({String? applicationUserName}) async {
@@ -214,7 +226,7 @@ class VehiclePackPurchaseController extends ChangeNotifier {
         await loadProductDetails();
         productDetails = _state.productDetails;
       }
-      if (productDetails == null) {
+      if (productDetails == null || _disposed) {
         return false;
       }
 
@@ -286,8 +298,7 @@ class VehiclePackPurchaseController extends ChangeNotifier {
       } else {
         await restoreBatch.future.timeout(const Duration(seconds: 5));
       }
-      if (_state.status == VehiclePackPurchaseStatus.restoring &&
-          !_state.vehiclePackUnlocked) {
+      if (_state.status == VehiclePackPurchaseStatus.restoring) {
         _setState(
           _state.copyWith(
             status: VehiclePackPurchaseStatus.restoreNotFound,
