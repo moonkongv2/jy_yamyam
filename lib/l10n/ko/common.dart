@@ -5,6 +5,8 @@ import '../text_sets.dart';
 class CommonTexts implements CommonTextSet {
   const CommonTexts();
 
+  String get completionSaveError => '완료 기록을 저장하지 못했어요. 다시 시도해 주세요.';
+  String get retry => '다시 시도';
   String get appTitle => '냠냠 라이더';
   String get apply => '적용';
   String get cancel => '취소';

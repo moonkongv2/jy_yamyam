@@ -5,9 +5,40 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:jy_yamyam/models/active_meal_timer_session.dart';
 import 'package:jy_yamyam/models/meal_timer_config.dart';
+import 'package:jy_yamyam/models/meal_completion_status.dart';
+import 'helpers/meal_result_fixture.dart';
 import 'package:jy_yamyam/services/active_meal_timer_session_store.dart';
 
 void main() {
+  test(
+    'pending completion retains arrival status and selected ingredients',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      const store = ActiveMealTimerSessionStore();
+      final result = mealResult(
+        completionStatus: MealCompletionStatus.completedAtArrival,
+        selectedIngredientIds: ['egg'],
+      ).copyWith(sessionId: 'completion-1');
+      await store.save(
+        ActiveMealTimerSession(
+          sessionId: 'completion-1',
+          startedAt: result.startedAt,
+          config: MealTimerConfig.defaults(),
+          state: ActiveMealTimerSessionState.arrived,
+          pendingCompletion: result,
+        ),
+      );
+      final restored = (await store.load())!.pendingCompletion!;
+      expect(restored.sessionId, 'completion-1');
+      expect(
+        restored.completionStatus,
+        MealCompletionStatus.completedAtArrival,
+      );
+      expect(restored.selectedIngredientIds, ['egg']);
+      expect(restored.endedAt, result.endedAt);
+    },
+  );
+
   test(
     'Active meal timer session store saves and loads a running session',
     () async {

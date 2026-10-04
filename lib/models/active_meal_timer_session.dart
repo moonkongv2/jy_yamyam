@@ -1,5 +1,6 @@
 import '../config/meal_timer_policy.dart';
 import 'meal_timer_config.dart';
+import 'meal_session_result.dart';
 
 enum ActiveMealTimerSessionState { running, paused, arrived }
 
@@ -12,6 +13,7 @@ class ActiveMealTimerSession {
     required this.startedAt,
     required this.config,
     required this.state,
+    this.pendingCompletion,
     this.totalPausedDuration = Duration.zero,
     this.pausedAt,
     this.shownMotivationMilestones = const {},
@@ -31,6 +33,11 @@ class ActiveMealTimerSession {
     }
 
     return ActiveMealTimerSession(
+      pendingCompletion: json['pendingCompletion'] is Map
+          ? MealSessionResult.fromJson(
+              Map<String, Object?>.from(json['pendingCompletion'] as Map),
+            )
+          : null,
       sessionId: sessionId,
       startedAt: startedAt,
       config: _configFromJson(Map<String, Object?>.from(configJson)),
@@ -53,6 +60,7 @@ class ActiveMealTimerSession {
     );
   }
 
+  final MealSessionResult? pendingCompletion;
   final String sessionId;
   final DateTime startedAt;
   final MealTimerConfig config;
@@ -66,6 +74,7 @@ class ActiveMealTimerSession {
   Duration get duration => config.duration;
 
   ActiveMealTimerSession copyWith({
+    MealSessionResult? pendingCompletion,
     MealTimerConfig? config,
     ActiveMealTimerSessionState? state,
     Duration? totalPausedDuration,
@@ -77,6 +86,7 @@ class ActiveMealTimerSession {
     return ActiveMealTimerSession(
       sessionId: sessionId,
       startedAt: startedAt,
+      pendingCompletion: pendingCompletion ?? this.pendingCompletion,
       config: config ?? this.config,
       state: state ?? this.state,
       totalPausedDuration: totalPausedDuration ?? this.totalPausedDuration,
@@ -96,6 +106,7 @@ class ActiveMealTimerSession {
 
   Map<String, Object?> toJson() {
     return {
+      'pendingCompletion': pendingCompletion?.toJson(),
       'sessionId': sessionId,
       'startedAt': startedAt.toIso8601String(),
       'config': _configToJson(config),

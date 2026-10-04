@@ -18,6 +18,7 @@ import 'package:jy_yamyam/widgets/vehicle_widget.dart';
 import 'helpers/timer_screen_test_harness.dart';
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
   testWidgets('Timer screen keeps vehicle fixed when paused', (tester) async {
     tester.view.physicalSize = const Size(852, 393);
     tester.view.devicePixelRatio = 1;

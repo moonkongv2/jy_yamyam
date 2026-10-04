@@ -5,6 +5,9 @@ import '../text_sets.dart';
 class EnCommonTexts implements CommonTextSet {
   const EnCommonTexts();
 
+  String get completionSaveError =>
+      'Couldn’t save the meal result. Please try again.';
+  String get retry => 'Try again';
   String get appTitle => 'Yamyam Rider';
   String get apply => 'Apply';
   String get cancel => 'Cancel';

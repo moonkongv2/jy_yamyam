@@ -5,6 +5,9 @@ import '../text_sets.dart';
 class PtBrCommonTexts implements CommonTextSet {
   const PtBrCommonTexts();
 
+  String get completionSaveError =>
+      'Não foi possível salvar o resultado. Tente novamente.';
+  String get retry => 'Tentar novamente';
   String get appTitle => 'Yamyam Rider';
   String get apply => 'Aplicar';
   String get cancel => 'Cancelar';

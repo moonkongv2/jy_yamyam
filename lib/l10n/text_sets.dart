@@ -1,6 +1,8 @@
 import '../models/meal_completion_status.dart';
 
 abstract interface class CommonTextSet {
+  String get completionSaveError;
+  String get retry;
   String get appTitle;
   String get apply;
   String get cancel;

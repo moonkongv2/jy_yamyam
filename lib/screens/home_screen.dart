@@ -105,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void initState() {
     super.initState();
     _activeSessionFuture = _loadActiveSession();
-    _progressSnapshotFuture = widget.mealProgressService.loadSnapshot();
+    _progressSnapshotFuture = _loadProgressAfterActiveSession();
     _syncSelectedVehicleCustomAvatarExists(notify: false);
   }
 
@@ -133,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         _isRouteVisible = isRouteVisible;
       }
       _activeSessionFuture = _loadActiveSession();
-      _progressSnapshotFuture = widget.mealProgressService.loadSnapshot();
+      _progressSnapshotFuture = _loadProgressAfterActiveSession();
     });
   }
 
@@ -165,8 +165,21 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     );
   }
 
+  Future<MealProgressSnapshot> _loadProgressAfterActiveSession() async {
+    await _activeSessionFuture;
+    return widget.mealProgressService.loadSnapshot();
+  }
+
   Future<ActiveMealTimerSession?> _loadActiveSession() async {
     var session = await widget.activeSessionStore.load();
+    if (session?.pendingCompletion != null) {
+      await widget.mealProgressService.recordMealResult(
+        session!.pendingCompletion!,
+        vehicleId: session.config.vehicleId,
+      );
+      await widget.activeSessionStore.clear();
+      return null;
+    }
     if (session != null && _isStaleActiveSession(session, now: _now())) {
       await widget.activeSessionStore.clear();
       session = null;
@@ -329,7 +342,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Future<bool> _resolveActiveSessionBeforeNewTimer() async {
-    final activeSession = await _loadActiveSession();
+    ActiveMealTimerSession? activeSession;
+    try {
+      activeSession = await _loadActiveSession();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppTexts.of(context).common.completionSaveError),
+          ),
+        );
+      }
+      return false;
+    }
     if (!mounted) {
       return false;
     }

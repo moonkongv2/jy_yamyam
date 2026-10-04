@@ -55,6 +55,7 @@ class MealSessionResult {
     'actualDuration': actualDuration.inMicroseconds,
     'completedBeforeArrival': completedBeforeArrival,
     'mealCompleted': mealCompleted,
+    'completionStatus': completionStatus.name,
     'selectedIngredientIds': selectedIngredientIds,
   };
 
@@ -67,6 +68,11 @@ class MealSessionResult {
         actualDuration: Duration(microseconds: json['actualDuration'] as int),
         completedBeforeArrival: json['completedBeforeArrival'] as bool,
         mealCompleted: json['mealCompleted'] as bool,
+        completionStatus: mealCompletionStatusFromJson(
+          json['completionStatus'],
+          completedBeforeArrival: json['completedBeforeArrival'] as bool,
+          mealCompleted: json['mealCompleted'] as bool,
+        ),
         selectedIngredientIds: (json['selectedIngredientIds'] as List)
             .cast<String>(),
       );

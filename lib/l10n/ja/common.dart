@@ -5,6 +5,8 @@ import '../text_sets.dart';
 class JaCommonTexts implements CommonTextSet {
   const JaCommonTexts();
 
+  String get completionSaveError => '食事の記録を保存できませんでした。もう一度お試しください。';
+  String get retry => '再試行';
   String get appTitle => 'Yamyam Rider';
   String get apply => '適用';
   String get cancel => 'キャンセル';

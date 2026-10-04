@@ -111,11 +111,13 @@ class ResultScreen extends StatefulWidget {
     required this.config,
     required this.mealProgressService,
     required this.onConfigChanged,
+    this.recordedSession,
     this.introControllerFactory,
     this.resultAudioService,
     this.orientationService = const SystemOrientationService(),
   });
 
+  final RecordedMealSession? recordedSession;
   final MealSessionResult result;
   final MealTimerConfig config;
   final LocalMealProgressService mealProgressService;
@@ -148,10 +150,12 @@ class _ResultScreenState extends State<ResultScreen> {
         widget.resultAudioService ?? AudioplayersResultAudioService();
     _ownsResultAudioService = widget.resultAudioService == null;
     unawaited(widget.orientationService.allowMealFlowOrientations());
-    _recordedSession = widget.mealProgressService.recordMealResult(
-      widget.result,
-      vehicleId: _resolvedVehicleId,
-    );
+    _recordedSession = widget.recordedSession != null
+        ? Future.value(widget.recordedSession)
+        : widget.mealProgressService.recordMealResult(
+            widget.result,
+            vehicleId: _resolvedVehicleId,
+          );
     if (!widget.result.mealCompleted) {
       _introFinished = true;
       return;

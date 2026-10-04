@@ -5,6 +5,9 @@ import '../text_sets.dart';
 class EsCommonTexts implements CommonTextSet {
   const EsCommonTexts();
 
+  String get completionSaveError =>
+      'No se pudo guardar el resultado. Inténtalo de nuevo.';
+  String get retry => 'Reintentar';
   String get appTitle => 'Yamyam Rider';
   String get apply => 'Aplicar';
   String get cancel => 'Cancelar';

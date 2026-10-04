@@ -14,8 +14,57 @@ import 'package:jy_yamyam/services/local_meal_progress_service.dart';
 import 'package:jy_yamyam/widgets/road_view.dart';
 
 import 'helpers/app_test_harness.dart';
+import 'helpers/meal_result_fixture.dart';
 
 void main() {
+  testWidgets('Home recovers stale completed session before loading progress', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final now = DateTime(2026, 6, 10);
+    final result = mealResult(
+      startedAt: now.subtract(const Duration(days: 2)),
+    ).copyWith(sessionId: 'pending-completion');
+    const store = ActiveMealTimerSessionStore();
+    final progress = LocalMealProgressService();
+    await progress.createRewardGoal(
+      requiredStickerCount: 1,
+      rewardText: 'Picnic',
+    );
+    await store.save(
+      ActiveMealTimerSession(
+        sessionId: 'pending-completion',
+        startedAt: result.startedAt,
+        config: MealTimerConfig.defaults().copyWith(vehicleId: 'bus'),
+        state: ActiveMealTimerSessionState.running,
+        pendingCompletion: result,
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        supportedLocales: AppTexts.supportedLocales,
+        locale: const Locale('ko'),
+        home: HomeScreen(
+          config: MealTimerConfig.defaults(),
+          mealProgressService: progress,
+          onConfigChanged: (_) {},
+          now: () => now,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(await store.load(), isNull);
+    final snapshot = await progress.loadSnapshot();
+    expect(snapshot.history.single.id, 'pending-completion');
+    expect(snapshot.inventory.single.rewardId, 'sticker_vehicle_bus');
+    expect(snapshot.inventory.single.count, 1);
+    expect(snapshot.earnedRewardGoals.single.filledSlots, hasLength(1));
+    expect(find.byKey(const ValueKey('activeTimerResumeCard')), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
+  });
+
   testWidgets('Home screen shows meal timer actions', (tester) async {
     SharedPreferences.setMockInitialValues({});
 
@@ -76,6 +125,8 @@ void main() {
     final timerScreen = tester.widget<TimerScreen>(find.byType(TimerScreen));
     expect(timerScreen.restoredSession?.sessionId, 'active-session');
     expect(timerScreen.config.duration, const Duration(minutes: 35));
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump();
   });
 
   testWidgets('Home screen can cancel a saved active timer session', (

@@ -18,6 +18,7 @@ import '../l10n/text_sets.dart';
 import '../models/active_meal_timer_session.dart';
 import '../models/meal_ingredient.dart';
 import '../models/meal_session_result.dart';
+import '../models/meal_progress_snapshot.dart';
 import '../models/meal_timer_config.dart';
 import '../models/vehicle_avatar_presentation.dart';
 import '../services/active_meal_timer_session_store.dart';
@@ -286,6 +287,9 @@ class _TimerScreenState extends State<TimerScreen>
   var _highestHandledCourseMarkerIndex = -1;
   Animation<double>? _finishDriveAnimation;
   MealSessionResult? _pendingFinishDriveResult;
+  ActiveMealTimerSession? _pendingCompletionSession;
+  RecordedMealSession? _recordedCompletion;
+  bool _isCompleting = false;
   double _finishDriveStartProgress = 0;
   late final String _activeSessionId;
   late final TimerActiveSessionController _activeSessionController;
@@ -798,7 +802,12 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   Future<void> _confirmExit() async {
-    if (_exitPromptShown || _allowExit || _isFinishDriving || !mounted) {
+    if (_exitPromptShown ||
+        _allowExit ||
+        _isFinishDriving ||
+        _isCompleting ||
+        _pendingCompletionSession != null ||
+        !mounted) {
       return;
     }
 
@@ -859,75 +868,126 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   Future<void> _confirmComplete({bool showFailureOnDecline = false}) async {
-    if (_isFinishDriving) {
-      return;
-    }
-    _cancelCourseOverview();
-    _arrivalPromptTimer?.cancel();
+    if (_isFinishDriving || _isCompleting) return;
+    setState(() => _isCompleting = true);
+    try {
+      if (_pendingCompletionSession != null) {
+        await _saveCompletionAndOpenResult();
+        return;
+      }
+      _cancelCourseOverview();
+      _arrivalPromptTimer?.cancel();
 
-    final texts = AppTexts.of(context);
-    final arrivalDialogMessage = timerArrivalDialogMessage(
-      texts: texts.timer,
-      vehicleId: _timerConfig.vehicleId,
-      languageCode: Localizations.localeOf(context).languageCode,
-    );
-    final confirmed = await showDialog<bool>(
-      context: context,
-      barrierDismissible: !showFailureOnDecline,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(texts.timer.completeDialogTitle),
-          content: Text(
-            showFailureOnDecline
-                ? arrivalDialogMessage
-                : texts.timer.completeDialogMessage,
+      final texts = AppTexts.of(context);
+      final arrivalDialogMessage = timerArrivalDialogMessage(
+        texts: texts.timer,
+        vehicleId: _timerConfig.vehicleId,
+        languageCode: Localizations.localeOf(context).languageCode,
+      );
+      final confirmed = await showDialog<bool>(
+        context: context,
+        barrierDismissible: !showFailureOnDecline,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(texts.timer.completeDialogTitle),
+            content: Text(
+              showFailureOnDecline
+                  ? arrivalDialogMessage
+                  : texts.timer.completeDialogMessage,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(texts.common.notYet),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(texts.common.complete),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      if (confirmed != true) {
+        if (_completionFlowController.shouldRecordIncompleteResult(
+          confirmed: confirmed,
+          showFailureOnDecline: showFailureOnDecline,
+        )) {
+          final session = _activeSessionController.snapshot();
+          final result = _controller.complete(
+            mealCompleted: false,
+            completionStatus: _completionFlowController
+                .completionStatusForIncompleteResult(),
+          );
+          await _preserveCompletion(session!, result);
+        }
+        return;
+      }
+
+      final session = _activeSessionController.snapshot();
+      final result = _controller.complete(
+        completionStatus: _completionFlowController
+            .completionStatusForConfirmedResult(
+              showFailureOnDecline: showFailureOnDecline,
+            ),
+      );
+      await _preserveCompletion(session!, result);
+    } finally {
+      if (mounted) setState(() => _isCompleting = false);
+    }
+  }
+
+  Future<void> _preserveCompletion(
+    ActiveMealTimerSession session,
+    MealSessionResult result,
+  ) async {
+    final recordable = _completionFlowController
+        .resultWithSelectedIngredients(result: result, config: _timerConfig)
+        .copyWith(sessionId: _activeSessionId);
+    _pendingCompletionSession = session.copyWith(pendingCompletion: recordable);
+    await _saveCompletionAndOpenResult();
+  }
+
+  Future<void> _saveCompletionAndOpenResult() async {
+    final session = _pendingCompletionSession!;
+    final result = session.pendingCompletion!;
+    try {
+      await widget.activeSessionStore.save(session);
+      _recordedCompletion = await widget.mealProgressService.recordMealResult(
+        result,
+        vehicleId: session.config.vehicleId,
+      );
+      await widget.activeSessionStore.clear();
+    } catch (error, stackTrace) {
+      debugPrint('Unable to persist completed meal: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        final texts = AppTexts.of(context).common;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(texts.completionSaveError),
+            duration: const Duration(days: 1),
+            action: SnackBarAction(
+              label: texts.retry,
+              onPressed: () => unawaited(_confirmComplete()),
+            ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(texts.common.notYet),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(texts.common.complete),
-            ),
-          ],
         );
-      },
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    if (confirmed != true) {
-      if (_completionFlowController.shouldRecordIncompleteResult(
-        confirmed: confirmed,
-        showFailureOnDecline: showFailureOnDecline,
-      )) {
-        final result = _controller.complete(
-          mealCompleted: false,
-          completionStatus: _completionFlowController
-              .completionStatusForIncompleteResult(),
-        );
-        unawaited(_clearActiveSession());
-        _openResult(result);
       }
       return;
     }
-
-    final result = _controller.complete(
-      completionStatus: _completionFlowController
-          .completionStatusForConfirmedResult(
-            showFailureOnDecline: showFailureOnDecline,
-          ),
-    );
-    unawaited(_clearActiveSession());
+    if (!mounted) return;
+    _pendingCompletionSession = null;
     if (_completionFlowController.shouldStartFinishDrive(result)) {
       _startFinishDrive(result);
-      return;
+    } else {
+      _openResult(result);
     }
-    _openResult(result);
   }
 
   void _startFinishDrive(MealSessionResult result) {
@@ -1014,6 +1074,7 @@ class _TimerScreenState extends State<TimerScreen>
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
         builder: (_) => ResultScreen(
+          recordedSession: _recordedCompletion,
           result: recordableResult,
           config: _timerConfig,
           mealProgressService: widget.mealProgressService,
@@ -1025,6 +1086,7 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   Future<void> _persistActiveSession() async {
+    if (_isCompleting || _pendingCompletionSession != null) return;
     await _activeSessionController.persist();
   }
 
@@ -1252,7 +1314,11 @@ class _TimerScreenState extends State<TimerScreen>
             : timerProgress;
         final timerHasStarted = _controller.startedAt != null;
         final canUseTimerControls =
-            timerHasStarted && !_isStartupPreviewing && !_isFinishDriving;
+            !_isCompleting &&
+            _pendingCompletionSession == null &&
+            timerHasStarted &&
+            !_isStartupPreviewing &&
+            !_isFinishDriving;
         final cameraDisplayProgress = _isCameraPreviewActive
             ? (_previewController?.value ?? 0.0).clamp(0.0, 1.0).toDouble()
             : displayProgress;
