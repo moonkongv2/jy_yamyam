@@ -12,7 +12,15 @@ abstract interface class IapPurchaseClient {
     String? applicationUserName,
   });
 
-  Future<void> restorePurchases({String? applicationUserName});
+  Future<List<PurchaseDetails>?> restorePurchases({
+    String? applicationUserName,
+  });
 
   Future<void> completePurchase(PurchaseDetails purchase);
+}
+
+/// Android ownership queries do not open the interactive restore flow.
+abstract interface class PurchaseReconciliationClient {
+  bool get supportsPurchaseReconciliation;
+  Future<List<PurchaseDetails>> queryOwnedPurchases();
 }

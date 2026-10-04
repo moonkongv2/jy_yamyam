@@ -87,7 +87,9 @@ class FakeIapPurchaseClient implements IapPurchaseClient {
   }
 
   @override
-  Future<void> restorePurchases({String? applicationUserName}) async {
+  Future<List<PurchaseDetails>?> restorePurchases({
+    String? applicationUserName,
+  }) async {
     final error = restorePurchasesError;
     if (error != null) {
       throw error;
@@ -95,6 +97,7 @@ class FakeIapPurchaseClient implements IapPurchaseClient {
 
     restoreApplicationUserNames.add(applicationUserName);
     await onRestorePurchases?.call(applicationUserName);
+    return null;
   }
 
   @override

@@ -206,9 +206,12 @@ class VehiclePackPurchaseController extends ChangeNotifier {
     );
 
     try {
-      await _purchaseClient.restorePurchases(
+      final restored = await _purchaseClient.restorePurchases(
         applicationUserName: applicationUserName,
       );
+      if (restored != null) {
+        await _handlePurchaseUpdates(restored);
+      }
       if (_state.status == VehiclePackPurchaseStatus.restoring &&
           !_state.vehiclePackUnlocked) {
         _setState(
