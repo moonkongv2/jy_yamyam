@@ -28,28 +28,57 @@ class StickerCollectionScreen extends StatelessWidget {
           builder: (context, snapshot) {
             final inventory = snapshot.data?.inventory ?? const [];
 
-            return GridView.builder(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.xl,
-                AppSpacing.md,
-                AppSpacing.xl,
-                AppSpacing.xxl,
-              ),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: AppSpacing.md,
-                crossAxisSpacing: AppSpacing.md,
-                childAspectRatio: 0.88,
-              ),
-              itemCount: VehicleCatalog.all.length,
-              itemBuilder: (context, index) {
-                final vehicle = VehicleCatalog.all[index];
-                final sticker = RewardCatalog.findVehicleStickerByVehicleId(
-                  vehicle.id,
-                )!;
-                final item = _inventoryItemFor(inventory, sticker.id);
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final horizontalPadding = (constraints.maxWidth / 4)
+                    .clamp(0.0, AppSpacing.xl)
+                    .toDouble();
+                final availableWidth =
+                    constraints.maxWidth - horizontalPadding * 2;
+                if (availableWidth <= 0) return const SizedBox.shrink();
+                final textScale =
+                    (MediaQuery.textScalerOf(context).scale(16) / 16).clamp(
+                      1.0,
+                      double.infinity,
+                    );
+                final columns =
+                    ((availableWidth + AppSpacing.md) /
+                            (132 * textScale + AppSpacing.md))
+                        .floor()
+                        .clamp(1, 4);
+                final distributedWidth =
+                    (availableWidth - (columns - 1) * AppSpacing.md) / columns;
+                // Round down so floating-point error cannot push a card to a new row.
+                final cardWidth = columns == 1
+                    ? availableWidth
+                    : distributedWidth.floorToDouble();
+                return SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(
+                    horizontalPadding,
+                    AppSpacing.md,
+                    horizontalPadding,
+                    AppSpacing.xxl,
+                  ),
+                  child: Wrap(
+                    spacing: AppSpacing.md,
+                    runSpacing: AppSpacing.md,
+                    children: VehicleCatalog.all.map((vehicle) {
+                      final sticker =
+                          RewardCatalog.findVehicleStickerByVehicleId(
+                            vehicle.id,
+                          )!;
+                      final item = _inventoryItemFor(inventory, sticker.id);
 
-                return _StickerCard(sticker: sticker, count: item?.count ?? 0);
+                      return SizedBox(
+                        width: cardWidth,
+                        child: _StickerCard(
+                          sticker: sticker,
+                          count: item?.count ?? 0,
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                );
               },
             );
           },
@@ -79,11 +108,15 @@ class _StickerCard extends StatelessWidget {
 
   bool get _isCollected => count > 0;
 
-  Widget _buildStickerStack(String semanticLabel) {
+  Widget _buildStickerStack(String semanticLabel, double availableWidth) {
+    // Include rotated corners and shadows in the stack's layout bounds.
+    final scale = (availableWidth / (count > 1 ? 141 : 85))
+        .clamp(0.0, 1.0)
+        .toDouble();
     final stickerImage = RewardStickerImage(
       reward: sticker,
       semanticLabel: semanticLabel,
-      size: 85,
+      size: 85 * scale,
       locked: !_isCollected,
     );
 
@@ -92,16 +125,16 @@ class _StickerCard extends StatelessWidget {
     }
 
     return SizedBox(
-      width: 85,
-      height: 85,
+      width: 141 * scale,
+      height: 131 * scale,
       child: Stack(
         clipBehavior: Clip.none,
         alignment: Alignment.center,
         children: [
           if (count >= 5)
             Positioned(
-              left: -12,
-              top: 4,
+              left: 18 * scale,
+              top: 26 * scale,
               child: Transform.rotate(
                 angle: -0.25,
                 child: Opacity(opacity: 0.6, child: stickerImage),
@@ -109,14 +142,14 @@ class _StickerCard extends StatelessWidget {
             ),
           if (count >= 2)
             Positioned(
-              right: -10,
-              top: -6,
+              left: 40 * scale,
+              top: 16 * scale,
               child: Transform.rotate(
                 angle: 0.18,
                 child: Opacity(opacity: 0.8, child: stickerImage),
               ),
             ),
-          stickerImage,
+          Positioned(left: 30 * scale, top: 22 * scale, child: stickerImage),
         ],
       ),
     );
@@ -143,55 +176,65 @@ class _StickerCard extends StatelessWidget {
           : null,
       child: Card(
         color: _isCollected ? AppColors.white : AppColors.cream,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildStickerStack(
-                _isCollected
-                    ? stickerName
-                    : texts.rewards.uncollectedSemanticLabel,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                _isCollected ? stickerName : texts.rewards.lockedSticker,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: _isCollected
-                      ? AppColors.textStrong
-                      : AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: _isCollected
-                      ? AppColors.surfaceYellow
-                      : AppColors.borderSoft,
-                  borderRadius: AppRadius.pill,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.xs,
-                  ),
-                  child: Text(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final padding = (constraints.maxWidth / 4)
+                .clamp(0.0, AppSpacing.lg)
+                .toDouble();
+            final contentWidth = constraints.maxWidth - padding * 2;
+            return Padding(
+              padding: EdgeInsets.all(padding),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildStickerStack(
                     _isCollected
-                        ? texts.rewards.stickerCount(count)
-                        : texts.rewards.lockedStatus,
-                    style: textTheme.labelLarge?.copyWith(
+                        ? stickerName
+                        : texts.rewards.uncollectedSemanticLabel,
+                    contentWidth,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    _isCollected ? stickerName : texts.rewards.lockedSticker,
+                    textAlign: TextAlign.center,
+                    style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
+                      color: _isCollected
+                          ? AppColors.textStrong
+                          : AppColors.textSecondary,
                     ),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.sm),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: _isCollected
+                          ? AppColors.surfaceYellow
+                          : AppColors.borderSoft,
+                      borderRadius: AppRadius.pill,
+                    ),
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: (contentWidth / 4)
+                            .clamp(0.0, AppSpacing.md)
+                            .toDouble(),
+                        vertical: AppSpacing.xs,
+                      ),
+                      child: Text(
+                        _isCollected
+                            ? texts.rewards.stickerCount(count)
+                            : texts.rewards.lockedStatus,
+                        textAlign: TextAlign.center,
+                        style: textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
