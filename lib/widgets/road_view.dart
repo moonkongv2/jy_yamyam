@@ -296,7 +296,7 @@ class _AnimatedRoadPaint extends StatefulWidget {
 class _AnimatedRoadPaintState extends State<_AnimatedRoadPaint>
     with TickerProviderStateMixin {
   static const _fieldFootprintAssetPath =
-      'assets/images/ingredients/footprints.png';
+      'assets/images/ingredients/footprints.webp';
 
   late final AnimationController _flowController;
   late final AnimationController _skyPathCloudController;

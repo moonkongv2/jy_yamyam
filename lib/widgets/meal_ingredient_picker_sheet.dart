@@ -9,7 +9,7 @@ import '../theme/app_shadows.dart';
 import '../theme/app_spacing.dart';
 import 'app/app_help_sheet.dart';
 
-const _ingredientGuideImageAssetPath = 'assets/images/ingredient_markers.png';
+const _ingredientGuideImageAssetPath = 'assets/images/ingredient_markers.webp';
 
 sealed class MealIngredientPickerResult {
   const MealIngredientPickerResult();

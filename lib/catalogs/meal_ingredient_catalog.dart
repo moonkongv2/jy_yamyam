@@ -26,7 +26,7 @@ abstract final class MealIngredientCatalog {
     labelEs: 'Huevo',
     labelPtBr: 'Ovo',
     emoji: '🍳',
-    assetPath: 'assets/images/ingredients/egg.png',
+    assetPath: 'assets/images/ingredients/egg.webp',
   );
 
   static const meat = MealIngredientDefinition(
@@ -77,7 +77,7 @@ abstract final class MealIngredientCatalog {
     labelEs: 'Alga',
     labelPtBr: 'Alga',
     emoji: '🟩',
-    assetPath: 'assets/images/ingredients/seaweed.png',
+    assetPath: 'assets/images/ingredients/seaweed.webp',
   );
 
   static const tofu = MealIngredientDefinition(
@@ -88,7 +88,7 @@ abstract final class MealIngredientCatalog {
     labelEs: 'Tofu',
     labelPtBr: 'Tofu',
     emoji: '⬜',
-    assetPath: 'assets/images/ingredients/tofu.png',
+    assetPath: 'assets/images/ingredients/tofu.webp',
   );
 
   static const broccoli = MealIngredientDefinition(
@@ -179,7 +179,7 @@ abstract final class MealIngredientCatalog {
     labelEs: 'Rábano',
     labelPtBr: 'Nabo',
     emoji: '⚪',
-    assetPath: 'assets/images/ingredients/radish.png',
+    assetPath: 'assets/images/ingredients/radish.webp',
   );
 
   static const bean = MealIngredientDefinition(

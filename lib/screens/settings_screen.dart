@@ -21,7 +21,7 @@ import '../widgets/purchases/purchase_entitlement_scope.dart';
 import '../widgets/purchases/vehicle_pack_purchase_sheet.dart';
 import 'user_guide_screen.dart';
 
-const _ingredientGuideImageAssetPath = 'assets/images/ingredient_markers.png';
+const _ingredientGuideImageAssetPath = 'assets/images/ingredient_markers.webp';
 const _motivationVideoIntervalOptions = [
   Duration(minutes: 3),
   Duration(minutes: 5),

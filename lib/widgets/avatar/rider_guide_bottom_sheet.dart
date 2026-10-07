@@ -31,7 +31,7 @@ class RiderGuideBottomSheet extends StatelessWidget {
             ClipRRect(
               borderRadius: AppRadius.card,
               child: Image.asset(
-                'assets/images/rider_sample.png',
+                'assets/images/rider_sample.webp',
                 fit: BoxFit.contain,
               ),
             ),

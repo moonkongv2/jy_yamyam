@@ -45,8 +45,8 @@ import 'settings_screen.dart';
 import 'sticker_collection_screen.dart';
 import 'timer_screen.dart';
 
-const _homeLogoAssetPath = 'assets/images/logo_eng.png';
-const _settingsIconAssetPath = 'assets/images/icon_setting_rgba.png';
+const _homeLogoAssetPath = 'assets/images/logo_eng.webp';
+const _settingsIconAssetPath = 'assets/images/icon_setting_rgba.webp';
 const _activeSessionMaxAge = Duration(hours: 24);
 const _unscopedPurchaseEntitlement = PurchaseEntitlement(
   vehiclePackUnlocked: true,
