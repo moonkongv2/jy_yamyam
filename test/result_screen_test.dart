@@ -341,6 +341,10 @@ void main() {
         requiredStickerCount: 5,
         rewardText: 'Reward',
       );
+      await service.createRewardGoal(
+        requiredStickerCount: 10,
+        rewardText: 'A New Toy',
+      );
 
       await tester.pumpWidget(
         MaterialApp(
@@ -386,6 +390,15 @@ void main() {
       final homeButton = find.byType(OutlinedButton).last;
       await tester.ensureVisible(homeButton);
       await tester.pumpAndSettle();
+
+      final guardianTipRect = tester.getRect(
+        find.byKey(const ValueKey('completedResultGuardianTipCard')),
+      );
+      final restartRect = tester.getRect(find.byType(FilledButton));
+      expect(
+        restartRect.top - guardianTipRect.bottom,
+        greaterThanOrEqualTo(16),
+      );
 
       final homeRect = tester.getRect(homeButton);
       expect(homeRect.top, greaterThanOrEqualTo(59));

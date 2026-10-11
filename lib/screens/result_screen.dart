@@ -432,6 +432,7 @@ class _ResultScreenState extends State<ResultScreen> {
                               onPressed: () => _showResultHelp(mealCompleted),
                             ),
                             Spacer(flex: isPortraitSuccess ? 2 : 1),
+                            const SizedBox(height: AppSpacing.lg),
                             FilledButton.icon(
                               onPressed: () => _restart(context),
                               icon: const Icon(Icons.two_wheeler_rounded),
