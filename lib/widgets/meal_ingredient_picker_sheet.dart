@@ -237,10 +237,7 @@ class _MealIngredientPickerSheetState extends State<MealIngredientPickerSheet> {
                               'randomStartMealIngredientsButton',
                             ),
                             onPressed: _startRandom,
-                            icon: const Icon(
-                              Icons.shuffle_rounded,
-                              size: 28,
-                            ),
+                            icon: const Icon(Icons.shuffle_rounded, size: 28),
                             label: Text(texts.randomStartButton),
                           ),
                         ),

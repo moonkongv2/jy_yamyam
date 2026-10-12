@@ -862,28 +862,52 @@ class _CompactLandscapeRewardResult extends StatelessWidget {
     return SizedBox(
       key: const ValueKey('compactLandscapeRewardBox'),
       width: _compactLandscapeRewardWidth,
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _RewardResultBox(
-              rewards: recordedSession?.awardedRewards,
-              isCompact: true,
-            ),
-            if (recordedSession != null &&
-                (recordedSession!.updatedRewardGoals.isNotEmpty ||
-                    recordedSession!.earnedRewardGoals.isNotEmpty)) ...[
-              const SizedBox(height: AppSpacing.sm),
-              _RewardGoalResultBox(
-                updatedGoals: recordedSession!.updatedRewardGoals,
-                earnedGoals: recordedSession!.earnedRewardGoals,
-                mealProgressService: mealProgressService,
-                orientationService: orientationService,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final session = recordedSession;
+          final hasGoals =
+              session != null &&
+              (session.updatedRewardGoals.isNotEmpty ||
+                  session.earnedRewardGoals.isNotEmpty);
+          final goalHeight = hasGoals
+              ? (constraints.maxHeight * 0.28).clamp(0.0, 88.0)
+              : 0.0;
+          final rewardHeight =
+              (constraints.maxHeight -
+                      goalHeight -
+                      (hasGoals ? AppSpacing.sm : 0.0))
+                  .clamp(0.0, 220.0);
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _RewardResultBox(
+                rewards: session?.awardedRewards,
                 isCompact: true,
+                compactBadgeWidth: (constraints.maxWidth - AppSpacing.lg * 2)
+                    .clamp(0.0, 196.0),
+                compactBadgeHeight: (rewardHeight - AppSpacing.md * 2).clamp(
+                  0.0,
+                  196.0,
+                ),
               ),
+              if (hasGoals) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: _RewardGoalResultBox(
+                      updatedGoals: session.updatedRewardGoals,
+                      earnedGoals: session.earnedRewardGoals,
+                      mealProgressService: mealProgressService,
+                      orientationService: orientationService,
+                      isCompact: true,
+                    ),
+                  ),
+                ),
+              ],
             ],
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -1088,7 +1112,10 @@ class _CompactLandscapeResultLayout extends StatelessWidget {
         color: AppColors.transparent,
         shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.sm,
+          ),
           child: Column(
             children: [
               Expanded(
@@ -1325,11 +1352,15 @@ class _RewardResultBox extends StatelessWidget {
     required this.rewards,
     this.isCompact = false,
     this.isCondensed = false,
+    this.compactBadgeHeight = 196,
+    this.compactBadgeWidth = 196,
   });
 
   final List<RewardDefinition>? rewards;
   final bool isCompact;
   final bool isCondensed;
+  final double compactBadgeHeight;
+  final double compactBadgeWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -1392,6 +1423,8 @@ class _RewardResultBox extends StatelessWidget {
                       reward: reward,
                       isCompact: isCompact,
                       isCondensed: isCondensed,
+                      compactHeight: compactBadgeHeight,
+                      compactWidth: compactBadgeWidth,
                     ),
                 ],
               ),
@@ -1405,11 +1438,15 @@ class _RewardBadge extends StatelessWidget {
     required this.reward,
     this.isCompact = false,
     this.isCondensed = false,
+    this.compactHeight = 196,
+    this.compactWidth = 196,
   });
 
   final RewardDefinition reward;
   final bool isCompact;
   final bool isCondensed;
+  final double compactHeight;
+  final double compactWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -1418,9 +1455,27 @@ class _RewardBadge extends StatelessWidget {
     );
 
     if (isCompact) {
+      final nameStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w900,
+        color: AppColors.textPrimary,
+      );
+      final namePainter = TextPainter(
+        text: TextSpan(text: rewardName, style: nameStyle),
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+        maxLines: 2,
+        ellipsis: '…',
+      )..layout(maxWidth: compactWidth);
+      final nameHeight = namePainter.height;
+      namePainter.dispose();
+      final stickerSize = (compactHeight - nameHeight - AppSpacing.sm).clamp(
+        0.0,
+        compactWidth.clamp(0.0, 132.0),
+      );
+
       return SizedBox(
-        width: 196,
-        height: 196,
+        width: compactWidth,
+        height: compactHeight,
         child: Stack(
           children: [
             const _RewardConfettiDot(
@@ -1473,19 +1528,16 @@ class _RewardBadge extends StatelessWidget {
                   RewardStickerImage(
                     reward: reward,
                     semanticLabel: rewardName,
-                    size: 132,
+                    size: stickerSize,
                     framed: false,
                   ),
-                  const SizedBox(height: AppSpacing.md),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     rewardName,
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.textPrimary,
-                    ),
+                    style: nameStyle,
                   ),
                 ],
               ),

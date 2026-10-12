@@ -778,6 +778,95 @@ void main() {
     );
   });
 
+  for (final layoutCase in [
+    (size: const Size(852, 393), scale: 1.0, goals: false),
+    (size: const Size(852, 393), scale: 1.3, goals: true),
+    (size: const Size(568, 320), scale: 1.0, goals: false),
+    (size: const Size(568, 320), scale: 1.3, goals: true),
+  ]) {
+    testWidgets(
+      'Landscape sticker fits ${layoutCase.size} at ${layoutCase.scale}x '
+      'with goals ${layoutCase.goals}',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        tester.view.physicalSize = layoutCase.size;
+        tester.view.devicePixelRatio = 1;
+        tester.view.padding = const FakeViewPadding(
+          left: 44,
+          right: 44,
+          bottom: 21,
+        );
+        addTearDown(() {
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+          tester.view.resetPadding();
+        });
+        final service = LocalMealProgressService();
+        if (layoutCase.goals) {
+          await service.createRewardGoal(
+            requiredStickerCount: 5,
+            rewardText: 'Reward',
+          );
+        }
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            supportedLocales: AppTexts.supportedLocales,
+            locale: const Locale('ko'),
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(layoutCase.scale)),
+              child: child!,
+            ),
+            home: ResultScreen(
+              result: mealResult(completedBeforeArrival: true),
+              config: MealTimerConfig.defaults().copyWith(
+                vehicleId: 'airplane',
+              ),
+              mealProgressService: service,
+              onConfigChanged: (_) {},
+              introControllerFactory: (_) => VideoPlayerController.asset(
+                'assets/videos/missing_result_success.mp4',
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        final rewardBox = find.byKey(
+          const ValueKey('compactLandscapeRewardBox'),
+        );
+        final rewardRect = tester.getRect(rewardBox);
+        final name = find.descendant(
+          of: rewardBox,
+          matching: find.text('비행기 스티커'),
+        );
+        final sticker = find.descendant(
+          of: rewardBox,
+          matching: find.byType(RewardStickerImage),
+        );
+        expect(name, findsOneWidget);
+        expect(sticker, findsOneWidget);
+        for (final element in [name, sticker]) {
+          final rect = tester.getRect(element);
+          expect(rect.top, greaterThanOrEqualTo(rewardRect.top));
+          expect(rect.bottom, lessThanOrEqualTo(rewardRect.bottom));
+          expect(rect.left, greaterThanOrEqualTo(rewardRect.left));
+          expect(rect.right, lessThanOrEqualTo(rewardRect.right));
+        }
+        final restartRect = tester.getRect(
+          find.widgetWithText(FilledButton, '다시 출발'),
+        );
+        expect(rewardRect.bottom, lessThan(restartRect.top));
+        expect(
+          restartRect.bottom,
+          lessThanOrEqualTo(layoutCase.size.height - 21),
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets('Result records the resolved vehicle sticker', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final service = LocalMealProgressService();
