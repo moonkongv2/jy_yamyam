@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -6,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jy_yamyam/catalogs/meal_ingredient_catalog.dart';
 import 'package:jy_yamyam/l10n/app_texts.dart';
 import 'package:jy_yamyam/models/meal_timer_config.dart';
+import 'package:jy_yamyam/models/active_meal_timer_session.dart';
 import 'package:jy_yamyam/screens/home_screen.dart';
 import 'package:jy_yamyam/screens/timer_screen.dart';
 import 'package:jy_yamyam/services/active_meal_timer_session_store.dart';
@@ -13,6 +15,110 @@ import 'package:jy_yamyam/services/local_meal_progress_service.dart';
 import 'package:jy_yamyam/widgets/app/app_bouncy_button.dart';
 
 void main() {
+  testWidgets(
+    'rapid course taps open one picker and allow retry after dismissal',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final store = DelayedStore();
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: GlobalMaterialLocalizations.delegates,
+          supportedLocales: AppTexts.supportedLocales,
+          locale: const Locale('ko'),
+          home: HomeScreen(
+            config: MealTimerConfig.defaults().copyWith(childName: '지율'),
+            mealProgressService: LocalMealProgressService(),
+            activeSessionStore: store,
+            onConfigChanged: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      store.delay = true;
+      final button = find.textContaining('25분 보통 코스');
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pump(const Duration(milliseconds: 80));
+      await tester.tap(button);
+      await tester.pump();
+      expect(store.pending.length, 1);
+      store.delay = false;
+      for (final c in store.pending) {
+        c.complete(null);
+      }
+      await tester.pumpAndSettle();
+      final sheets = find.byKey(
+        const ValueKey('mealIngredientPickerSheet'),
+        skipOffstage: false,
+      );
+      expect(sheets, findsOneWidget);
+      Navigator.of(
+        tester.element(find.byKey(const ValueKey('mealIngredientPickerSheet'))),
+      ).pop();
+      await tester.pumpAndSettle();
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      expect(sheets, findsOneWidget);
+      await tester.tap(
+        find.byKey(const ValueKey('randomStartMealIngredientsButton')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(TimerScreen, skipOffstage: false), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    },
+  );
+  for (final disposeHome in [false, true]) {
+    testWidgets(
+      disposeHome
+          ? 'pending course lookup tolerates disposed home'
+          : 'failed course lookup releases guard for retry',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final store = DelayedStore();
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: GlobalMaterialLocalizations.delegates,
+            supportedLocales: AppTexts.supportedLocales,
+            locale: const Locale('ko'),
+            home: HomeScreen(
+              config: MealTimerConfig.defaults(),
+              mealProgressService: LocalMealProgressService(),
+              activeSessionStore: store,
+              onConfigChanged: (_) {},
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        store.delay = true;
+        final button = find.textContaining('25분 보통 코스');
+        await tester.tap(button);
+        await tester.pump();
+        expect(store.pending, hasLength(1));
+        if (disposeHome) await tester.pumpWidget(const SizedBox.shrink());
+        store.delay = false;
+        if (disposeHome) {
+          store.pending.single.complete(null);
+        } else {
+          store.pending.single.completeError(StateError('storage unavailable'));
+        }
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        if (!disposeHome) {
+          await tester.tap(button);
+          await tester.pumpAndSettle();
+          expect(
+            find.byKey(const ValueKey('mealIngredientPickerSheet')),
+            findsOneWidget,
+          );
+        }
+        await tester.pumpWidget(const SizedBox.shrink());
+        await tester.pumpAndSettle();
+      },
+    );
+  }
+
   testWidgets('Starting a course opens the ingredient picker first', (
     tester,
   ) async {
@@ -547,4 +653,16 @@ void main() {
       expect(changedConfig?.courseIngredientIds, isEmpty);
     },
   );
+}
+
+class DelayedStore extends ActiveMealTimerSessionStore {
+  bool delay = false;
+  final pending = <Completer<ActiveMealTimerSession?>>[];
+  @override
+  Future<ActiveMealTimerSession?> load() {
+    if (!delay) return Future.value(null);
+    final c = Completer<ActiveMealTimerSession?>();
+    pending.add(c);
+    return c.future;
+  }
 }

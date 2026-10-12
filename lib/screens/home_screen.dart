@@ -96,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   late Future<ActiveMealTimerSession?> _activeSessionFuture;
   late Future<MealProgressSnapshot> _progressSnapshotFuture;
   bool _isRouteVisible = true;
+  bool _isOpeningTimer = false;
   final Map<String, bool> _customAvatarFileExistsByPath = {};
   String? _selectedVehicleCustomAvatarPath;
   bool _selectedVehicleCustomAvatarExists = false;
@@ -307,37 +308,43 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Future<void> _startTimer(int minutes) async {
-    final normalizedMinutes = MealTimerPolicy.normalizeMinutes(minutes);
-    final shouldStartNewTimer = await _resolveActiveSessionBeforeNewTimer();
-    if (!mounted || !shouldStartNewTimer) {
-      return;
-    }
+    if (_isOpeningTimer) return;
+    _isOpeningTimer = true;
+    try {
+      final normalizedMinutes = MealTimerPolicy.normalizeMinutes(minutes);
+      final shouldStartNewTimer = await _resolveActiveSessionBeforeNewTimer();
+      if (!mounted || !shouldStartNewTimer) {
+        return;
+      }
 
-    final courseIngredientSelection =
-        await _courseIngredientSelectionForStart();
-    if (!mounted || courseIngredientSelection == null) {
-      return;
-    }
+      final courseIngredientSelection =
+          await _courseIngredientSelectionForStart();
+      if (!mounted || courseIngredientSelection == null) {
+        return;
+      }
 
-    final config = _configWithEffectiveVehicle(_config).copyWith(
-      duration: Duration(minutes: normalizedMinutes),
-      courseIngredientIds: courseIngredientSelection.courseIngredientIds,
-      selectedCourseIngredientIds:
-          courseIngredientSelection.selectedCourseIngredientIds,
-    );
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => TimerScreen(
-          config: config,
-          mealProgressService: widget.mealProgressService,
-          activeSessionStore: widget.activeSessionStore,
-          motivationMediaAvailable: widget.motivationMediaAvailable,
-          onConfigChanged: _updateTimerRuntimeConfig,
+      final config = _configWithEffectiveVehicle(_config).copyWith(
+        duration: Duration(minutes: normalizedMinutes),
+        courseIngredientIds: courseIngredientSelection.courseIngredientIds,
+        selectedCourseIngredientIds:
+            courseIngredientSelection.selectedCourseIngredientIds,
+      );
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => TimerScreen(
+            config: config,
+            mealProgressService: widget.mealProgressService,
+            activeSessionStore: widget.activeSessionStore,
+            motivationMediaAvailable: widget.motivationMediaAvailable,
+            onConfigChanged: _updateTimerRuntimeConfig,
+          ),
         ),
-      ),
-    );
-    if (mounted) {
-      _refreshHomeData();
+      );
+      if (mounted) {
+        _refreshHomeData();
+      }
+    } finally {
+      _isOpeningTimer = false;
     }
   }
 
@@ -406,24 +413,30 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Future<void> _resumeActiveTimer(ActiveMealTimerSession session) async {
-    final effectiveSession = _sessionWithEffectiveVehicle(session);
-    final normalizedSession = effectiveSession.copyWith(
-      config: _normalizeMealTimerConfig(effectiveSession.config),
-    );
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => TimerScreen(
-          config: normalizedSession.config,
-          restoredSession: normalizedSession,
-          mealProgressService: widget.mealProgressService,
-          activeSessionStore: widget.activeSessionStore,
-          motivationMediaAvailable: widget.motivationMediaAvailable,
-          onConfigChanged: _updateTimerRuntimeConfig,
+    if (_isOpeningTimer) return;
+    _isOpeningTimer = true;
+    try {
+      final effectiveSession = _sessionWithEffectiveVehicle(session);
+      final normalizedSession = effectiveSession.copyWith(
+        config: _normalizeMealTimerConfig(effectiveSession.config),
+      );
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => TimerScreen(
+            config: normalizedSession.config,
+            restoredSession: normalizedSession,
+            mealProgressService: widget.mealProgressService,
+            activeSessionStore: widget.activeSessionStore,
+            motivationMediaAvailable: widget.motivationMediaAvailable,
+            onConfigChanged: _updateTimerRuntimeConfig,
+          ),
         ),
-      ),
-    );
-    if (mounted) {
-      _refreshHomeData();
+      );
+      if (mounted) {
+        _refreshHomeData();
+      }
+    } finally {
+      _isOpeningTimer = false;
     }
   }
 
