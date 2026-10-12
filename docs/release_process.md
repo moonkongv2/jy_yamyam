@@ -3,18 +3,19 @@
 ## Version policy
 
 - 사용자 버전: `major.minor.patch`
-- 스토어에 빌드를 업로드할 때마다 build number를 1 증가한다.
+- `pubspec.yaml`을 버전·빌드 번호의 기준으로 사용한다.
+- 일반 로컬 개발·검증에서는 번호를 올리지 않는다. 새 업로드 바이너리를 준비할 때만
+  마지막 성공 업로드보다 큰 번호를 사용하며, 성공 업로드 번호는 재사용하지 않는다.
 - Android와 iOS의 build number는 동일하게 유지한다.
 - 첫 출시 전에는 `1.0.0`을 유지한다.
 - 버그 수정 출시: `1.0.1`
 - 기능 추가 출시: `1.1.0`
 
-## Build examples
+## First submission build
 
-- `1.0.0+1`: 최초 내부 테스트
-- `1.0.0+2`: IAP 테스트 빌드
-- `1.0.0+3`: 스토어 심사 제출
-- `1.0.0+4`: 심사 대응 수정
+- 현재 `1.0.0+1`, 성공 업로드 이력 없음(사용자 확인). 첫 업로드에 사용 가능.
+- 로컬 IAP 테스트·Release·Archive 검증을 이유로 `+2`/`+3`으로 올리지 않는다.
+- build 1이 성공 업로드된 뒤 새 바이너리를 준비할 때 build 2 이상을 사용한다.
 
 ## iOS release environment
 
@@ -73,3 +74,12 @@ flutter build ios --release --no-codesign
 `iphoneos26.*` 이상인지 확인하고, App Store Connect 업로드 검증을 수행한다.
 새 환경에서 연결된 iPhone의 첫 실행, 영상 재생, 사진 선택, 로컬 StoreKit
 구매·복원을 확인한다. 실제 스토어 결제 검증은 별도로 수행한다.
+
+## 2026-10-13 local verification
+
+`2cf2a5c`의 변경 없는 소스에서 `flutter build ios --release`와
+`flutter build ipa --release`가 성공했다. `1.0.0+1`, iOS 15.0, SDK 27.0.
+App Store용 export IPA의 서명 검증 통과, `get-task-allow=false` 확인.
+Organizer Validate와 App Store Connect 업로드/처리는 아직 수행하지 않았다.
+최종 소스·산출물·경고는 [검증 결과](IOS_RELEASE_VALIDATION.md),
+수동 검증은 [제출 체크리스트](IOS_APP_STORE_SUBMISSION_CHECKLIST.md)를 따른다.

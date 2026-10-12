@@ -1,6 +1,7 @@
 # iOS 첫 제출 — 커밋 단위 작업 계획
 
-작성일: 2026-10-12. 상태: 계획 검토 단계; 아래 구현 커밋은 아직 실행하지 않음.
+작성일: 2026-10-12. 실행 결과 갱신: 2026-10-13. 승인된 구현 및 로컬 검증 완료.
+실제 Sandbox·Organizer Validate·업로드·최종 심사 제출은 미완료.
 
 검토 상태: 이전 실행은 시간 초과했으나, 2026-10-12 재시도에서
 `agy-plan-review-loop` 1회 완료. 지적 2건 중 기존 체크리스트에 있던 빈 복원
@@ -17,8 +18,8 @@
 - 승인 범위: 버그 2건, 사진 권한 문구 현지화, 릴리스 문서 갱신 및 검증.
   privacy manifest와 배포 Archive는 조사·검증 승인. 조사 결과 필요한 추가
   코드·의존성·서명 변경은 근거와 최소 수정안을 먼저 보고한다.
-- 이번 요청은 기존 변경 커밋, 계획 검토 및 체크리스트 작성까지 수행한다.
-  사용자가 계획을 확인할 시간을 두고 후속 구현을 시작한다.
+- 계획 검토 이후 사용자가 구현 및 커밋을 승인하여 수행했다.
+  업로드·심사 제출은 별도 지시를 받은 뒤 수행한다.
 
 ## 기존 변경 커밋
 
@@ -170,3 +171,19 @@ App Store Connect IAP·메타데이터 준비가 완료된 뒤 최종 Go/No-Go�
 
 참조: [제출 체크리스트](IOS_APP_STORE_SUBMISSION_CHECKLIST.md),
 [릴리스 절차](release_process.md), [IAP 문서](release_iap_checklist.md).
+
+## 구현·검증 결과 — 2026-10-13
+
+- `5143857`: 계획 리뷰 결과 기록.
+- `b8125da`: 빈 iOS 복원 이벤트 대기 만료 처리 및 회귀 테스트.
+- `02b1242`: 시작/재개 공통 잠금 및 연속 탭·취소 재시도·조회 실패·dispose 회귀 테스트.
+- `2cf2a5c`: 5개 언어 사진 권한 설명.
+- 자동 검증: IAP 관련 48개, 홈 관련 24개, 전체 542개 테스트 성공. 분석 이슈 없음.
+- 깨끗한 `2cf2a5c` 소스에서 Release 앱, Archive 및 App Store IPA export 성공.
+  최종 IPA 서명 검증 통과, `get-task-allow=false`; 빌드 전후 tracked/untracked 변경 없음.
+- Flutter launch image 경고는 투명 1×1 네이티브 이미지에서 발생한다. Flutter 로고가
+  표시되는 기본 그림이 아니며, 초기 흰 화면과 앱 splash 전환은 실기기 확인 항목이다.
+- Privacy manifest 8개 확인. `path_provider` FFI의 전용 manifest 부재는 제출 검증 필요.
+  이번 조사 범위에서 의존성·manifest·서명 설정을 추가 변경하지 않았다.
+- 상세 명령·생성 파일·미검증 범위: [검증 결과](IOS_RELEASE_VALIDATION.md).
+- 상품 등록 초안·실제 테스트 순서: [Sandbox 가이드](IOS_IAP_SANDBOX_GUIDE.md).

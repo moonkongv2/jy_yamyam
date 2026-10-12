@@ -1,6 +1,6 @@
 # iOS App Store 제출 체크리스트
 
-작성일: 2026-10-12. 체크는 해당 결과를 확인한 뒤에만 표시한다.
+작성일: 2026-10-12. 자동 검증 갱신: 2026-10-13. 체크는 확인한 결과에만 표시한다.
 기존 감사에서 성공한 검증도 수정 후 최종 바이너리에 대해 다시 실행한다.
 
 ## 사용자 확인 사항
@@ -24,15 +24,15 @@
 
 ## 1. 코드와 최종 자동 검증 — Codex
 
-- [ ] AUTO-01 빈 iOS 복원 처리 수정 및 회귀 테스트 통과.
-- [ ] AUTO-02 코스 시작 중복 진입 수정 및 회귀 테스트 통과.
-- [ ] AUTO-03 사진 권한 설명 5개 언어 리소스 확인.
-- [ ] AUTO-04 `flutter analyze`: 명령·날짜·결과 기록.
-- [ ] AUTO-05 전체 `flutter test`: 성공/실패/건너뜀 수 기록.
-- [ ] AUTO-06 `flutter build ios --release`: 최종 소스에서 성공.
-- [ ] AUTO-07 버전·빌드 번호·Bundle ID·최소 iOS·SDK를 최종 앱 plist로 확인.
-- [ ] AUTO-08 Release는 5분 미만 설정을 정규화하고 개발 UI·가짜 구매를 노출하지 않음.
-- [ ] AUTO-09 최종 앱에 `.storekit`, 테스트 자료·스토어 자료 ZIP이 포함되지 않음.
+- [x] AUTO-01 빈 iOS 복원 처리 수정 및 회귀 테스트 통과.
+- [x] AUTO-02 코스 시작 중복 진입 수정 및 회귀 테스트 통과.
+- [x] AUTO-03 사진 권한 설명 5개 언어 리소스 확인.
+- [x] AUTO-04 `flutter analyze`: 명령·날짜·결과 기록.
+- [x] AUTO-05 전체 `flutter test`: 성공/실패/건너뜀 수 기록.
+- [x] AUTO-06 `flutter build ios --release`: 최종 소스에서 성공.
+- [x] AUTO-07 버전·빌드 번호·Bundle ID·최소 iOS·SDK를 최종 앱 plist로 확인.
+- [x] AUTO-08 Release는 5분 미만 설정을 정규화하고 개발 UI·가짜 구매를 노출하지 않음.
+- [x] AUTO-09 최종 앱에 `.storekit`, 테스트 자료·스토어 자료 ZIP이 포함되지 않음.
 - [ ] AUTO-10 최종 제출 코드 커밋 확정, tracked/untracked 변경과 생성 파일 확인.
 
 ## 2. App Store Connect IAP 준비 — 사용자, Codex 안내 지원
@@ -133,8 +133,8 @@ IAP-11/12는 실제 Sandbox에서 강제로 재현하기 어려울 수 있다. �
 ## 7. 배포 및 마지막 Go/No-Go — 사용자, Codex 검증 지원
 
 - [ ] DIST-01 첫 업로드 번호가 미사용 `1`인지 확인. 성공 업로드 이후 새 바이너리는 번호 증가.
-- [ ] DIST-02 최종 소스 커밋에서 배포 Archive 생성.
-- [ ] DIST-03 App Store 배포 export/서명 확인. 개발용 `get-task-allow=true` 앱을 제출 산출물로 오인하지 않음.
+- [x] DIST-02 최종 소스 커밋에서 배포 Archive 생성.
+- [x] DIST-03 App Store 배포 export/서명 확인. 개발용 `get-task-allow=true` 앱을 제출 산출물로 오인하지 않음.
 - [ ] DIST-04 Organizer Validate 및 개인정보/SDK 관련 검증 결과 확인.
 - [ ] DIST-05 사용자 업로드 지시 후 App Store Connect 업로드·처리 성공, 경고 메일 확인.
 - [ ] DIST-06 업로드된 빌드를 필요한 TestFlight/실기기 테스트 결과와 연결.
@@ -149,3 +149,11 @@ IAP-11/12는 실제 Sandbox에서 강제로 재현하기 어려울 수 있다. �
 - [SDK 개인정보 요구 사항](https://developer.apple.com/support/third-party-SDK-requirements/)
 
 관련 계획: [커밋 단위 작업 계획](IOS_APP_STORE_RELEASE_PLAN.md).
+
+## 이번 로컬 검증 기록
+
+- 자동 검증 소스: `2cf2a5c`; 빌드/Archive 전후 Git 변경 없음.
+- 분석 이슈 없음, 전체 테스트 542 성공·0 실패·0 건너뜀.
+- Release/Archive/App Store용 export/배포 서명 검증 성공.
+- DIST-04~08, PRIV-01~04, 실제 IAP/FLOW/STORE 항목은 완료로 간주하지 않는다.
+- [상세 검증 결과](IOS_RELEASE_VALIDATION.md), [Sandbox 실행 가이드](IOS_IAP_SANDBOX_GUIDE.md).

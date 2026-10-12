@@ -14,20 +14,22 @@ Policy references were checked on 2026-07-03:
 
 ## Verification Status
 
-Checked on 2026-07-03:
+Checked on 2026-10-13 after the approved release fixes:
 
-- `flutter analyze`: passed.
-- Focused IAP and vehicle entitlement tests: passed.
-- `VehicleSelectionCard` locked tap widget test: passed.
-- Full `flutter test`: not green yet because of existing broad `test/widget_test.dart` failures outside the IAP vehicle pack scope.
+- `flutter analyze`: passed, no issues.
+- Focused controller/adapter/Settings/purchase sheet tests: 48 passed.
+- Home start/active session tests: 24 passed.
+- Full `flutter test --no-pub --reporter json`: 542 passed, 0 failed, 0 skipped.
+- Signed iOS Release app, Archive and App Store IPA export: passed from `2cf2a5c`.
+- Exported IPA signature verified; distribution profile has `get-task-allow=false`.
+- App Store Connect IAP registration, actual Sandbox and Organizer Validate/upload:
+  not completed. Local build success does not certify submission readiness.
 
-Known full-suite failure areas to resolve before release:
-
-- Outdated result screen copy expectations.
-- Timer preview sequence tests leaving pending fake timers.
-- Outdated English locale copy expectations.
-- Existing avatar setup guide visibility/scroll expectation.
-- Reward goal confirmation copy expectation.
+The July full-suite failures below this heading in the previous revision are
+resolved; they are not current release blockers.
+See [validation results](IOS_RELEASE_VALIDATION.md),
+[submission checklist](IOS_APP_STORE_SUBMISSION_CHECKLIST.md), and
+[product setup/Sandbox guide](IOS_IAP_SANDBOX_GUIDE.md).
 
 ## Product
 
@@ -59,7 +61,8 @@ Known full-suite failure areas to resolve before release:
   3. Vehicle pack purchase/restore sheet
 - Settings shows the vehicle pack card lower in the settings list.
 - When the pack is locked, Settings exposes vehicle pack purchase and restore behind the guardian gate.
-- When the pack is unlocked, Settings shows only the unlocked status and hides purchase/restore actions.
+- When the pack is unlocked, the vehicle pack card shows only the unlocked status.
+- The separate Settings Help restore action remains available, including after unlock, behind the guardian gate.
 - Purchase state is kept separate from `MealTimerConfig`.
 - The local entitlement cache is stored through `LocalPurchaseEntitlementStore`.
 - Normal settings, progress, stickers, rewards, active timer state, and avatars remain local-first.
@@ -159,7 +162,11 @@ submit until the matching store records and signing setup are complete.
   - TODO: configure the App Store Connect app record with that bundle ID.
   - TODO: enable In-App Purchase capability if the final Xcode/App Store setup requires it.
 
-## Kids App Review Checklist
+## Lifestyle App Purchase Protection Checklist
+
+App Store Connect is configured as Lifestyle, not Kids Category (user confirmed).
+The app retains its guardian gates for its parent/child usage. The following
+checks describe the app behavior; they do not assert Kids Category membership.
 
 - No ads.
 - No third-party analytics.
@@ -215,5 +222,5 @@ Suggested privacy wording:
 - Locked-state Settings purchase entry requires guardian gate.
 - Locked-state Settings restore entry requires guardian gate.
 - Unlocked-state Settings: vehicle pack card appears lower in the settings list as a status-only card.
-- Unlocked-state Settings: purchase and restore actions are hidden.
-- Korean and English purchase/privacy copy fit on small devices.
+- Unlocked-state Settings: purchase actions on the pack card are hidden; the separate Help restore action remains available behind the guardian gate.
+- Korean, English, Japanese, Spanish and Portuguese purchase/privacy copy fit on small devices.
