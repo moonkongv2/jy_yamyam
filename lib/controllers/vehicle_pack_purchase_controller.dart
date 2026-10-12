@@ -296,7 +296,13 @@ class VehiclePackPurchaseController extends ChangeNotifier {
           }).toList(),
         );
       } else {
-        await restoreBatch.future.timeout(const Duration(seconds: 5));
+        try {
+          await restoreBatch.future.timeout(const Duration(seconds: 5));
+        } on TimeoutException {
+          // StoreKit can finish an empty restore without emitting an event.
+          // Let any queued transaction finish before deciding nothing was found.
+          await _purchaseQueue;
+        }
       }
       if (_state.status == VehiclePackPurchaseStatus.restoring) {
         _setState(

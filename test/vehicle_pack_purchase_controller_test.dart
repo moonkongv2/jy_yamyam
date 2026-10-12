@@ -12,6 +12,62 @@ import 'package:jy_yamyam/services/local_purchase_entitlement_store.dart';
 import 'fakes/fake_iap_purchase_client.dart';
 
 void main() {
+  testWidgets(
+    'eventless native restore finishes without an error and accepts late purchases',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final client = FakeIapPurchaseClient(
+        productDetailsResponse: ProductDetailsResponse(
+          productDetails: [fakeProductDetails()],
+          notFoundIDs: const [],
+        ),
+      )..onRestorePurchases = (_) async {};
+      addTearDown(client.dispose);
+      final controller = _controller(client);
+      addTearDown(controller.dispose);
+      final restore = controller.restorePurchases();
+      await tester.pump();
+      await controller.restorePurchases();
+      expect(client.restorePurchasesCallCount, 1);
+      expect(await controller.buyVehiclePack(), isFalse);
+      await tester.pump(const Duration(seconds: 6));
+      await restore;
+      expect(
+        controller.state.status,
+        VehiclePackPurchaseStatus.restoreNotFound,
+      );
+      expect(controller.state.errorMessage, isNull);
+      final purchase = fakePurchaseDetails(
+        status: PurchaseStatus.restored,
+        pendingCompletePurchase: true,
+      );
+      client.emitPurchases([purchase]);
+      await tester.runAsync(() => pumpEventQueue());
+      expect(
+        controller.state.status,
+        VehiclePackPurchaseStatus.restoreCompleted,
+      );
+      expect(controller.entitlement.vehiclePackUnlocked, isTrue);
+      expect(client.completedPurchases, [purchase]);
+      client.onRestorePurchases = null;
+      await controller.restorePurchases();
+      expect(client.restorePurchasesCallCount, 2);
+      expect(controller.entitlement.vehiclePackUnlocked, isTrue);
+    },
+  );
+
+  test('native restore timeout remains an error', () async {
+    SharedPreferences.setMockInitialValues({});
+    final client = FakeIapPurchaseClient()
+      ..restorePurchasesError = TimeoutException('native restore failed');
+    addTearDown(client.dispose);
+    final controller = _controller(client);
+    addTearDown(controller.dispose);
+    await controller.restorePurchases();
+    expect(controller.state.status, VehiclePackPurchaseStatus.error);
+    expect(controller.state.errorMessage, contains('native restore failed'));
+  });
+
   test('Vehicle pack purchase controller loads product details', () async {
     SharedPreferences.setMockInitialValues({});
     final productDetails = fakeProductDetails();
