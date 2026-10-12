@@ -1,2 +1,3 @@
 "CFBundleDisplayName" = "Yamyam Rider";
 "CFBundleName" = "Yamyam Rider";
+"NSPhotoLibraryUsageDescription" = "保護者の方がライダーに使う写真を選ぶために写真へのアクセスを求めます。写真の使用は任意です。";

@@ -1,2 +1,3 @@
 "CFBundleDisplayName" = "Yamyam Rider";
 "CFBundleName" = "Yamyam Rider";
+"NSPhotoLibraryUsageDescription" = "Parents can choose a photo for their rider. Photo access is optional.";
