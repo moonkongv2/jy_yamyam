@@ -137,6 +137,8 @@ class _ResultScreenState extends State<ResultScreen> {
   late final ResultAudioService _resultAudioService;
   late final bool _ownsResultAudioService;
   late final Future<RecordedMealSession> _recordedSession;
+  bool _recording = false;
+  Object? _recordError;
   bool _introFinished = false;
   bool _introFallback = false;
   bool _handoffOrientation = false;
@@ -156,6 +158,28 @@ class _ResultScreenState extends State<ResultScreen> {
             widget.result,
             vehicleId: _resolvedVehicleId,
           );
+    if (widget.recordedSession == null) {
+      _recording = true;
+      _recordedSession.then<void>(
+        (_) {
+          if (!mounted) return;
+          setState(() => _recording = false);
+          _startIntro();
+        },
+        onError: (Object error, StackTrace stackTrace) {
+          if (!mounted) return;
+          setState(() {
+            _recording = false;
+            _recordError = error;
+          });
+        },
+      );
+    } else {
+      _startIntro();
+    }
+  }
+
+  void _startIntro() {
     if (!widget.result.mealCompleted) {
       _introFinished = true;
       return;
@@ -265,6 +289,36 @@ class _ResultScreenState extends State<ResultScreen> {
   Widget build(BuildContext context) {
     final mealCompleted = widget.result.mealCompleted;
     final texts = AppTexts.of(context);
+    if (_recording) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (_recordError != null) {
+      return Scaffold(
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _recordError is DeletedMealSessionException
+                        ? texts.mealHistory.deletedMealMessage
+                        : _recordError is MealProgressDataException
+                        ? texts.mealHistory.deleteRecordDataError
+                        : texts.common.completionSaveError,
+                  ),
+                  TextButton(
+                    onPressed: () => _goHome(context),
+                    child: Text(texts.common.home),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     final vehicleId = _resolvedVehicleId;
     final failureRiderAssetPath = failureRiderAssetPathForVehicle(
       vehicleId: vehicleId,

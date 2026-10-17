@@ -160,6 +160,12 @@ abstract interface class MealHistoryTextSet {
   String get deleteRecordDialogBody;
   String get deleteRecordConfirmLabel;
   String get deleteRecordSuccessMessage;
+  String get deleteLinkedRewardsLabel;
+  String get deleteLinkedRewardsBody;
+  String get deleteRecordOnlyWarning;
+  String get deleteRecordError;
+  String get deleteRecordDataError;
+  String get deletedMealMessage;
 
   String completedStatus(MealCompletionStatus completionStatus);
   String dateLabel(DateTime dateTime);
@@ -378,6 +384,7 @@ abstract interface class RewardTextSet {
   String get earnedRewardGoalsTitle;
   String get usedRewardGoalsTitle;
   String get maxActiveRewardGoalsMessage;
+  String extraActiveRewardGoals(int count);
   String get editRewardGoal;
   String get cancelRewardGoal;
   String get rewardGoalHistoryTitle;

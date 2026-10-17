@@ -8,9 +8,19 @@ import '../models/meal_session_result.dart';
 import '../models/reward_goal.dart';
 import '../models/reward_item.dart';
 
+class DeletedMealSessionException implements Exception {
+  const DeletedMealSessionException();
+}
+
+class MealProgressDataException implements Exception {
+  const MealProgressDataException();
+}
+
 class LocalMealProgressService {
   LocalMealProgressService();
 
+  // Keep deleted IDs so a late completion cannot grant the same rewards again.
+  static const _deletedSessionIdsKey = 'deletedMealSessionIds';
   static const _historyKey = 'mealHistory';
   static const _inventoryKey = 'rewardInventory';
   static const _legacyActiveRewardGoalKey = 'activeRewardGoal';
@@ -45,16 +55,50 @@ class LocalMealProgressService {
   }
 
   Future<void> _recoverCompletion(SharedPreferences preferences) async {
-    final raw = preferences.getString(_completionJournalKey);
+    final String? raw;
+    try {
+      raw = preferences.getString(_completionJournalKey);
+    } catch (_) {
+      throw const MealProgressDataException();
+    }
     if (raw == null) return;
-    final journal = jsonDecode(raw) as Map<String, dynamic>;
+    final Map<String, dynamic> journal;
+    final Map<String, List<String>> valuesByKey;
+    try {
+      journal = jsonDecode(raw) as Map<String, dynamic>;
+      valuesByKey = {
+        for (final key in [
+          _historyKey,
+          _inventoryKey,
+          _activeRewardGoalsKey,
+          _earnedRewardGoalsKey,
+        ])
+          key: List<String>.from(journal[key] as List),
+      };
+      // Older completion journals do not carry or overwrite deleted IDs.
+      if (journal.containsKey(_deletedSessionIdsKey)) {
+        valuesByKey[_deletedSessionIdsKey] = _validatedDeletedIds(
+          journal[_deletedSessionIdsKey],
+        ).toList();
+      }
+    } catch (_) {
+      throw const MealProgressDataException();
+    }
+    if (valuesByKey.containsKey(_deletedSessionIdsKey)) {
+      _requireWrite(
+        await preferences.setStringList(
+          _deletedSessionIdsKey,
+          valuesByKey[_deletedSessionIdsKey]!,
+        ),
+      );
+    }
     for (final key in [
       _historyKey,
       _inventoryKey,
       _activeRewardGoalsKey,
       _earnedRewardGoalsKey,
     ]) {
-      final values = (journal[key] as List).cast<String>();
+      final values = valuesByKey[key]!;
       _requireWrite(await preferences.setStringList(key, values));
     }
     _requireWrite(await preferences.remove(_legacyActiveRewardGoalKey));
@@ -258,22 +302,145 @@ class LocalMealProgressService {
     });
   }
 
-  Future<bool> deleteMealHistoryEntry(String entryId) async {
+  Set<String> _validatedDeletedIds(Object? raw) {
+    if (raw is! List || raw.any((id) => id is! String || id.trim().isEmpty)) {
+      throw const MealProgressDataException();
+    }
+    return raw.cast<String>().toSet();
+  }
+
+  Set<String> _loadDeletedIds(SharedPreferences preferences) {
+    try {
+      if (!preferences.containsKey(_deletedSessionIdsKey)) return {};
+      return _validatedDeletedIds(preferences.get(_deletedSessionIdsKey));
+    } catch (_) {
+      throw const MealProgressDataException();
+    }
+  }
+
+  Future<bool> hasLinkedMealRewards(String entryId) {
+    return _withPreferences((preferences) async {
+      final history = _decodeList(
+        preferences.getStringList(_historyKey),
+        MealHistoryEntry.fromJson,
+      );
+      return history.any(
+            (entry) => entry.id == entryId && entry.rewardIds.isNotEmpty,
+          ) ||
+          [
+            ..._loadActiveRewardGoals(preferences),
+            ..._loadEarnedRewardGoals(preferences),
+          ].any(
+            (goal) =>
+                goal.filledSlots.any((slot) => slot.mealSessionId == entryId),
+          );
+    });
+  }
+
+  Future<bool> deleteMealHistoryEntry(
+    String entryId, {
+    bool deleteLinkedRewards = false,
+  }) async {
     return _withPreferences((preferences) async {
       final history = _decodeList(
         preferences.getStringList(_historyKey),
         MealHistoryEntry.fromJson,
       ).toList();
       final index = history.indexWhere((entry) => entry.id == entryId);
-      if (index == -1) {
-        return false;
-      }
+      if (index == -1) return false;
+      final deletedIds = _loadDeletedIds(preferences)..add(entryId);
+      final entry = history.removeAt(index);
+      var inventoryValues =
+          preferences.getStringList(_inventoryKey) ?? <String>[];
+      var activeValues =
+          preferences.getStringList(_activeRewardGoalsKey) ??
+          _loadActiveRewardGoals(
+            preferences,
+          ).map((goal) => jsonEncode(goal.toJson())).toList();
+      var earnedValues =
+          preferences.getStringList(_earnedRewardGoalsKey) ??
+          _loadEarnedRewardGoals(
+            preferences,
+          ).map((goal) => jsonEncode(goal.toJson())).toList();
 
-      history.removeAt(index);
-      await preferences.setStringList(
-        _historyKey,
-        history.map((entry) => jsonEncode(entry.toJson())).toList(),
+      if (deleteLinkedRewards) {
+        final active = _loadActiveRewardGoals(preferences);
+        final earned = _loadEarnedRewardGoals(preferences);
+        final goalIds = <String>{};
+        for (final goal in [...active, ...earned]) {
+          if (!goalIds.add(goal.id)) throw const MealProgressDataException();
+        }
+        final deductions = <String, int>{};
+        for (final id in entry.rewardIds) {
+          deductions[id] = (deductions[id] ?? 0) + 1;
+        }
+        final inventory = _decodeList(
+          inventoryValues,
+          RewardInventoryItem.fromJson,
+        );
+        if (inventory.length != inventoryValues.length ||
+            active.length != activeValues.length ||
+            earned.length != earnedValues.length) {
+          throw const MealProgressDataException();
+        }
+        final nextInventory = <RewardInventoryItem>[];
+        for (final item in inventory) {
+          final deduction = deductions.remove(item.rewardId) ?? 0;
+          if (deduction == 0) {
+            nextInventory.add(item);
+          } else {
+            final count = item.count - deduction;
+            if (count > 0) nextInventory.add(item.copyWith(count: count));
+          }
+        }
+        final nextActive = <RewardGoal>[];
+        final nextEarned = <RewardGoal>[];
+        for (final goal in [...active, ...earned]) {
+          final slots = goal.filledSlots
+              .where((slot) => slot.mealSessionId != entryId)
+              .toList();
+          final changed = slots.length != goal.filledSlots.length;
+          final revert =
+              changed &&
+              goal.isReady &&
+              slots.length < goal.requiredStickerCount;
+          final updated = !changed
+              ? goal
+              : goal.copyWith(
+                  filledSlots: slots,
+                  status: revert ? RewardGoalStatus.active : goal.status,
+                  earnedAt: revert ? null : goal.earnedAt,
+                  readyAt: revert ? null : goal.readyAt,
+                );
+          if (updated.isReady) {
+            nextEarned.add(updated);
+          } else {
+            nextActive.add(updated);
+          }
+        }
+        inventoryValues = nextInventory
+            .map((item) => jsonEncode(item.toJson()))
+            .toList();
+        activeValues = nextActive
+            .map((goal) => jsonEncode(goal.toJson()))
+            .toList();
+        earnedValues = nextEarned
+            .map((goal) => jsonEncode(goal.toJson()))
+            .toList();
+      }
+      final journal = <String, Object?>{
+        _deletedSessionIdsKey: deletedIds.toList(),
+        _historyKey: history
+            .map((entry) => jsonEncode(entry.toJson()))
+            .toList(),
+        _inventoryKey: inventoryValues,
+        _activeRewardGoalsKey: activeValues,
+        _earnedRewardGoalsKey: earnedValues,
+      };
+      _requireWrite(
+        await preferences.setString(_completionJournalKey, jsonEncode(journal)),
       );
+      await _recoverCompletion(preferences);
       return true;
     });
   }
@@ -283,6 +450,11 @@ class LocalMealProgressService {
     required String vehicleId,
   }) async {
     return _withPreferences((preferences) async {
+      final sessionId =
+          result.sessionId ?? result.endedAt.microsecondsSinceEpoch.toString();
+      if (_loadDeletedIds(preferences).contains(sessionId)) {
+        throw const DeletedMealSessionException();
+      }
       final history = _decodeList(
         preferences.getStringList(_historyKey),
         MealHistoryEntry.fromJson,
@@ -296,7 +468,7 @@ class LocalMealProgressService {
 
       if (result.sessionId != null) {
         final existing = history
-            .where((entry) => entry.id == result.sessionId)
+            .where((entry) => entry.id == sessionId)
             .firstOrNull;
         if (existing != null) {
           final relatedActive = activeRewardGoals
@@ -328,9 +500,7 @@ class LocalMealProgressService {
 
       final awardedRewards = _selectRewards(result, vehicleId: vehicleId);
       final entry = MealHistoryEntry(
-        id:
-            result.sessionId ??
-            result.endedAt.microsecondsSinceEpoch.toString(),
+        id: sessionId,
         startedAt: result.startedAt,
         endedAt: result.endedAt,
         targetDuration: result.targetDuration,
@@ -490,10 +660,9 @@ class LocalMealProgressService {
   List<RewardGoal> _loadActiveRewardGoals(SharedPreferences preferences) {
     final rawGoals = preferences.getStringList(_activeRewardGoalsKey);
     if (rawGoals != null) {
-      return _decodeRewardGoalList(rawGoals)
-          .where((goal) => goal.status == RewardGoalStatus.active)
-          .take(maxActiveRewardGoals)
-          .toList();
+      return _decodeRewardGoalList(
+        rawGoals,
+      ).where((goal) => goal.status == RewardGoalStatus.active).toList();
     }
 
     final legacyGoal = _decodeRewardGoal(

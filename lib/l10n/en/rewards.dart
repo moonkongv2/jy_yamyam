@@ -32,7 +32,7 @@ class EnRewardTexts implements RewardTextSet {
   String get earnedRewardGoalsTitle => 'Earned Rewards';
   String get usedRewardGoalsTitle => 'Given Rewards';
   String get maxActiveRewardGoalsMessage =>
-      'You can keep up to 2 active reward goals.';
+      "You can create a new reward promise when fewer than 2 are in progress.";
   String get editRewardGoal => 'Edit Goal';
   String get cancelRewardGoal => 'Cancel Goal';
   String get rewardGoalHistoryTitle => 'Reward History';
@@ -50,6 +50,8 @@ class EnRewardTexts implements RewardTextSet {
   String get confirmUseRewardGoalMessage =>
       'It will move from earned rewards to given rewards.';
   String get confirmUseRewardGoal => 'Give Reward';
+
+  String extraActiveRewardGoals(int count) => "$count more";
 
   String stickerCount(int count) => '$count';
   String rewardGoalProgress(int filledCount, int requiredCount) =>

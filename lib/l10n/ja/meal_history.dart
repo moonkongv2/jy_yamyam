@@ -27,6 +27,15 @@ class JaMealHistoryTexts implements MealHistoryTextSet {
   String get deleteRecordConfirmLabel => '削除';
   String get deleteRecordSuccessMessage => '食事記録を削除しました。';
 
+  String get deleteLinkedRewardsLabel => "この食事でもらったシールも削除する";
+  String get deleteLinkedRewardsBody =>
+      "シールコレクションとごほうびボードからも減ります。未使用のごほうびは達成が取り消される場合があります。使用済みのごほうびは残ります。";
+  String get deleteRecordOnlyWarning =>
+      "記録だけを削除すると、あとからこの記録のシールをまとめて削除することはできません。";
+  String get deleteRecordError => "保存を完了できませんでした。もう一度お試しください。";
+  String get deleteRecordDataError => "保存データに問題があるため変更できません。データをご確認ください。";
+  String get deletedMealMessage => "この食事はすでに削除されています。";
+
   String completedStatus(MealCompletionStatus completionStatus) {
     return completionStatus == MealCompletionStatus.notCompleted ? '未完了' : '完了';
   }

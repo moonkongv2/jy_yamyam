@@ -30,7 +30,8 @@ class RewardTexts implements RewardTextSet {
   String get activeRewardGoalsTitle => '진행 중인 보상 약속';
   String get earnedRewardGoalsTitle => '받은 보상';
   String get usedRewardGoalsTitle => '사용한 보상';
-  String get maxActiveRewardGoalsMessage => '진행 중인 보상 약속은 최대 2개까지 만들 수 있어요.';
+  String get maxActiveRewardGoalsMessage =>
+      "새 보상 약속은 진행 중인 약속이 2개 미만일 때 만들 수 있어요.";
   String get editRewardGoal => '약속 수정';
   String get cancelRewardGoal => '약속 취소';
   String get rewardGoalHistoryTitle => '지급 완료 이력';
@@ -46,6 +47,8 @@ class RewardTexts implements RewardTextSet {
   String get confirmUseRewardGoalMessage =>
       '사용하면 받은 보상 목록에서 사라지고 사용한 보상에 기록돼요.';
   String get confirmUseRewardGoal => '사용하기';
+
+  String extraActiveRewardGoals(int count) => "외 $count개";
 
   String stickerCount(int count) => '$count장';
   String rewardGoalProgress(int filledCount, int requiredCount) =>

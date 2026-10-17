@@ -29,6 +29,18 @@ class PtBrMealHistoryTexts implements MealHistoryTextSet {
   String get deleteRecordConfirmLabel => 'Excluir';
   String get deleteRecordSuccessMessage => 'Refeição excluída do histórico.';
 
+  String get deleteLinkedRewardsLabel =>
+      "Remover também os adesivos desta refeição";
+  String get deleteLinkedRewardsBody =>
+      "Os adesivos serão removidos da coleção e dos quadros de recompensas. Recompensas não usadas podem deixar de estar disponíveis. As já utilizadas serão mantidas.";
+  String get deleteRecordOnlyWarning =>
+      "Se excluir apenas o registro, não será possível remover seus adesivos por ele depois.";
+  String get deleteRecordError =>
+      "Não foi possível concluir o salvamento. Tente novamente.";
+  String get deleteRecordDataError =>
+      "Não é possível salvar as alterações porque há um problema nos dados armazenados. Verifique seus dados.";
+  String get deletedMealMessage => "Esta refeição já foi excluída.";
+
   String completedStatus(MealCompletionStatus completionStatus) {
     return completionStatus == MealCompletionStatus.notCompleted
         ? 'Não concluída'

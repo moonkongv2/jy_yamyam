@@ -290,6 +290,7 @@ class _TimerScreenState extends State<TimerScreen>
   ActiveMealTimerSession? _pendingCompletionSession;
   RecordedMealSession? _recordedCompletion;
   bool _isCompleting = false;
+  bool _deletedCompletion = false;
   double _finishDriveStartProgress = 0;
   late final String _activeSessionId;
   late final TimerActiveSessionController _activeSessionController;
@@ -954,6 +955,10 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   Future<void> _saveCompletionAndOpenResult() async {
+    if (_deletedCompletion) {
+      await _finishDeletedMealCleanup();
+      return;
+    }
     final session = _pendingCompletionSession!;
     final result = session.pendingCompletion!;
     try {
@@ -963,19 +968,29 @@ class _TimerScreenState extends State<TimerScreen>
         vehicleId: session.config.vehicleId,
       );
       await widget.activeSessionStore.clear();
+    } on DeletedMealSessionException {
+      _deletedCompletion = true;
+      await _finishDeletedMealCleanup();
+      return;
     } catch (error, stackTrace) {
       debugPrint('Unable to persist completed meal: $error');
       debugPrintStack(stackTrace: stackTrace);
       if (mounted) {
-        final texts = AppTexts.of(context).common;
+        final texts = AppTexts.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(texts.completionSaveError),
-            duration: const Duration(days: 1),
-            action: SnackBarAction(
-              label: texts.retry,
-              onPressed: () => unawaited(_confirmComplete()),
+            content: Text(
+              error is MealProgressDataException
+                  ? texts.mealHistory.deleteRecordDataError
+                  : texts.common.completionSaveError,
             ),
+            duration: const Duration(days: 1),
+            action: error is MealProgressDataException
+                ? null
+                : SnackBarAction(
+                    label: texts.common.retry,
+                    onPressed: () => unawaited(_confirmComplete()),
+                  ),
           ),
         );
       }
@@ -987,6 +1002,27 @@ class _TimerScreenState extends State<TimerScreen>
       _startFinishDrive(result);
     } else {
       _openResult(result);
+    }
+  }
+
+  Future<void> _finishDeletedMealCleanup() async {
+    if (!mounted) return;
+    try {
+      await widget.activeSessionStore.clear();
+      _pendingCompletionSession = null;
+      if (mounted) Navigator.of(context).popUntil((route) => route.isFirst);
+    } catch (_) {
+      if (!mounted) return;
+      final texts = AppTexts.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(texts.mealHistory.deleteRecordError),
+          action: SnackBarAction(
+            label: texts.common.retry,
+            onPressed: () => unawaited(_finishDeletedMealCleanup()),
+          ),
+        ),
+      );
     }
   }
 

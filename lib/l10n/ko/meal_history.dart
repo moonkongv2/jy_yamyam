@@ -27,6 +27,14 @@ class MealHistoryTexts implements MealHistoryTextSet {
   String get deleteRecordConfirmLabel => '삭제';
   String get deleteRecordSuccessMessage => '식사 기록을 삭제했어요.';
 
+  String get deleteLinkedRewardsLabel => "이 식사로 받은 스티커도 함께 삭제";
+  String get deleteLinkedRewardsBody =>
+      "스티커 보관함과 보상판에서도 차감돼요. 아직 사용하지 않은 보상은 달성이 취소될 수 있어요. 이미 사용한 보상은 유지돼요.";
+  String get deleteRecordOnlyWarning => "기록만 삭제하면 나중에 이 기록의 스티커를 함께 삭제할 수 없어요.";
+  String get deleteRecordError => "저장을 완료하지 못했어요. 다시 시도해 주세요.";
+  String get deleteRecordDataError => "저장 데이터에 문제가 있어 변경할 수 없어요. 데이터를 확인해 주세요.";
+  String get deletedMealMessage => "이미 삭제된 식사예요.";
+
   String completedStatus(MealCompletionStatus completionStatus) {
     return completionStatus == MealCompletionStatus.notCompleted ? '미완료' : '완료';
   }

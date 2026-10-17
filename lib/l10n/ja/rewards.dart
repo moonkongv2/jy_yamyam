@@ -30,7 +30,7 @@ class JaRewardTexts implements RewardTextSet {
   String get activeRewardGoalsTitle => '進行中のごほうび約束';
   String get earnedRewardGoalsTitle => 'もらえるごほうび';
   String get usedRewardGoalsTitle => '使ったごほうび';
-  String get maxActiveRewardGoalsMessage => '進行中のごほうび約束は2つまで作れます。';
+  String get maxActiveRewardGoalsMessage => "進行中のごほうびの約束が2つ未満になると、新しい約束を作れます。";
   String get editRewardGoal => '約束を編集';
   String get cancelRewardGoal => '約束をキャンセル';
   String get rewardGoalHistoryTitle => '受け渡し履歴';
@@ -46,6 +46,8 @@ class JaRewardTexts implements RewardTextSet {
   String get confirmUseRewardGoalMessage =>
       '使うと、もらえるごほうび一覧から消え、使ったごほうびに記録されます。';
   String get confirmUseRewardGoal => '使う';
+
+  String extraActiveRewardGoals(int count) => "ほか$count件";
 
   String stickerCount(int count) => '$count枚';
   String rewardGoalProgress(int filledCount, int requiredCount) =>

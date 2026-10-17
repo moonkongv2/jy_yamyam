@@ -32,7 +32,7 @@ class PtBrRewardTexts implements RewardTextSet {
   String get earnedRewardGoalsTitle => 'Recompensas ganhas';
   String get usedRewardGoalsTitle => 'Recompensas usadas';
   String get maxActiveRewardGoalsMessage =>
-      'Você pode ter até 2 metas ativas ao mesmo tempo.';
+      "Você pode criar uma nova promessa quando houver menos de 2 em andamento.";
   String get editRewardGoal => 'Editar meta';
   String get cancelRewardGoal => 'Cancelar meta';
   String get rewardGoalHistoryTitle => 'Histórico de recompensas';
@@ -50,6 +50,8 @@ class PtBrRewardTexts implements RewardTextSet {
   String get confirmUseRewardGoalMessage =>
       'Ao usar, ela sai das recompensas ganhas e fica registrada como usada.';
   String get confirmUseRewardGoal => 'Usar recompensa';
+
+  String extraActiveRewardGoals(int count) => "Mais $count";
 
   String stickerCount(int count) => '$count';
   String rewardGoalProgress(int filledCount, int requiredCount) =>

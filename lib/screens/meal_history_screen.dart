@@ -24,6 +24,7 @@ class MealHistoryScreen extends StatefulWidget {
 
 class _MealHistoryScreenState extends State<MealHistoryScreen> {
   late Future<MealProgressSnapshot> _snapshotFuture;
+  bool _deleting = false;
 
   @override
   void initState() {
@@ -38,41 +39,88 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
   }
 
   Future<void> _confirmDeleteMealHistoryEntry(MealHistoryEntry entry) async {
+    if (_deleting) return;
+    _deleting = true;
     final texts = AppTexts.of(context);
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(texts.mealHistory.deleteRecordDialogTitle),
-          content: Text(texts.mealHistory.deleteRecordDialogBody),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(texts.common.cancel),
+    try {
+      final hasLinkedRewards = await widget.mealProgressService
+          .hasLinkedMealRewards(entry.id);
+      if (!mounted) return;
+      var deleteLinkedRewards = false;
+      final shouldDelete = await showDialog<bool>(
+        context: context,
+        builder: (context) => StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            scrollable: true,
+            title: Text(texts.mealHistory.deleteRecordDialogTitle),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!deleteLinkedRewards)
+                  Text(texts.mealHistory.deleteRecordDialogBody),
+                if (hasLinkedRewards) ...[
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    title: Text(texts.mealHistory.deleteLinkedRewardsLabel),
+                    value: deleteLinkedRewards,
+                    onChanged: (value) => setDialogState(
+                      () => deleteLinkedRewards = value ?? false,
+                    ),
+                  ),
+                  Text(
+                    deleteLinkedRewards
+                        ? texts.mealHistory.deleteLinkedRewardsBody
+                        : texts.mealHistory.deleteRecordOnlyWarning,
+                  ),
+                ],
+              ],
             ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(texts.mealHistory.deleteRecordConfirmLabel),
-            ),
-          ],
-        );
-      },
-    );
-    if (shouldDelete != true) {
-      return;
-    }
-
-    final deleted = await widget.mealProgressService.deleteMealHistoryEntry(
-      entry.id,
-    );
-    if (!mounted) {
-      return;
-    }
-    if (deleted) {
-      _reloadSnapshot();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(texts.mealHistory.deleteRecordSuccessMessage)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(texts.common.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(texts.mealHistory.deleteRecordConfirmLabel),
+              ),
+            ],
+          ),
+        ),
       );
+      if (shouldDelete != true || !mounted) return;
+      final deleted = await widget.mealProgressService.deleteMealHistoryEntry(
+        entry.id,
+        deleteLinkedRewards: deleteLinkedRewards,
+      );
+      if (!mounted) return;
+      _reloadSnapshot();
+      if (deleted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(texts.mealHistory.deleteRecordSuccessMessage)),
+        );
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            error is MealProgressDataException
+                ? texts.mealHistory.deleteRecordDataError
+                : texts.mealHistory.deleteRecordError,
+          ),
+          action: error is MealProgressDataException
+              ? null
+              : SnackBarAction(
+                  label: texts.common.retry,
+                  onPressed: _reloadSnapshot,
+                ),
+        ),
+      );
+    } finally {
+      _deleting = false;
     }
   }
 
@@ -87,6 +135,27 @@ class _MealHistoryScreenState extends State<MealHistoryScreen> {
           future: _snapshotFuture,
           builder: (context, snapshot) {
             final history = snapshot.data?.history ?? const [];
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        snapshot.error is MealProgressDataException
+                            ? texts.mealHistory.deleteRecordDataError
+                            : texts.mealHistory.deleteRecordError,
+                      ),
+                      TextButton(
+                        onPressed: _reloadSnapshot,
+                        child: Text(texts.common.retry),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
@@ -287,9 +356,11 @@ class _MealHistoryCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                _StatusChip(
-                  label: historyTexts.completedStatus(entry.completionStatus),
-                  isIncomplete: !entry.mealCompleted,
+                Flexible(
+                  child: _StatusChip(
+                    label: historyTexts.completedStatus(entry.completionStatus),
+                    isIncomplete: !entry.mealCompleted,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 IconButton(

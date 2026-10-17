@@ -29,6 +29,18 @@ class EsMealHistoryTexts implements MealHistoryTextSet {
   String get deleteRecordConfirmLabel => 'Eliminar';
   String get deleteRecordSuccessMessage => 'Comida eliminada del historial.';
 
+  String get deleteLinkedRewardsLabel =>
+      "Eliminar también las pegatinas de esta comida";
+  String get deleteLinkedRewardsBody =>
+      "Se quitarán de la colección y de los tableros de recompensas. Las recompensas sin usar pueden dejar de estar disponibles. Las recompensas ya utilizadas se conservarán.";
+  String get deleteRecordOnlyWarning =>
+      "Si eliminas solo el registro, después no podrás quitar sus pegatinas desde este registro.";
+  String get deleteRecordError =>
+      "No se pudo completar el guardado. Inténtalo de nuevo.";
+  String get deleteRecordDataError =>
+      "No se pueden guardar los cambios porque hay un problema con los datos almacenados. Revisa tus datos.";
+  String get deletedMealMessage => "Esta comida ya se ha eliminado.";
+
   String completedStatus(MealCompletionStatus completionStatus) {
     return completionStatus == MealCompletionStatus.notCompleted
         ? 'No completada'

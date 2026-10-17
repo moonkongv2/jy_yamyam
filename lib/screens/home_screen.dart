@@ -174,10 +174,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   Future<ActiveMealTimerSession?> _loadActiveSession() async {
     var session = await widget.activeSessionStore.load();
     if (session?.pendingCompletion != null) {
-      await widget.mealProgressService.recordMealResult(
-        session!.pendingCompletion!,
-        vehicleId: session.config.vehicleId,
-      );
+      try {
+        await widget.mealProgressService.recordMealResult(
+          session!.pendingCompletion!,
+          vehicleId: session.config.vehicleId,
+        );
+      } on DeletedMealSessionException {
+        // A late completion must not recreate a deleted meal.
+      }
       await widget.activeSessionStore.clear();
       return null;
     }
@@ -2181,6 +2185,8 @@ class _ActiveRewardGoalsCta extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xs),
               ],
+              if (goals.length > 2)
+                Text(texts.rewards.extraActiveRewardGoals(goals.length - 2)),
               if (earnedRewardCount > 0)
                 Text(
                   '${texts.rewards.earnedRewardGoalsTitle} $earnedRewardCount',

@@ -32,7 +32,7 @@ class EsRewardTexts implements RewardTextSet {
   String get earnedRewardGoalsTitle => 'Recompensas ganadas';
   String get usedRewardGoalsTitle => 'Recompensas usadas';
   String get maxActiveRewardGoalsMessage =>
-      'Puedes tener hasta 2 metas activas a la vez.';
+      "Puedes crear una nueva promesa cuando haya menos de 2 en curso.";
   String get editRewardGoal => 'Editar meta';
   String get cancelRewardGoal => 'Cancelar meta';
   String get rewardGoalHistoryTitle => 'Historial de recompensas';
@@ -50,6 +50,8 @@ class EsRewardTexts implements RewardTextSet {
   String get confirmUseRewardGoalMessage =>
       'Al usarla, desaparece de ganadas y queda registrada como usada.';
   String get confirmUseRewardGoal => 'Usar recompensa';
+
+  String extraActiveRewardGoals(int count) => "$count más";
 
   String stickerCount(int count) => '$count';
   String rewardGoalProgress(int filledCount, int requiredCount) =>

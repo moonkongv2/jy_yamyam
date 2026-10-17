@@ -28,6 +28,18 @@ class EnMealHistoryTexts implements MealHistoryTextSet {
   String get deleteRecordConfirmLabel => 'Delete';
   String get deleteRecordSuccessMessage => 'Meal record deleted.';
 
+  String get deleteLinkedRewardsLabel =>
+      "Also remove stickers earned from this meal";
+  String get deleteLinkedRewardsBody =>
+      "Stickers will be removed from your collection and reward boards. Unused rewards may lose their earned status. Rewards already used will stay.";
+  String get deleteRecordOnlyWarning =>
+      "If you delete only the record, you cannot remove its stickers from this record later.";
+  String get deleteRecordError =>
+      "Saving could not be completed. Please try again.";
+  String get deleteRecordDataError =>
+      "Changes cannot be saved because there is a problem with the stored data. Please check your data.";
+  String get deletedMealMessage => "This meal has already been deleted.";
+
   String completedStatus(MealCompletionStatus completionStatus) {
     return completionStatus == MealCompletionStatus.notCompleted
         ? 'Incomplete'
