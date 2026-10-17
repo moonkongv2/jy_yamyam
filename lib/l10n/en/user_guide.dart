@@ -67,6 +67,11 @@ class EnUserGuideTexts implements UserGuideTextSet {
     'Meal history shows target time, actual time, and completion status. It also shows earned stickers and manually chosen ingredients.',
     'Earned stickers collect in the sticker collection screen.',
     'If reward goals are active, stickers can fill goal slots.',
+    'Deleting a meal record keeps its earned stickers and rewards by default.',
+    'If the meal has linked stickers or reward board slots, you can select “Also remove stickers earned from this meal” to remove them from the collection and linked reward boards.',
+    'Unused rewards return to an in-progress state if they fall below their goal after removal. Rewards already used stay unchanged.',
+    'If you delete only the record, you cannot later use that record to remove its stickers.',
+    'You can create a new reward goal when fewer than two are in progress. Removing stickers can return earned rewards to an in-progress state, bringing the total above two. Future completed meals fill all active boards.',
   ];
 
   String get exitResumeTitle => 'Leaving and resuming during a timer';

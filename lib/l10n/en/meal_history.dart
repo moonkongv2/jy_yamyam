@@ -15,6 +15,10 @@ class EnMealHistoryTexts implements MealHistoryTextSet {
     'Manually chosen ingredients appear when they were saved with the meal.',
     'Auto-selected ingredients appear on the road only and are not saved in history.',
     'Incomplete meals may show no stickers.',
+    'Deleting a meal record keeps its earned stickers and rewards by default.',
+    'If the meal has linked stickers or reward board slots, you can select “Also remove stickers earned from this meal” to remove them from the collection and linked reward boards.',
+    'Unused rewards return to an in-progress state if they fall below their goal after removal. Rewards already used stay unchanged.',
+    'If you delete only the record, you cannot later use that record to remove its stickers.',
   ];
   String get targetTimeLabel => 'Target';
   String get actualTimeLabel => 'Actual';

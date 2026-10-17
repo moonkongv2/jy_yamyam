@@ -67,6 +67,11 @@ class PtBrUserGuideTexts implements UserGuideTextSet {
     'No histórico, você vê tempo planejado, tempo real e status. Também aparecem adesivos recebidos e ingredientes escolhidos.',
     'Os adesivos recebidos ficam na coleção.',
     'Se houver uma meta de recompensa, os adesivos podem preencher os espaços dela.',
+    'Ao excluir uma refeição do histórico, os adesivos e as recompensas recebidos são mantidos por padrão.',
+    'Se a refeição tiver adesivos ou espaços vinculados nos quadros de recompensas, você pode marcar “Remover também os adesivos desta refeição” para removê-los da coleção e dos quadros vinculados.',
+    'Recompensas não usadas voltam a ficar em andamento se deixarem de atingir a meta. As recompensas já utilizadas são mantidas.',
+    'Se excluir apenas o registro, você não poderá usá-lo depois para remover os adesivos daquela refeição.',
+    'Você pode criar uma nova meta quando houver menos de duas em andamento. A remoção de adesivos pode fazer recompensas voltarem a ficar em andamento e ultrapassar esse número. As próximas refeições concluídas preenchem todos os quadros ativos.',
   ];
 
   String get exitResumeTitle => 'Sair e continuar durante o timer';

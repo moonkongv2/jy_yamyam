@@ -16,6 +16,10 @@ class PtBrMealHistoryTexts implements MealHistoryTextSet {
     'Ingredientes escolhidos manualmente também aparecem no histórico.',
     'Ingredientes automáticos aparecem apenas na rota e não ficam salvos.',
     'Uma refeição não concluída pode aparecer sem adesivo de veículo.',
+    'Ao excluir uma refeição do histórico, os adesivos e as recompensas recebidos são mantidos por padrão.',
+    'Se a refeição tiver adesivos ou espaços vinculados nos quadros de recompensas, você pode marcar “Remover também os adesivos desta refeição” para removê-los da coleção e dos quadros vinculados.',
+    'Recompensas não usadas voltam a ficar em andamento se deixarem de atingir a meta. As recompensas já utilizadas são mantidas.',
+    'Se excluir apenas o registro, você não poderá usá-lo depois para remover os adesivos daquela refeição.',
   ];
   String get targetTimeLabel => 'Meta';
   String get actualTimeLabel => 'Real';

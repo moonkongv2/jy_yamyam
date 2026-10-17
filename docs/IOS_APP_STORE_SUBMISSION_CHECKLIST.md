@@ -1,7 +1,10 @@
 # iOS App Store 제출 체크리스트
 
-작성일: 2026-10-12. 자동 검증 갱신: 2026-10-13. 체크는 확인한 결과에만 표시한다.
+작성일: 2026-10-12. 자동 검증 기록: 2026-10-13. 기능 반영 점검 갱신: 2026-10-17. 체크는 확인한 결과에만 표시한다.
 기존 감사에서 성공한 검증도 수정 후 최종 바이너리에 대해 다시 실행한다.
+`62f20ee`의 식사 기록 연동 삭제와 후속 사용 안내 수정은 기존 배포 산출물에 포함되지 않았다.
+AUTO-04~09 및 DIST-02/03은 최종 소스로 재검증하기 전까지 미완료로 표시한다.
+2026-10-13의 통과 이력은 문서 하단과 상세 검증 결과에 보존한다.
 
 ## 사용자 확인 사항
 
@@ -27,12 +30,12 @@
 - [x] AUTO-01 빈 iOS 복원 처리 수정 및 회귀 테스트 통과.
 - [x] AUTO-02 코스 시작 중복 진입 수정 및 회귀 테스트 통과.
 - [x] AUTO-03 사진 권한 설명 5개 언어 리소스 확인.
-- [x] AUTO-04 `flutter analyze`: 명령·날짜·결과 기록.
-- [x] AUTO-05 전체 `flutter test`: 성공/실패/건너뜀 수 기록.
-- [x] AUTO-06 `flutter build ios --release`: 최종 소스에서 성공.
-- [x] AUTO-07 버전·빌드 번호·Bundle ID·최소 iOS·SDK를 최종 앱 plist로 확인.
-- [x] AUTO-08 Release는 5분 미만 설정을 정규화하고 개발 UI·가짜 구매를 노출하지 않음.
-- [x] AUTO-09 최종 앱에 `.storekit`, 테스트 자료·스토어 자료 ZIP이 포함되지 않음.
+- [ ] AUTO-04 `flutter analyze`: 명령·날짜·결과 기록.
+- [ ] AUTO-05 전체 `flutter test`: 성공/실패/건너뜀 수 기록.
+- [ ] AUTO-06 `flutter build ios --release`: 최종 소스에서 성공.
+- [ ] AUTO-07 버전·빌드 번호·Bundle ID·최소 iOS·SDK를 최종 앱 plist로 확인.
+- [ ] AUTO-08 Release는 5분 미만 설정을 정규화하고 개발 UI·가짜 구매를 노출하지 않음.
+- [ ] AUTO-09 최종 앱에 `.storekit`, 테스트 자료·스토어 자료 ZIP이 포함되지 않음.
 - [ ] AUTO-10 최종 제출 코드 커밋 확정, tracked/untracked 변경과 생성 파일 확인.
 
 ## 2. App Store Connect IAP 준비 — 사용자, Codex 안내 지원
@@ -97,7 +100,12 @@ IAP-11/12는 실제 Sandbox에서 강제로 재현하기 어려울 수 있다. �
 - [ ] FLOW-09 조기 완료·도착 시 완료·미완료: 결과 기록·영상·스티커 지급 규칙 정상.
 - [ ] FLOW-10 완료 저장 후 재시작·반복 조작: 스티커/식사 기록이 중복되지 않음.
 - [ ] FLOW-11 보상 목표 생성·수정·달성·사용·취소와 재시작 후 저장 확인.
-- [ ] FLOW-12 식사 이력·스티커 앨범 표시, 기록 삭제 후 앱 동작 확인.
+- [ ] FLOW-12 식사 이력·스티커 앨범 표시. 삭제 확인창의 스티커 함께 삭제 옵션은 기본 해제이며, 연결 보상이 없는 식사에는 표시되지 않음. 취소 시 변경 없음.
+- [ ] FLOW-12A 기록만 삭제: 기록은 사라지고 스티커·보상판·사용한 보상은 유지. 나중에 해당 기록을 통한 스티커 삭제가 불가능하다는 안내 확인.
+- [ ] FLOW-12B 스티커 함께 삭제: 해당 식사의 스티커와 연결 보상판 칸만 차감. 보관함의 마지막 스티커 삭제 시 항목 제거, 목표 미달 미사용 보상은 진행 중으로 복귀, 사용한 보상은 유지.
+- [ ] FLOW-12C 복귀로 진행 중 보상이 3개 이상인 상태: 보상 화면에 전체 표시, 홈에 ‘외 N개’ 표시. 신규 생성은 진행 중 2개 미만일 때만 가능하며, 다음 완료 식사는 모든 진행 중 보상판에 반영.
+- [ ] FLOW-12D 두 삭제 방식 모두 홈 복귀·앱 재시작 후 기록·스티커 합계·보상 상태 일치. 빠른 연속 삭제로 중복 차감되지 않음.
+- [ ] FLOW-12E 사용 안내와 식사 기록 도움말의 삭제 규칙을 5개 언어로 확인. 작은 화면·글자 확대에서 스크롤과 닫기·삭제·취소 조작 가능.
 - [ ] FLOW-13 사진 선택 취소·거부·정상 선택·아바타 저장 후 재시작.
 - [ ] FLOW-14 사진 선택 후 화면을 나가도 오류 없음. 권한 설명이 표시되면 OS 언어 확인.
 - [ ] FLOW-15 설정의 Privacy/Support 링크: 보호자 확인 후 열리고 앱으로 복귀 가능.
@@ -117,7 +125,8 @@ IAP-11/12는 실제 Sandbox에서 강제로 재현하기 어려울 수 있다. �
 - [ ] META-02 기존 스크린샷·설명이 최종 UI·지원 기기·기능과 일치. 디버그 UI/가짜 가격 없음.
 - [ ] META-03 아바타 이미지는 외부에서 준비하여 가져옴을 설명. 앱 내부 AI 생성으로 광고하지 않음.
 - [ ] META-04 현재 Age Rating 설문과 Lifestyle 설정을 최종 확인.
-- [ ] META-05 App Review 연락처·심사 노트·IAP 접근 경로 입력.
+- [ ] META-05 App Review 연락처·심사 노트·IAP 접근 경로 및 아래 식사 기록 삭제 안내 입력.
+- [ ] META-06 외부 Support 페이지에 개별 기록 삭제 FAQ 반영 여부 확인. [5개 언어 초안](MEAL_HISTORY_DELETE_SUPPORT_COPY.md)은 아직 미게시 상태.
 
 심사 노트 초안(최종 UI와 대조 후 사용):
 
@@ -129,12 +138,17 @@ IAP-11/12는 실제 Sandbox에서 강제로 재현하기 어려울 수 있다. �
 > that the meal is finished before the timer ends to view the result and sticker.
 > Custom rider images are imported from the photo library and stored locally;
 > the app does not generate AI images or upload photos to a backend.
+>
+> In Meal Records, deleting a record keeps its stickers by default. Selecting
+> “Also remove stickers earned from this meal” removes the associated stickers
+> from the collection and linked reward boards. Unused rewards return to
+> in-progress status if they fall below their goal; used rewards remain unchanged.
 
 ## 7. 배포 및 마지막 Go/No-Go — 사용자, Codex 검증 지원
 
 - [ ] DIST-01 첫 업로드 번호가 미사용 `1`인지 확인. 성공 업로드 이후 새 바이너리는 번호 증가.
-- [x] DIST-02 최종 소스 커밋에서 배포 Archive 생성.
-- [x] DIST-03 App Store 배포 export/서명 확인. 개발용 `get-task-allow=true` 앱을 제출 산출물로 오인하지 않음.
+- [ ] DIST-02 최종 소스 커밋에서 배포 Archive 생성.
+- [ ] DIST-03 App Store 배포 export/서명 확인. 개발용 `get-task-allow=true` 앱을 제출 산출물로 오인하지 않음.
 - [ ] DIST-04 Organizer Validate 및 개인정보/SDK 관련 검증 결과 확인.
 - [ ] DIST-05 사용자 업로드 지시 후 App Store Connect 업로드·처리 성공, 경고 메일 확인.
 - [ ] DIST-06 업로드된 빌드를 필요한 TestFlight/실기기 테스트 결과와 연결.
@@ -150,10 +164,17 @@ IAP-11/12는 실제 Sandbox에서 강제로 재현하기 어려울 수 있다. �
 
 관련 계획: [커밋 단위 작업 계획](IOS_APP_STORE_RELEASE_PLAN.md).
 
-## 이번 로컬 검증 기록
+## 2026-10-13 로컬 검증 기록 — 과거 소스
 
 - 자동 검증 소스: `2cf2a5c`; 빌드/Archive 전후 Git 변경 없음.
 - 분석 이슈 없음, 전체 테스트 542 성공·0 실패·0 건너뜀.
 - Release/Archive/App Store용 export/배포 서명 검증 성공.
 - DIST-04~08, PRIV-01~04, 실제 IAP/FLOW/STORE 항목은 완료로 간주하지 않는다.
 - [상세 검증 결과](IOS_RELEASE_VALIDATION.md), [Sandbox 실행 가이드](IOS_IAP_SANDBOX_GUIDE.md).
+
+## 2026-10-17 기능 반영 상태
+
+- `62f20ee`는 기록만 삭제/스티커 연동 삭제 선택, 미사용 보상 복귀, 초과 보상 보존과 삭제 식사 재지급 방지를 구현했다.
+- 해당 커밋의 구현 문서에는 전체 테스트 609개 및 분석 통과가 기록되어 있다. [구현·검증 범위](MEAL_HISTORY_LINKED_DELETE_PLAN.md#10-구현-및-검증-결과)를 참고한다.
+- 후속 사용 안내 수정의 검증은 [출시 검증 결과](IOS_RELEASE_VALIDATION.md)에 별도로 기록한다.
+- 기능과 사용 안내를 포함한 최종 Release/Archive/export, 실기기 FLOW-12~12E 및 스토어 검증은 미완료다.

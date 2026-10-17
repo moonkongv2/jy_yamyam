@@ -16,6 +16,10 @@ class EsMealHistoryTexts implements MealHistoryTextSet {
     'Si se eligieron ingredientes manualmente, también aparecen en el historial.',
     'Los ingredientes automáticos solo aparecen en la ruta y no se guardan.',
     'Una comida no completada puede aparecer sin pegatina de vehículo.',
+    'Al eliminar una comida del historial, las pegatinas y recompensas obtenidas se conservan de forma predeterminada.',
+    'Si la comida tiene pegatinas o espacios vinculados en los tableros de recompensas, puedes marcar «Eliminar también las pegatinas de esta comida» para quitarlos de la colección y de los tableros vinculados.',
+    'Las recompensas sin usar vuelven a estar en curso si dejan de alcanzar su meta. Las recompensas ya utilizadas se conservan.',
+    'Si eliminas solo el registro, después no podrás usarlo para quitar las pegatinas de esa comida.',
   ];
   String get targetTimeLabel => 'Objetivo';
   String get actualTimeLabel => 'Real';

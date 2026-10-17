@@ -14,6 +14,12 @@ Policy references were checked on 2026-07-03:
 
 ## Verification Status
 
+The results below apply to the October 13 source, not the current submission
+candidate. Commit `62f20ee` adds optional linked sticker deletion; the follow-up
+updates the in-app guide. A new Release/Archive/export and device validation
+are still required. See the October 17 entries in the linked validation results
+and submission checklist. The IAP product and entitlement rules are unchanged.
+
 Checked on 2026-10-13 after the approved release fixes:
 
 - `flutter analyze`: passed, no issues.

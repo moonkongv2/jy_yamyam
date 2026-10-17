@@ -1,9 +1,11 @@
 # iOS 출시 수정 및 로컬 검증 결과
 
 검증일: 2026-10-12~13. 확정 코드/설정 소스: `2cf2a5c898d077e5a84858f8b89a184a33a0c36b`.
-후속 커밋은 릴리스 문서 갱신이며 실행 코드나 설정을 바꾸지 않는다.
+이 문서의 2026-10-12~13 결과는 위 소스에만 적용한다.
+이후 `62f20ee`에서 식사 기록 연동 삭제와 완료 저장 경로가 변경되었고, 후속 수정으로 사용 안내가 추가되었다.
+기존 배포 산출물은 이 변경을 포함하지 않으며 현재 소스의 제출 검증 결과로 사용할 수 없다.
 
-**코드 수정과 로컬 배포 산출물 검증 완료. 제출 준비는 아직 미완료.**
+**2026-10-13 소스의 로컬 배포 검증 완료. 현재 소스의 최종 바이너리 검증과 제출 준비는 미완료.**
 App Store Connect IAP 미등록, 실제 Sandbox 및 전체 실기기 점검이 남아 있다.
 Organizer Validate·업로드·처리 결과 역시 아직 확인하지 않았다.
 
@@ -131,3 +133,30 @@ signature 요구도 적용한다(2026-10-13 재확인). 현재 FFI 구현에서 
 
 실행 안내: [Sandbox 가이드](IOS_IAP_SANDBOX_GUIDE.md).
 전체 결과 기록: [제출 체크리스트](IOS_APP_STORE_SUBMISSION_CHECKLIST.md).
+
+## 2026-10-17 식사 기록 연동 삭제 및 안내 후속 수정
+
+- 기능 소스: `62f20ee4a339235a07023ed009281577c8e1f05c`.
+- 해당 커밋의 [구현 기록](MEAL_HISTORY_LINKED_DELETE_PLAN.md#10-구현-및-검증-결과)은 전체 테스트 609개 통과, 분석 이슈 없음, 전체 검증 후 추가 가드의 UI 테스트 15개 통과를 보고한다. 이 결과는 여기서 재실행한 결과와 구분한다.
+- 후속 수정: 사용 안내와 식사 기록 도움말 5개 언어, 심사 노트, 삭제 방식별 실기기 체크리스트 및 외부 Support FAQ 초안.
+- 외부 Support 소스는 이 저장소에 없어 [FAQ 초안](MEAL_HISTORY_DELETE_SUPPORT_COPY.md)만 작성했다. 외부 페이지 게시와 App Store Connect 심사 노트 입력은 아직 수행하지 않았다.
+- 현재 소스의 Release/Archive/export/서명 확인 및 Organizer Validate·업로드: NOT RUN.
+- 실기기 두 삭제 방식, 미사용 보상 복귀·사용 보상 유지, 3개 이상 보상판, 홈 갱신·재시작 및 5개 언어 레이아웃: NOT RUN.
+- 버전·빌드 번호·서명·IAP 설정 변경 없음.
+
+### 이번 안내 수정의 로컬 검증
+
+검증일: 2026-10-17. 소스: `62f20ee` 기준의 미커밋 안내·문서·기존 테스트 수정.
+
+| 명령 | 결과 |
+|---|---|
+| `dart format` (수정한 l10n 파일 10개 및 기존 UI 테스트) | PASS, 포맷 변경 없음 |
+| `flutter test --no-pub test/user_guide_screen_test.dart test/meal_history_screen_test.dart test/meal_history_linked_delete_screen_test.dart test/meal_history_linked_delete_test.dart` | PASS, 79 성공·0 실패 |
+| `flutter analyze --no-pub` | PASS, 이슈 없음 |
+| `git diff --check` | PASS |
+
+첫 테스트 실행은 78 성공·1 실패였다. 새 도움말과 삭제창에 같은 안내 문구가 있어
+기존 `find.textContaining`이 두 위젯을 찾은 것이 원인이다. 확인창 내부로 검색 범위를
+한정하고 같은 4개 파일을 재실행해 79개 통과를 확인했다. 앱 동작 오류는 발견하지 못했다.
+Dart 포맷의 첫 실행은 SDK 캐시 쓰기가 sandbox에서 차단되어, 승인된 권한으로 재실행했다.
+이번에는 전체 테스트와 최종 배포 바이너리 검증을 수행하지 않았다.

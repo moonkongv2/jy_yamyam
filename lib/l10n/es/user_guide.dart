@@ -67,6 +67,11 @@ class EsUserGuideTexts implements UserGuideTextSet {
     'En el historial puedes ver tiempo objetivo, tiempo real y estado. También aparecen las pegatinas recibidas y los ingredientes elegidos.',
     'Las pegatinas recibidas se guardan en la colección.',
     'Si hay una meta de recompensa, las pegatinas pueden llenar sus espacios.',
+    'Al eliminar una comida del historial, las pegatinas y recompensas obtenidas se conservan de forma predeterminada.',
+    'Si la comida tiene pegatinas o espacios vinculados en los tableros de recompensas, puedes marcar «Eliminar también las pegatinas de esta comida» para quitarlos de la colección y de los tableros vinculados.',
+    'Las recompensas sin usar vuelven a estar en curso si dejan de alcanzar su meta. Las recompensas ya utilizadas se conservan.',
+    'Si eliminas solo el registro, después no podrás usarlo para quitar las pegatinas de esa comida.',
+    'Puedes crear una nueva meta si hay menos de dos en curso. Al quitar pegatinas, algunas recompensas pueden volver a estar en curso y superar ese número. Las siguientes comidas completadas suman pegatinas a todos los tableros activos.',
   ];
 
   String get exitResumeTitle => 'Salir y continuar durante el temporizador';

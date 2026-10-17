@@ -23,6 +23,7 @@ The app is designed around one simple goal: make mealtime pacing feel like a coz
 - Completion result screen with vehicle-specific success videos and fallback handling
 - In-app parent guide and contextual help for ingredients, results, rewards, and history
 - Local active timer session restore, meal history, progress summary, vehicle stickers, and reward goal tracking
+- Optional removal of linked stickers and unused reward progress when deleting a meal record
 - Vehicle sticker collection and reward goal screens
 - One-time vehicle pack in-app purchase flow with guardian gate and local entitlement cache
 - Korean, English, Japanese, Spanish, and Brazilian Portuguese localization

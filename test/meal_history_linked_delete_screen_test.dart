@@ -49,7 +49,13 @@ void main() {
           await tester.tap(find.byType(CheckboxListTile));
           await tester.pumpAndSettle();
           expect(find.text('기록만 삭제되고 받은 차량 스티커는 유지돼요.'), findsNothing);
-          expect(find.textContaining('이미 사용한 보상은 유지돼요.'), findsOneWidget);
+          expect(
+            find.descendant(
+              of: find.byType(AlertDialog),
+              matching: find.textContaining('이미 사용한 보상은 유지돼요.'),
+            ),
+            findsOneWidget,
+          );
         }
         await tester.tap(find.widgetWithText(FilledButton, '삭제'));
         await tester.pumpAndSettle();
