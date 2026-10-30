@@ -84,9 +84,32 @@ Timer background music loops only while a meal timer is actively running. It doe
 
 Course-marker sound effects play once when the rider passes a visible meal-ingredient marker. The marker event uses the same progress thresholds as the visible course markers and suppresses duplicate playback after rebuilds, restores, orientation changes, and large progress jumps.
 
-Both timer background music and course-marker effects use the existing sound setting. The same setting also continues to gate motivation voice when motivation media is later re-enabled; motivation video availability remains separately controlled by `ENABLE_MOTIVATION_MEDIA`.
+Timer background music, course-marker effects, and the repeating end alarm use the existing sound setting. The same setting also continues to gate motivation voice when motivation media is later re-enabled; motivation video availability remains separately controlled by `ENABLE_MOTIVATION_MEDIA`.
 
-Runtime audio files live under `assets/audio/timer_bgm/` and `assets/audio/marker/`. The app registers only the exact playable files in `pubspec.yaml` so license evidence, metadata, screenshots, certificates, PDFs, and original source files under `_licenses/` are kept out of the app bundle.
+At zero, `assets/audio/timer_end.mp3` loops while the app is active until the
+user responds to the existing completion dialog. The automatic arrival dialog
+still opens after about 900ms; opening the dialog does not silence the alarm.
+Done stops the alarm and saves the completed result; Not Yet stops the alarm
+and saves the existing incomplete result. Alarm stop completes before saving
+and result navigation, while meal duration is captured at the response time.
+
+If a manual completion dialog is open when time expires, it keeps its original
+completion/cancellation meaning. Cancelling it defers the automatic arrival
+dialog until the manual dialog has closed, followed by the usual 900ms delay.
+An explicit Not Yet silences the alarm, so the deferred arrival dialog is silent;
+a barrier/back cancellation leaves the alarm unconfirmed. The deferred dialog
+then lets the user finish with the existing completed or incomplete result.
+
+The alarm stops on sound-off, app inactivity, exit, and disposal. Returning to
+the same unconfirmed timer or enabling sound again restarts it. Relaunching an
+already expired saved session shows the existing arrival prompt without replaying
+the old alarm. This feature does not provide background or lock-screen alarms.
+Early completion keeps its existing finish-drive and arrival sounds. See
+[`docs/TIMER_END_ALARM_IMPLEMENTATION_PLAN.md`](docs/TIMER_END_ALARM_IMPLEMENTATION_PLAN.md)
+for the scenario contract and verification scope.
+
+Runtime audio files live under `assets/audio/timer_bgm/`, `assets/audio/marker/`,
+and exact top-level effect paths such as `assets/audio/timer_end.mp3`. The app registers only the exact playable files in `pubspec.yaml` so license evidence, metadata, screenshots, certificates, PDFs, and original source files under `_licenses/` are kept out of the app bundle.
 
 Repository-local license metadata lives next to each audio asset under `_licenses/<audio-file-stem>/`. Source and license details must come from real evidence and must not be invented. Licensed audio and evidence are kept in this private repository for rebuild and audit purposes, and must not be redistributed independently from the app.
 
@@ -121,7 +144,7 @@ lib/
     meal_course_catalog.dart         # Preset and custom meal course constants
     meal_ingredient_catalog.dart     # Meal ingredient options and course slot generation
     motivation_asset_catalog.dart    # Motivation video and voice asset catalogs
-    timer_audio_asset_catalog.dart   # Timer BGM and marker SFX asset catalog
+    timer_audio_asset_catalog.dart   # Timer BGM, effects, and end-alarm asset catalog
     vehicle_catalog.dart             # Available vehicles and image assets
   controllers/
     meal_timer_controller.dart       # Timer state, progress, pause/resume logic
