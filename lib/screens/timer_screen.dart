@@ -240,7 +240,19 @@ class _TimerScreenState extends State<TimerScreen>
   late final bool _ownsTimerAudioService;
   late MealTimerConfig _timerConfig;
   final math.Random _motivationRandom = math.Random();
-  bool _arrivalPromptShown = false;
+  bool _arrivalObserved = false;
+  bool _arrivalPromptPending = false;
+  bool _arrivalPromptScheduled = false;
+  bool _completionDialogClosing = false;
+  int _arrivalPromptRequest = 0;
+  bool _suppressRestoredAlarm = false;
+  bool _timerEndAlarmAcknowledged = false;
+  bool _timerEndAlarmRequested = false;
+  int _timerEndAlarmRequest = 0;
+  bool _isDisposing = false;
+  Future<void> _motivationPlaybackOperation = Future.value();
+  Future<void> _arrivalAudioStopped = Future.value();
+  Future<void>? _timerEndAlarmStopped;
   bool _exitPromptShown = false;
   bool _allowExit = false;
   late final MotivationCueController _motivationCueController;
@@ -303,6 +315,9 @@ class _TimerScreenState extends State<TimerScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    final lifecycle = WidgetsBinding.instance.lifecycleState;
+    _isAppBackgrounded =
+        lifecycle != null && lifecycle != AppLifecycleState.resumed;
     _timerConfig = _normalizeMealTimerConfig(widget.config);
     _motivationAudioService =
         widget.motivationAudioService ??
@@ -333,6 +348,7 @@ class _TimerScreenState extends State<TimerScreen>
         now: widget.now,
       );
     }
+    _suppressRestoredAlarm = restoredSession != null && _controller.hasArrived;
     _activeSessionController = TimerActiveSessionController(
       timerController: _controller,
       store: widget.activeSessionStore,
@@ -556,6 +572,10 @@ class _TimerScreenState extends State<TimerScreen>
 
   @override
   void dispose() {
+    _isDisposing = true;
+    _arrivalPromptPending = false;
+    _cancelArrivalPrompt();
+    _syncTimerEndAlarm();
     WidgetsBinding.instance.removeObserver(this);
     _motivationVoiceTimer?.cancel();
     _arrivalPromptTimer?.cancel();
@@ -624,46 +644,121 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _handleTimerChanged() {
-    _syncTimerAudioWithState();
-    if (_isFinishDriving) {
-      return;
+    if (!_arrivalObserved && _controller.state == MealTimerState.arrived) {
+      _arrivalObserved = true;
+      _arrivalPromptPending = true;
+      _motivationVoiceTimer?.cancel();
+      _motivationCueController.completeActiveCue();
+      _arrivalAudioStopped = _stopArrivalMotivationAudio();
+      unawaited(_persistActiveSession());
     }
+    _syncTimerAudioWithState();
+    if (_isFinishDriving) return;
 
     if (_isCourseOverviewing &&
         (_controller.state == MealTimerState.arrived ||
             _controller.state == MealTimerState.completed)) {
       _cancelCourseOverview();
     }
-
     _maybeShowMotivationVideo();
+  }
 
-    if (_arrivalPromptShown ||
-        _controller.state != MealTimerState.arrived ||
-        !mounted) {
+  bool get _canShowArrivalPrompt =>
+      mounted &&
+      !_isDisposing &&
+      _arrivalPromptPending &&
+      !_isAppBackgrounded &&
+      !_exitPromptShown &&
+      !_allowExit &&
+      !_isCompleting &&
+      !_completionDialogClosing &&
+      !_isFinishDriving &&
+      _controller.state == MealTimerState.arrived;
+
+  void _cancelArrivalPrompt() {
+    _arrivalPromptRequest++;
+    _arrivalPromptTimer?.cancel();
+    _arrivalPromptTimer = null;
+    _arrivalPromptScheduled = false;
+  }
+
+  void _syncArrivalPrompt() {
+    if (!_canShowArrivalPrompt) {
+      if (_arrivalPromptScheduled) _cancelArrivalPrompt();
       return;
     }
-
-    _arrivalPromptShown = true;
-    unawaited(_persistActiveSession());
+    if (_arrivalPromptScheduled) return;
+    _arrivalPromptScheduled = true;
+    final request = ++_arrivalPromptRequest;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) {
-        return;
-      }
-      _arrivalPromptTimer?.cancel();
+      if (request != _arrivalPromptRequest || !_canShowArrivalPrompt) return;
       _arrivalPromptTimer = Timer(const Duration(milliseconds: 900), () {
-        if (!mounted ||
-            _isFinishDriving ||
-            _controller.state != MealTimerState.arrived) {
-          return;
-        }
-        _confirmComplete(showFailureOnDecline: true);
+        if (request != _arrivalPromptRequest || !_canShowArrivalPrompt) return;
+        _arrivalPromptScheduled = false;
+        _arrivalPromptTimer = null;
+        _arrivalPromptPending = false;
+        unawaited(_confirmComplete(showFailureOnDecline: true));
       });
     });
+    // A dialog can finish between frames without rebuilding the timer screen.
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  void _syncTimerEndAlarm() {
+    final shouldPlay =
+        mounted &&
+        !_isDisposing &&
+        _arrivalObserved &&
+        !_suppressRestoredAlarm &&
+        !_timerEndAlarmAcknowledged &&
+        _timerConfig.soundEnabled &&
+        !_isAppBackgrounded &&
+        !_exitPromptShown &&
+        !_allowExit &&
+        !_isFinishDriving &&
+        _pendingCompletionSession == null &&
+        _controller.state == MealTimerState.arrived;
+    if (shouldPlay == _timerEndAlarmRequested) return;
+    _timerEndAlarmRequested = shouldPlay;
+    final request = ++_timerEndAlarmRequest;
+    if (shouldPlay) {
+      unawaited(_startTimerEndAlarmAfterAudioStops(request));
+    } else {
+      _timerEndAlarmStopped = _timerAudioService.stopTimerEndAlarm();
+      unawaited(_timerEndAlarmStopped);
+    }
+  }
+
+  Future<void> _startTimerEndAlarmAfterAudioStops(int request) async {
+    await _arrivalAudioStopped;
+    if (!mounted ||
+        !_timerEndAlarmRequested ||
+        request != _timerEndAlarmRequest) {
+      return;
+    }
+    await _timerAudioService.startTimerEndAlarm();
+  }
+
+  void _acknowledgeTimerEndAlarm() {
+    if (!_controller.hasArrived) return;
+    _timerEndAlarmAcknowledged = true;
+    _syncTimerEndAlarm();
+  }
+
+  Future<void> _stopArrivalMotivationAudio() async {
+    await _motivationPlaybackOperation;
+    try {
+      await _motivationAudioService.stop();
+    } catch (error, stackTrace) {
+      debugPrint('Unable to stop arrival motivation audio: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   void _maybeShowMotivationVideo() {
     if (!widget.motivationMediaAvailable ||
         !mounted ||
+        _controller.state != MealTimerState.running ||
         _isCameraPreviewActive ||
         _isFinishDriving) {
       return;
@@ -699,7 +794,10 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _maybePlayMotivationVoice() {
-    if (!widget.motivationMediaAvailable || !_timerConfig.soundEnabled) {
+    if (!widget.motivationMediaAvailable ||
+        !_timerConfig.soundEnabled ||
+        _controller.state != MealTimerState.running ||
+        _isAppBackgrounded) {
       return;
     }
 
@@ -713,7 +811,11 @@ class _TimerScreenState extends State<TimerScreen>
     if (voicePath == null) {
       return;
     }
-    unawaited(_playMotivationVoice(voicePath));
+    _motivationPlaybackOperation = Future.wait([
+      _motivationPlaybackOperation,
+      _playMotivationVoice(voicePath),
+    ]).then((_) {});
+    unawaited(_motivationPlaybackOperation);
   }
 
   Future<void> _playMotivationVoice(String voicePath) async {
@@ -807,6 +909,7 @@ class _TimerScreenState extends State<TimerScreen>
         _allowExit ||
         _isFinishDriving ||
         _isCompleting ||
+        _completionDialogClosing ||
         _pendingCompletionSession != null ||
         !mounted) {
       return;
@@ -851,6 +954,9 @@ class _TimerScreenState extends State<TimerScreen>
     _exitPromptShown = false;
     if (shouldExit == true) {
       _allowExit = true;
+      _arrivalPromptPending = false;
+      _cancelArrivalPrompt();
+      _syncTimerEndAlarm();
       await _clearActiveSession(waitForTimerAudio: false);
       if (!mounted) {
         return;
@@ -866,18 +972,20 @@ class _TimerScreenState extends State<TimerScreen>
       _controller.resume();
       unawaited(_persistActiveSession());
     }
+    _syncTimerAudioWithState();
   }
 
   Future<void> _confirmComplete({bool showFailureOnDecline = false}) async {
-    if (_isFinishDriving || _isCompleting) return;
+    if (_isFinishDriving || _isCompleting || _completionDialogClosing) return;
     setState(() => _isCompleting = true);
+    ModalRoute<bool>? completionRoute;
     try {
       if (_pendingCompletionSession != null) {
         await _saveCompletionAndOpenResult();
         return;
       }
       _cancelCourseOverview();
-      _arrivalPromptTimer?.cancel();
+      _cancelArrivalPrompt();
 
       final texts = AppTexts.of(context);
       final arrivalDialogMessage = timerArrivalDialogMessage(
@@ -889,6 +997,13 @@ class _TimerScreenState extends State<TimerScreen>
         context: context,
         barrierDismissible: !showFailureOnDecline,
         builder: (context) {
+          completionRoute = ModalRoute.of<bool>(context);
+          void respond(bool value) {
+            _controller.refreshFromClock();
+            _acknowledgeTimerEndAlarm();
+            Navigator.of(context).pop(value);
+          }
+
           return AlertDialog(
             title: Text(texts.timer.completeDialogTitle),
             content: Text(
@@ -898,11 +1013,11 @@ class _TimerScreenState extends State<TimerScreen>
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
+                onPressed: () => respond(false),
                 child: Text(texts.common.notYet),
               ),
               FilledButton(
-                onPressed: () => Navigator.of(context).pop(true),
+                onPressed: () => respond(true),
                 child: Text(texts.common.complete),
               ),
             ],
@@ -914,6 +1029,9 @@ class _TimerScreenState extends State<TimerScreen>
         return;
       }
 
+      if (showFailureOnDecline || confirmed != null) {
+        _acknowledgeTimerEndAlarm();
+      }
       if (confirmed != true) {
         if (_completionFlowController.shouldRecordIncompleteResult(
           confirmed: confirmed,
@@ -925,6 +1043,10 @@ class _TimerScreenState extends State<TimerScreen>
             completionStatus: _completionFlowController
                 .completionStatusForIncompleteResult(),
           );
+          _arrivalPromptPending = false;
+          final stopped = _timerEndAlarmStopped;
+          if (stopped != null) await stopped;
+          if (!mounted) return;
           await _preserveCompletion(session!, result);
         }
         return;
@@ -937,9 +1059,21 @@ class _TimerScreenState extends State<TimerScreen>
               showFailureOnDecline: showFailureOnDecline,
             ),
       );
+      _arrivalPromptPending = false;
+      final stopped = _timerEndAlarmStopped;
+      if (stopped != null) await stopped;
+      if (!mounted) return;
       await _preserveCompletion(session!, result);
     } finally {
-      if (mounted) setState(() => _isCompleting = false);
+      if (mounted) {
+        _completionDialogClosing = completionRoute != null;
+        setState(() => _isCompleting = false);
+        if (completionRoute != null) await completionRoute!.completed;
+        if (mounted) {
+          _completionDialogClosing = false;
+          _syncTimerAudioWithState();
+        }
+      }
     }
   }
 
@@ -1104,6 +1238,9 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _openResult(MealSessionResult result) {
+    _arrivalPromptPending = false;
+    _cancelArrivalPrompt();
+    _acknowledgeTimerEndAlarm();
     final recordableResult = _completionFlowController
         .resultWithSelectedIngredients(result: result, config: _timerConfig);
     _lifecycleController.handOffOrientation();
@@ -1144,6 +1281,8 @@ class _TimerScreenState extends State<TimerScreen>
   }
 
   void _syncTimerAudioWithState() {
+    _syncTimerEndAlarm();
+    _syncArrivalPrompt();
     if (_shouldPlayTimerBgm) {
       if (_timerBgmState != _TimerBgmState.playing) {
         _timerBgmState = _TimerBgmState.playing;
