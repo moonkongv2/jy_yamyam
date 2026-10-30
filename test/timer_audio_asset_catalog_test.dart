@@ -7,6 +7,15 @@ import 'package:jy_yamyam/catalogs/timer_audio_asset_catalog.dart';
 void main() {
   test('timer audio catalog paths are registered exact runtime assets', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
+    expect(
+      File(TimerAudioAssetCatalog.timerEndAlarmAssetPath).existsSync(),
+      isTrue,
+    );
+    expect(
+      pubspec,
+      contains('    - ${TimerAudioAssetCatalog.timerEndAlarmAssetPath}\n'),
+    );
+    expect(TimerAudioAssetCatalog.timerEndAlarmVolume, 0.24);
     final bgmAssetPath = TimerAudioAssetCatalog.bgmAssetPath;
     final markerAssetPath = TimerAudioAssetCatalog.markerAssetPath;
     final courseLoadingAssetPath =

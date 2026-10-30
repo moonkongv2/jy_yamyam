@@ -30,6 +30,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          timerAudioService: _FakeTimerAudioService(),
           config: MealTimerConfig.defaults(),
           mealProgressService: service,
           onConfigChanged: (_) {},
@@ -68,6 +69,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          timerAudioService: _FakeTimerAudioService(),
           motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 10),
@@ -275,6 +277,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          timerAudioService: _FakeTimerAudioService(),
           motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 10),
@@ -313,6 +316,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          timerAudioService: _FakeTimerAudioService(),
           motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 5),
@@ -354,6 +358,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          timerAudioService: _FakeTimerAudioService(),
           motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 5),
@@ -399,6 +404,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          timerAudioService: _FakeTimerAudioService(),
           motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 5),
@@ -441,6 +447,7 @@ void main() {
         supportedLocales: AppTexts.supportedLocales,
         locale: const Locale('ko'),
         home: TimerScreen(
+          timerAudioService: _FakeTimerAudioService(),
           motivationMediaAvailable: true,
           config: MealTimerConfig.defaults().copyWith(
             duration: const Duration(minutes: 5),
@@ -583,6 +590,12 @@ class _FakeTimerAudioService implements TimerAudioService {
   Future<void> playFinishArrivalSfx() async {
     playFinishArrivalSfxCount += 1;
   }
+
+  @override
+  Future<void> startTimerEndAlarm() async {}
+
+  @override
+  Future<void> stopTimerEndAlarm() async {}
 
   @override
   Future<void> stopAll() async {

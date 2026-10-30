@@ -13,6 +13,9 @@ abstract final class TimerAudioAssetCatalog {
   static const String finishArrivalAssetPath =
       'assets/audio/finish_arrival.mp3';
 
+  static const String timerEndAlarmAssetPath = 'assets/audio/timer_end.mp3';
+  static const double timerEndAlarmVolume = 0.24;
+
   static const double bgmVolume = 0.22;
   static const double markerVolume = 0.080;
   static const double courseLoadingVolume = 0.18;

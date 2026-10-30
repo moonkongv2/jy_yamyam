@@ -548,6 +548,12 @@ class _FakeTimerAudioService implements TimerAudioService {
   }
 
   @override
+  Future<void> startTimerEndAlarm() async {}
+
+  @override
+  Future<void> stopTimerEndAlarm() async {}
+
+  @override
   Future<void> stopAll() async {
     stopAllCount += 1;
   }

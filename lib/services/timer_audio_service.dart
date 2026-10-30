@@ -30,6 +30,10 @@ abstract interface class TimerAudioService {
 
   Future<void> playFinishArrivalSfx();
 
+  Future<void> startTimerEndAlarm();
+
+  Future<void> stopTimerEndAlarm();
+
   Future<void> stopAll();
 
   Future<void> dispose();
@@ -75,6 +79,12 @@ class NoOpTimerAudioService implements TimerAudioService {
   Future<void> playFinishArrivalSfx() async {}
 
   @override
+  Future<void> startTimerEndAlarm() async {}
+
+  @override
+  Future<void> stopTimerEndAlarm() async {}
+
+  @override
   Future<void> stopAll() async {}
 
   @override
@@ -95,13 +105,18 @@ class AudioplayersTimerAudioService implements TimerAudioService {
         TimerAudioAssetCatalog.finishDriveLongAssetPath,
     String finishArrivalAssetPath =
         TimerAudioAssetCatalog.finishArrivalAssetPath,
+    String timerEndAlarmAssetPath =
+        TimerAudioAssetCatalog.timerEndAlarmAssetPath,
+    double timerEndAlarmVolume = TimerAudioAssetCatalog.timerEndAlarmVolume,
     double bgmVolume = TimerAudioAssetCatalog.bgmVolume,
     double markerVolume = TimerAudioAssetCatalog.markerVolume,
     double courseLoadingVolume = TimerAudioAssetCatalog.courseLoadingVolume,
     double readyStartBeepVolume = TimerAudioAssetCatalog.readyStartBeepVolume,
     double finishDriveVolume = TimerAudioAssetCatalog.finishDriveVolume,
     double finishArrivalVolume = TimerAudioAssetCatalog.finishArrivalVolume,
-  }) : _bgmAssetPath = bgmAssetPath,
+  }) : _timerEndAlarmAssetPath = timerEndAlarmAssetPath,
+       _timerEndAlarmVolume = timerEndAlarmVolume,
+       _bgmAssetPath = bgmAssetPath,
        _markerAssetPath = markerAssetPath,
        _courseLoadingAssetPath = courseLoadingAssetPath,
        _readyStartBeepAssetPath = readyStartBeepAssetPath,
@@ -120,11 +135,15 @@ class AudioplayersTimerAudioService implements TimerAudioService {
        _readyStartBeepPlayer = AudioPlayer(),
        _finishDrivePlayer = AudioPlayer(),
        _finishArrivalPlayer = AudioPlayer(),
+       _timerEndAlarmPlayer = AudioPlayer(),
        _audioContext = AudioContextConfig(
          focus: AudioContextConfigFocus.gain,
          respectSilence: false,
        ).build();
 
+  final String _timerEndAlarmAssetPath;
+  final double _timerEndAlarmVolume;
+  final AudioPlayer _timerEndAlarmPlayer;
   final String _bgmAssetPath;
   final String _markerAssetPath;
   final String _courseLoadingAssetPath;
@@ -150,6 +169,10 @@ class AudioplayersTimerAudioService implements TimerAudioService {
   var _bgmPrepared = false;
   var _bgmPlaying = false;
   var _disposed = false;
+  var _disposing = false;
+  var _alarmRequested = false;
+  var _alarmPlaying = false;
+  Future<void> _alarmOperation = Future.value();
 
   @override
   Future<void> startOrResumeBgm() {
@@ -358,8 +381,52 @@ class AudioplayersTimerAudioService implements TimerAudioService {
   }
 
   @override
+  Future<void> startTimerEndAlarm() {
+    if (_disposed || _disposing || _alarmRequested) {
+      return _alarmOperation;
+    }
+    _alarmRequested = true;
+    _alarmOperation = _alarmOperation.then((_) async {
+      if (!_alarmRequested || _disposed || _disposing || _alarmPlaying) return;
+      try {
+        await stopBgm();
+        if (!_alarmRequested || _disposing) return;
+        await _timerEndAlarmPlayer.setReleaseMode(ReleaseMode.loop);
+        if (!_alarmRequested || _disposing) return;
+        await _timerEndAlarmPlayer.play(
+          AssetSource(_assetSourcePath(_timerEndAlarmAssetPath)),
+          volume: _timerEndAlarmVolume,
+          ctx: _audioContext,
+          mode: PlayerMode.mediaPlayer,
+        );
+        _alarmPlaying = true;
+      } catch (error, stackTrace) {
+        debugPrint('Timer end alarm playback failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    });
+    return _alarmOperation;
+  }
+
+  @override
+  Future<void> stopTimerEndAlarm() {
+    _alarmRequested = false;
+    _alarmOperation = _alarmOperation.then((_) async {
+      if (_disposed) return;
+      try {
+        await _timerEndAlarmPlayer.stop();
+        _alarmPlaying = false;
+      } catch (error, stackTrace) {
+        debugPrint('Timer end alarm stop failed: $error');
+        debugPrintStack(stackTrace: stackTrace);
+      }
+    });
+    return _alarmOperation;
+  }
+
+  @override
   Future<void> stopAll() async {
-    await stopBgm();
+    await Future.wait([stopBgm(), stopTimerEndAlarm()]);
     if (_disposed) {
       return;
     }
@@ -383,14 +450,16 @@ class AudioplayersTimerAudioService implements TimerAudioService {
 
   @override
   Future<void> dispose() async {
-    if (_disposed) {
+    if (_disposed || _disposing) {
       return;
     }
 
+    _disposing = true;
     await stopAll();
     _disposed = true;
     await Future.wait([
       _disposePlayer(_bgmPlayer, 'Timer BGM dispose failed'),
+      _disposePlayer(_timerEndAlarmPlayer, 'Timer end alarm dispose failed'),
       _disposePlayer(_markerPlayer, 'Timer marker SFX dispose failed'),
       _disposePlayer(
         _courseLoadingPlayer,
